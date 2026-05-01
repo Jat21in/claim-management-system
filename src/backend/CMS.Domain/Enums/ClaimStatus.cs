@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace CMS.Domain.Enums;
 
-namespace CMS.Domain.Enums
+public enum ClaimStatus
 {
-    internal class ClaimStatus
-    {
-    }
+    Submitted,
+    Approved,
+    Rejected,
+    Paid
 }
