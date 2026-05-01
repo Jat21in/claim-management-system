@@ -1,9 +1,5 @@
 ﻿using CMS.Domain.Common;
 using CMS.Domain.ValueObjects;
-using System;
-using System.Collections.Generic;
-using System.Numerics;
-using System.Security.Claims;
 
 namespace CMS.Domain.Entities;
 
@@ -78,7 +74,6 @@ public sealed class Member : IAuditable
             throw new InvalidOperationException("Claim amount exceeds insured amount.");
 
         var claim = Claim.Create(
-            claimId: Guid.NewGuid(),
             memberId: MemberId,
             planId: ActivePlan.PlanId,
             claimDate: DateOnly.FromDateTime(claimDate),

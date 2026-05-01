@@ -23,31 +23,26 @@ public sealed class Claim : IAuditable
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
-<<<<<<< HEAD
-    // EF Core
-    private Claim() { }
-=======
+ 
     // Private constructor for controlled creation
     private Claim() {
 
         ClaimAmount = null!;
         Status = default!;
     }
->>>>>>> 774a445 (updated claim)
 
     // Factory Method (Intention-Revealing)
     public static Claim Create(
-        Guid claimId,
-        Guid memberId,
-        Guid planId,
-        DateOnly claimDate,
-        Money claimAmount)
+    Guid memberId,
+    Guid planId,
+    DateOnly claimDate,
+    Money claimAmount)
     {
         ValidateCreation(claimDate, claimAmount);
 
         return new Claim
         {
-            ClaimId = claimId,
+            ClaimId = Guid.NewGuid(),
             MemberId = memberId,
             PlanId = planId,
             ClaimDate = claimDate,
@@ -56,6 +51,7 @@ public sealed class Claim : IAuditable
             CreatedAt = DateTime.UtcNow
         };
     }
+
 
     // DOMAIN BEHAVIOR 
 
