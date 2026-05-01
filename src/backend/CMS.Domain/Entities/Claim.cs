@@ -23,8 +23,17 @@ public sealed class Claim : IAuditable
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
+<<<<<<< HEAD
     // EF Core
     private Claim() { }
+=======
+    // Private constructor for controlled creation
+    private Claim() {
+
+        ClaimAmount = null!;
+        Status = default!;
+    }
+>>>>>>> 774a445 (updated claim)
 
     // Factory Method (Intention-Revealing)
     public static Claim Create(
