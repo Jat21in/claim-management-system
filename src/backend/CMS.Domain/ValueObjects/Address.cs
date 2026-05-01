@@ -1,54 +1,41 @@
-﻿using System;
-
-namespace CMS.Domain.ValueObjects;
+﻿namespace CMS.Domain.ValueObjects;
 
 public sealed class Address
 {
-    public string Street { get; }
-    public string City { get; }
-    public string? State { get; }
-    public string Country { get; }
-    public string? PostalCode { get; }
+    public string Street { get; private set; } = null!;
+    public string City { get; private set; } = null!;
+    public string State { get; private set; } = null!;
+    public string Country { get; private set; } = null!;
+    public string PostalCode { get; private set; } = null!;
+
+    // ✅ Required by EF Core
+    private Address() { }
 
     public Address(
         string street,
         string city,
-        string? state,
+        string state,
         string country,
-        string? postalCode)
+        string postalCode)
     {
-        if (string.IsNullOrWhiteSpace(street))
-            throw new ArgumentException("Street is required.", nameof(street));
+        Street = string.IsNullOrWhiteSpace(street)
+            ? throw new ArgumentException("Street is required")
+            : street;
 
-        if (string.IsNullOrWhiteSpace(city))
-            throw new ArgumentException("City is required.", nameof(city));
+        City = string.IsNullOrWhiteSpace(city)
+            ? throw new ArgumentException("City is required")
+            : city;
 
-        if (string.IsNullOrWhiteSpace(country))
-            throw new ArgumentException("Country is required.", nameof(country));
+        State = string.IsNullOrWhiteSpace(state)
+            ? throw new ArgumentException("State is required")
+            : state;
 
-        Street = street.Trim();
-        City = city.Trim();
-        State = state?.Trim();
-        Country = country.Trim();
-        PostalCode = postalCode?.Trim();
-    }
+        Country = string.IsNullOrWhiteSpace(country)
+            ? throw new ArgumentException("Country is required")
+            : country;
 
-    private bool Equals(Address other)
-    {
-        return Street == other.Street &&
-               City == other.City &&
-               State == other.State &&
-               Country == other.Country &&
-               PostalCode == other.PostalCode;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is Address other && Equals(other);
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Street, City, State, Country, PostalCode);
+        PostalCode = string.IsNullOrWhiteSpace(postalCode)
+            ? throw new ArgumentException("Postal code is required")
+            : postalCode;
     }
 }

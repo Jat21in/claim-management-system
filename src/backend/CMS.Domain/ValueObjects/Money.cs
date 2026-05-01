@@ -1,25 +1,21 @@
-﻿using System;
+﻿namespace CMS.Domain.ValueObjects;
 
-namespace CMS.Domain.ValueObjects;
-
-public sealed class Money : IEquatable<Money>
+public sealed class Money
 {
-    public decimal Amount { get; }
+    public decimal Amount { get; private set; }
 
-    private const int Precision = 2;
+    // ✅ Required by EF Core (DO NOT USE DIRECTLY)
+    private Money() { }
 
     public Money(decimal amount)
     {
         if (amount < 0)
-            throw new ArgumentOutOfRangeException(
-                nameof(amount),
-                "Money value cannot be negative."
-            );
+            throw new ArgumentException("Amount cannot be negative.", nameof(amount));
 
-        Amount = Math.Round(amount, Precision, MidpointRounding.AwayFromZero);
+        Amount = Math.Round(amount, 2, MidpointRounding.AwayFromZero);
     }
 
-    public static Money Zero => new(0);
+    public static Money Zero => new Money(0);
 
     public Money Add(Money other)
     {

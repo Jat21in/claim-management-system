@@ -1,15 +1,4 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Text;
-
-//namespace CMS.Domain.Common
-//{
-//    internal interface IAuditable
-//    {
-//    }
-//}
-
-namespace CMS.Domain.Common;
+﻿namespace CMS.Domain.Common;
 
 /// <summary>
 /// Represents audit metadata for domain entities.

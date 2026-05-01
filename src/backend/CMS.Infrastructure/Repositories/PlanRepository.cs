@@ -1,10 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using CMS.Application.Interfaces.Repositories;
+using CMS.Domain.Entities;
+using CMS.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
-namespace CMS.Infrastructure.Repositories
+namespace CMS.Infrastructure.Repositories;
+
+public sealed class PlanRepository : IPlanRepository
 {
-    internal class PlanRepository
+    private readonly CmsDbContext _dbContext;
+
+    public PlanRepository(CmsDbContext dbContext)
     {
+        _dbContext = dbContext;
+    }
+
+    public async Task<Plan?> GetByIdAsync(Guid planId, CancellationToken cancellationToken)
+    {
+        return await _dbContext.Plans
+            .FirstOrDefaultAsync(p => p.PlanId == planId, cancellationToken);
+    }
+
+    public async Task AddAsync(Plan plan, CancellationToken cancellationToken)
+    {
+        _dbContext.Plans.Add(plan);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

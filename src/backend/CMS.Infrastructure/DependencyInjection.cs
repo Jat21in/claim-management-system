@@ -1,10 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using CMS.Application.Interfaces.Repositories;
+using CMS.Infrastructure.Data;
+using CMS.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace CMS.Infrastructure
+namespace CMS.Infrastructure;
+
+public static class DependencyInjection
 {
-    internal class DependencyInjection
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
+        services.AddDbContext<CmsDbContext>(options =>
+            options.UseSqlServer(
+                configuration.GetConnectionString("CmsDatabase")));
+
+        services.AddScoped<IMemberRepository, MemberRepository>();
+        services.AddScoped<IPlanRepository, PlanRepository>();
+        services.AddScoped<IClaimRepository, ClaimRepository>();
+
+        return services;
     }
 }
