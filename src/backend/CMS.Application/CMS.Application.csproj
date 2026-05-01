@@ -10,4 +10,11 @@
     <ProjectReference Include="..\CMS.Domain\CMS.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DTOs\Member\" />
+    <Folder Include="DTOs\Claim\" />
+    <Folder Include="DTOs\Auth\" />
+    <Folder Include="Validators\" />
+  </ItemGroup>
+
 </Project>
