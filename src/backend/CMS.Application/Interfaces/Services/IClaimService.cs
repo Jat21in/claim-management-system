@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using CMS.Application.DTOs.Claim;
 
-namespace CMS.Application.Interfaces.Services
+namespace CMS.Application.Interfaces.Services;
+
+public interface IClaimService
 {
-    internal interface IClaimService
-    {
-    }
+    Task<Guid> SubmitClaimAsync(
+        SubmitClaimRequest request,
+        CancellationToken cancellationToken);
 }

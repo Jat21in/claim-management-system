@@ -7,11 +7,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="DTOs\Auth\**" />
+    <EmbeddedResource Remove="DTOs\Auth\**" />
+    <None Remove="DTOs\Auth\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\CMS.Domain\CMS.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+<<<<<<< HEAD
     <Folder Include="DTOs\Auth\" />
+=======
+>>>>>>> 2bcb4dc96318eddb5105873ddd30ba7b300bb463
     <Folder Include="Validators\" />
   </ItemGroup>
 

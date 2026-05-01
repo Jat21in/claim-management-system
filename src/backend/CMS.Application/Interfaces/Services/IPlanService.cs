@@ -1,10 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using CMS.Application.DTOs.Plan;
 
-namespace CMS.Application.Interfaces.Services
+namespace CMS.Application.Interfaces.Services;
+
+public interface IPlanService
 {
-    internal interface IPlanService
-    {
-    }
+    Task<Guid> CreatePlanAsync(
+        CreatePlanRequest request,
+        CancellationToken cancellationToken);
+
+    Task<PlanResponse> GetPlanByIdAsync(
+        Guid planId,
+        CancellationToken cancellationToken);
 }
