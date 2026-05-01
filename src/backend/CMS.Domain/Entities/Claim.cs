@@ -1,35 +1,32 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CMS.Domain.Entities;
-
 using CMS.Domain.Enums;
 using CMS.Domain.ValueObjects;
 using CMS.Domain.Common;
+
+namespace CMS.Domain.Entities;
 
 public sealed class Claim : IAuditable
 {
     // Identity
     public Guid ClaimId { get; private set; }
 
-    // Associations (by identity, not navigation)
+    // Associations (by identity only)
     public Guid MemberId { get; private set; }
     public Guid PlanId { get; private set; }
 
-    // Core attributes
+    // Core Attributes
     public DateOnly ClaimDate { get; private set; }
-    public Money ClaimAmount { get; private set; }
+    public Money ClaimAmount { get; private set; } = null!;
     public ClaimStatus Status { get; private set; }
 
-    // Audit
+    // Auditing
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
-    // Private constructor for controlled creation
+    // EF Core
     private Claim() { }
 
-    // Factory method (intention-revealing)
+    // Factory Method (Intention-Revealing)
     public static Claim Create(
         Guid claimId,
         Guid memberId,
@@ -51,16 +48,18 @@ public sealed class Claim : IAuditable
         };
     }
 
-    // Domain behaviors (NOT approvals)
+    // DOMAIN BEHAVIOR 
+
     public void MarkUpdated()
     {
         UpdatedAt = DateTime.UtcNow;
     }
 
-    // -------- Domain Guards --------
+    // DOMAIN GUARDS 
+
     private static void ValidateCreation(DateOnly claimDate, Money claimAmount)
     {
-        if (claimAmount == null)
+        if (claimAmount is null)
             throw new ArgumentNullException(nameof(claimAmount));
 
         if (claimDate > DateOnly.FromDateTime(DateTime.UtcNow))
