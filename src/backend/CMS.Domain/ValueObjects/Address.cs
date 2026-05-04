@@ -38,4 +38,14 @@ public sealed class Address
             ? throw new ArgumentException("Postal code is required")
             : postalCode;
     }
+
+    public static Address Empty() { 
+        return new Address(
+            "N/A", 
+            "N/A", 
+            "N/A", 
+            "N/A", 
+            "N/A"
+            ); 
+    }
 }

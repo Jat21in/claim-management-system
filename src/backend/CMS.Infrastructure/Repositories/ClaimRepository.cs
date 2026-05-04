@@ -7,22 +7,28 @@ namespace CMS.Infrastructure.Repositories;
 
 public sealed class ClaimRepository : IClaimRepository
 {
-    private readonly CmsDbContext _dbContext;
+    private readonly CmsDbContext _db;
 
-    public ClaimRepository(CmsDbContext dbContext)
+    public ClaimRepository(CmsDbContext db)
     {
-        _dbContext = dbContext;
+        _db = db;
     }
 
-    public async Task<Claim?> GetByIdAsync(Guid claimId, CancellationToken cancellationToken)
+    public async Task AddAsync(Claim claim, CancellationToken ct)
     {
-        return await _dbContext.Claims
-            .FirstOrDefaultAsync(c => c.ClaimId == claimId, cancellationToken);
+        _db.Claims.Add(claim);
+        await _db.SaveChangesAsync(ct);
     }
 
-    public async Task AddAsync(Claim claim, CancellationToken cancellationToken)
+    public async Task<List<Claim>> GetByMemberIdAsync(Guid memberId, CancellationToken ct)
     {
-        _dbContext.Claims.Add(claim);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        return await _db.Claims
+            .Where(c => c.MemberId == memberId)
+            .ToListAsync(ct);
+    }
+
+    public async Task<Claim?> GetByIdAsync(Guid claimId, CancellationToken ct)
+    {
+        return await _db.Claims.FirstOrDefaultAsync(c => c.ClaimId == claimId, ct);
     }
 }

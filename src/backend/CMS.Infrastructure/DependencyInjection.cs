@@ -4,6 +4,8 @@ using CMS.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using CMS.Application.Interfaces.Security;
+using CMS.Infrastructure.Security;
 
 namespace CMS.Infrastructure;
 
@@ -20,6 +22,9 @@ public static class DependencyInjection
         services.AddScoped<IMemberRepository, MemberRepository>();
         services.AddScoped<IPlanRepository, PlanRepository>();
         services.AddScoped<IClaimRepository, ClaimRepository>();
+
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
         return services;
     }

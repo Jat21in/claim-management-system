@@ -29,7 +29,32 @@ public sealed class MemberRepository : IMemberRepository
 
     public async Task UpdateAsync(Member member, CancellationToken cancellationToken)
     {
-        _dbContext.Members.Update(member);
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+
+    public async Task<Member?> GetByEmailAsync(string email, CancellationToken cancellationToken) 
+    { 
+        return await _dbContext.Members.FirstOrDefaultAsync(m => m.Email == email, cancellationToken); 
+    }
+
+    public async Task<bool> ExistsByEmailAsync(
+    string email,
+    CancellationToken cancellationToken)
+    {
+        return await _dbContext.Members
+            .AnyAsync(m => m.Email == email, cancellationToken);
+    }
+
+    public async Task<Member?> GetByIdWithActivePlanAsync(
+    Guid memberId,
+    CancellationToken cancellationToken)
+    {
+        return await _dbContext.Members
+            .Include(m => m.ActivePlan)     // ✅ THIS IS THE FIX
+            .Include(m => m.Claims)
+            .FirstOrDefaultAsync(
+                m => m.MemberId == memberId,
+                cancellationToken);
     }
 }

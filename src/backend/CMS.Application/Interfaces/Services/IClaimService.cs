@@ -5,6 +5,7 @@ namespace CMS.Application.Interfaces.Services;
 public interface IClaimService
 {
     Task<Guid> SubmitClaimAsync(
-        SubmitClaimRequest request,
-        CancellationToken cancellationToken);
+    Guid memberId,
+    SubmitClaimRequest request,
+    CancellationToken cancellationToken);
 }

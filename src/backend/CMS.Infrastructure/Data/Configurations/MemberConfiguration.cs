@@ -18,6 +18,12 @@ public sealed class MemberConfiguration : IEntityTypeConfiguration<Member>
             .IsRequired()
             .HasMaxLength(200);
 
+
+        builder.Property(m => m.PasswordHash)
+            .IsRequired()
+            .HasMaxLength(500);
+
+
         // ✅ Address owned type mapping (CRUCIAL)
         builder.OwnsOne(m => m.Address, address =>
         {
@@ -50,5 +56,12 @@ public sealed class MemberConfiguration : IEntityTypeConfiguration<Member>
         builder.HasMany(m => m.Claims)
             .WithOne()
             .HasForeignKey(c => c.MemberId);
+
+        builder
+    .HasOne(m => m.ActivePlan)
+    .WithMany()                       // Plan does not need navigation
+    .HasForeignKey("ActivePlanPlanId")// Explicit FK
+    .OnDelete(DeleteBehavior.Restrict);
+
     }
 }

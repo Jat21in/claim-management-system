@@ -4,6 +4,7 @@ using CMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CMS.Infrastructure.Migrations
 {
     [DbContext(typeof(CmsDbContext))]
-    partial class CmsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260504065157_AddPasswordHashToMember")]
+    partial class AddPasswordHashToMember
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -66,9 +69,6 @@ namespace CMS.Infrastructure.Migrations
 
                     b.Property<Guid?>("ActivePlanPlanId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ContactNumber")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -135,8 +135,7 @@ namespace CMS.Infrastructure.Migrations
                 {
                     b.HasOne("CMS.Domain.Entities.Plan", "ActivePlan")
                         .WithMany()
-                        .HasForeignKey("ActivePlanPlanId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("ActivePlanPlanId");
 
                     b.OwnsOne("CMS.Domain.ValueObjects.Address", "Address", b1 =>
                         {

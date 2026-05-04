@@ -1,24 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="DTOs\Auth\**" />
-    <EmbeddedResource Remove="DTOs\Auth\**" />
-    <None Remove="DTOs\Auth\**" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\CMS.Domain\CMS.Domain.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\CMS.Domain\CMS.Domain.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="Validators\" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="DTOs\Auth\" />
-    <Folder Include="Validators\" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.7" />
+	</ItemGroup>
 
 </Project>
