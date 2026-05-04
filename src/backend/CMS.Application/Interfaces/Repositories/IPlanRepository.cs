@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using CMS.Domain.Entities;
 
-namespace CMS.Application.Interfaces.Repositories
+namespace CMS.Application.Interfaces.Repositories;
+
+public interface IPlanRepository
 {
-    internal interface IPlanRepository
-    {
-    }
+    Task<Plan?> GetByIdAsync(Guid planId, CancellationToken cancellationToken);
+    Task AddAsync(Plan plan, CancellationToken cancellationToken);
 }

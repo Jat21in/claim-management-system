@@ -9,6 +9,18 @@ public sealed class Plan
     public DateTime EndDate { get; private set; }
     public Money InsuredAmount { get; private set; } = null!;
 
+    public void Update(DateTime newEndDate, Money newInsuredAmount)
+    {
+        if (newEndDate <= EndDate)
+            throw new InvalidOperationException("Plan end date must be extended.");
+
+        if (newInsuredAmount.Amount < InsuredAmount.Amount)
+            throw new InvalidOperationException("Insured amount cannot be reduced.");
+
+        EndDate = newEndDate;
+        InsuredAmount = newInsuredAmount;
+    }
+
     // EF Core
     private Plan() { }
 

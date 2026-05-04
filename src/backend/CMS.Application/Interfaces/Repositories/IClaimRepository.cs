@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using CMS.Domain.Entities;
 
-namespace CMS.Application.Interfaces.Repositories
+namespace CMS.Application.Interfaces.Repositories;
+
+
+public interface IClaimRepository
 {
-    internal interface IClaimRepository
-    {
-    }
+    Task AddAsync(Claim claim, CancellationToken cancellationToken);
+    Task<List<Claim>> GetByMemberIdAsync(Guid memberId, CancellationToken ct);
+    Task<Claim?> GetByIdAsync(Guid claimId, CancellationToken ct);
 }
