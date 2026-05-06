@@ -38,4 +38,19 @@ public sealed class ClaimsController : ControllerBase
             Status = c.Status.ToString()
         }));
     }
+
+    [HttpPost]
+    public async Task<IActionResult> SubmitClaim(
+SubmitClaimRequest request,
+CancellationToken cancellationToken)
+    {
+        var memberId = Guid.Parse(
+            User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var claimId = await _claimService.SubmitClaimAsync(
+            memberId,
+            request,
+            cancellationToken);
+        return Ok(new { claimId });
+    }
+
 }
