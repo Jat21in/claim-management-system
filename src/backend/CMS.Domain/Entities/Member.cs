@@ -86,7 +86,7 @@ public sealed class Member : IAuditable
         if (!ActivePlan.IsWithinValidity(claimDate))
             throw new InvalidOperationException("Claim date is outside plan validity.");
 
-        if (claimAmount.Amount > ActivePlan.InsuredAmount.Amount)
+        if (claimAmount.Amount > ActivePlan.InsuredAmount)
             throw new InvalidOperationException("Claim amount exceeds insured amount.");
 
         var claim = Claim.Create(

@@ -1,8 +1,7 @@
 ﻿using CMS.Application.DTOs.Plan;
 using CMS.Application.Interfaces.Repositories;
 using CMS.Application.Interfaces.Services;
-using CMS.Domain.Entities;
-using CMS.Domain.ValueObjects;
+using System.Text.Json;
 
 namespace CMS.Application.Services;
 
@@ -15,34 +14,40 @@ public sealed class PlanService : IPlanService
         _planRepository = planRepository;
     }
 
-    public async Task<Guid> CreatePlanAsync(
-        CreatePlanRequest request,
-        CancellationToken cancellationToken)
+    public async Task<List<PublicPlanResponse>> GetPublicPlansAsync()
     {
-        var plan = new Plan(
-            request.StartDate,
-            request.EndDate,
-            new Money(request.InsuredAmount));
+        var plans = await _planRepository.GetActivePlansAsync(CancellationToken.None);
 
-        await _planRepository.AddAsync(plan, cancellationToken);
-        return plan.PlanId;
+        return plans.Select(p => new PublicPlanResponse
+        {
+            PlanId = p.PlanId,
+            Name = p.Name,
+            Description = p.Description,
+            InsuredAmount = p.InsuredAmount,
+            DurationInMonths = p.DurationInMonths,
+            Features = JsonSerializer.Deserialize<string[]>(p.FeaturesJson)
+                       ?? Array.Empty<string>(),
+            IsFeatured = p.IsFeatured
+        }).ToList();
     }
 
-    public async Task<PlanResponse> GetPlanByIdAsync(
-        Guid planId,
-        CancellationToken cancellationToken)
+    public async Task<PublicPlanResponse?> GetPublicPlanByIdAsync(Guid planId)
     {
-        var plan = await _planRepository.GetByIdAsync(planId, cancellationToken)
-            ?? throw new InvalidOperationException("Plan not found.");
+        var p = await _planRepository.GetByIdAsync(planId, CancellationToken.None);
 
-        return new PlanResponse
+        if (p is null || !p.IsActive)
+            return null;
+
+        return new PublicPlanResponse
         {
-            PlanId = plan.PlanId,
-            StartDate = plan.StartDate,
-            EndDate = plan.EndDate,
-            InsuredAmount = plan.InsuredAmount.Amount
+            PlanId = p.PlanId,
+            Name = p.Name,
+            Description = p.Description,
+            InsuredAmount = p.InsuredAmount,
+            DurationInMonths = p.DurationInMonths,
+            Features = JsonSerializer.Deserialize<string[]>(p.FeaturesJson)
+                       ?? Array.Empty<string>(),
+            IsFeatured = p.IsFeatured
         };
     }
-
-    
 }

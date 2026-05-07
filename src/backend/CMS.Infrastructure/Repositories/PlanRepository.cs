@@ -25,4 +25,12 @@ public sealed class PlanRepository : IPlanRepository
         _dbContext.Plans.Add(plan);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<List<Plan>> GetActivePlansAsync(CancellationToken cancellationToken)
+    {
+        return await _dbContext.Plans
+            .Where(p => p.IsActive)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
 }

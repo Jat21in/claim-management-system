@@ -95,9 +95,10 @@ public sealed class MemberService : IMemberService
         if (request.EndDate <= member.ActivePlan.EndDate)
             throw new InvalidOperationException("End date must be after current end date.");
 
-        member.ActivePlan.Update(
+        member.ActivePlan.UpdateValidityAndCoverage(
             request.EndDate,
-            new Money(request.InsuredAmount));
+            request.InsuredAmount);
+
 
         await _memberRepository.UpdateAsync(member, cancellationToken);
     }

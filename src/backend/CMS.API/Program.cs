@@ -1,6 +1,8 @@
 using CMS.Application;
 using CMS.Infrastructure;
 using CMS.API.Middleware;
+using CMS.Infrastructure.Data;
+using CMS.Infrastructure.Data.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -41,6 +43,15 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+
+// ✅ DATABASE SEEDING (✅ CORRECT PLACE)
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<CmsDbContext>();
+    await PlanSeeder.SeedAsync(dbContext);
+}
+
+
 // Swagger (only in dev)
 if (app.Environment.IsDevelopment())
 {
@@ -48,8 +59,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// middleware order
-
+// Middleware order
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
@@ -58,4 +68,5 @@ app.UseAuthentication();   // 🔐 FIRST
 app.UseAuthorization();    // 🔐 THEN
 
 app.MapControllers();
+
 app.Run();

@@ -1,9 +1,17 @@
-﻿namespace CMS.Application.DTOs.Auth;
+﻿using System;
 
-public sealed class RegisterRequest
+namespace CMS.Application.DTOs.Auth
 {
-    public string FullName { get; init; } = null!;
-    public string Email { get; init; } = null!;
-    public string Password { get; init; } = null!;
-    public DateTime DateOfBirth { get; init; }
+    public sealed class RegisterRequest
+    {
+        public string FullName { get; init; } = null!;
+        public string Email { get; init; } = null!;
+        public string Password { get; init; } = null!;
+        public DateTime DateOfBirth { get; init; }
+
+        // ✅ OPTIONAL:
+        // Used when user selects a plan BEFORE registration
+        // Null means user will choose a plan later
+        public Guid? SelectedPlanId { get; init; }
+    }
 }
