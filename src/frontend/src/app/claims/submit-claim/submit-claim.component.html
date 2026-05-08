@@ -1,0 +1,43 @@
+<h2>Submit Claim</h2>
+
+<form [formGroup]="claimForm" (ngSubmit)="submit()">
+
+    <label>
+    Claim Date
+    <input type="date" formControlName="claimDate" />
+  </label>
+
+    <div *ngIf="claimForm.get('claimDate')?.touched && claimForm.get('claimDate')?.invalid">
+        <small>Claim date is required</small>
+    </div>
+
+    <br />
+
+    <label>
+    Amount
+    <input type="number" formControlName="amount" />
+  </label>
+
+    <div *ngIf="claimForm.get('amount')?.touched && claimForm.get('amount')?.invalid">
+        <small *ngIf="claimForm.get('amount')?.errors?.['required']">Amount is required</small>
+        <small *ngIf="claimForm.get('amount')?.errors?.['min']">Amount must be greater than 0</small>
+    </div>
+
+    <br />
+
+    <label>
+    Description
+    <textarea formControlName="description"></textarea>
+  </label>
+
+    <div *ngIf="claimForm.get('description')?.touched && claimForm.get('description')?.invalid">
+        <small>Description is required (max 500 chars)</small>
+    </div>
+
+    <br />
+
+    <button type="submit" [disabled]="claimForm.invalid || loading">
+    {{ loading ? 'Submitting...' : 'Submit Claim' }}
+  </button>
+
+</form>

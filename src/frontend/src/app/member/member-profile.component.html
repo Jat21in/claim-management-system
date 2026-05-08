@@ -1,0 +1,17 @@
+<h2>My Profile</h2>
+
+<form novalidate>
+    <input placeholder="Full Name" [(ngModel)]="model.fullName" name="fullName" />
+    <input type="date" [(ngModel)]="model.dateOfBirth" name="dob" />
+    <input placeholder="Street" [(ngModel)]="model.street" name="street" />
+    <input placeholder="City" [(ngModel)]="model.city" name="city" />
+    <input placeholder="State" [(ngModel)]="model.state" name="state" />
+    <input placeholder="Country" [(ngModel)]="model.country" name="country" />
+    <input placeholder="Postal Code" [(ngModel)]="model.postalCode" name="postalCode" />
+    <input placeholder="Contact Number" [(ngModel)]="model.contactNumber" name="contactNumber" />
+
+    <button type="button" (click)="save()">Save Profile</button>
+</form>
+
+<p style="color:green" *ngIf="success">{{ success }}</p>
+<p style="color:red" *ngIf="error">{{ error }}</p>

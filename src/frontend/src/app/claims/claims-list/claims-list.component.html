@@ -1,0 +1,26 @@
+<h2>My Claims</h2>
+
+<div *ngIf="loading">Loading claims...</div>
+
+<table *ngIf="!loading && claims.length">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let c of claims">
+            <td>{{ c.claimDate | date }}</td>
+            <td>₹ {{ c.amount }}</td>
+            <td>{{ c.status }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<p *ngIf="!loading && !claims.length">
+    No claims submitted yet.
+</p>
+
+<a routerLink="/claims/new"> Submit New Claim </a>
