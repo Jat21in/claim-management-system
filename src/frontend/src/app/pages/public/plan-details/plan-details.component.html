@@ -1,0 +1,20 @@
+<ng-container *ngIf="plan$ | async as plan; else loading">
+
+    <h1>{{ plan.name }}</h1>
+    <p>{{ plan.description }}</p>
+
+    <p><strong>Coverage:</strong> ₹{{ plan.insuredAmount }}</p>
+    <p><strong>Duration:</strong> {{ plan.durationInMonths }} months</p>
+
+    <h3>Features</h3>
+    <ul>
+        <li *ngFor="let feature of plan.features">
+            {{ feature }}
+        </li>
+    </ul>
+
+</ng-container>
+
+<ng-template #loading>
+    <h1>Loading plan details...</h1>
+</ng-template>

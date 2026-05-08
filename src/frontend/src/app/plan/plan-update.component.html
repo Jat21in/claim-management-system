@@ -1,0 +1,9 @@
+<h2>Select or Update Plan</h2>
+
+<div *ngFor="let plan of plans" style="margin-bottom: 12px;">
+    <strong>{{ plan.name }}</strong><br /> Coverage: ₹{{ plan.insuredAmount }}<br />
+    <button (click)="selectPlan(plan)">Choose Plan</button>
+</div>
+
+<p style="color: green" *ngIf="success">{{ success }}</p>
+<p style="color: red" *ngIf="error">{{ error }}</p>

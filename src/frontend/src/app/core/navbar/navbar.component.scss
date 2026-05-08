@@ -1,0 +1,39 @@
+.navbar {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    background-color: #1976d2;
+    color: white;
+}
+
+.brand {
+    font-weight: bold;
+    margin-right: 24px;
+}
+
+.links a {
+    margin-right: 16px;
+    color: white;
+    text-decoration: none;
+    padding-bottom: 4px;
+}
+
+.links a.active {
+    border-bottom: 2px solid white;
+}
+
+.user {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.email {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+button {
+    cursor: pointer;
+}
