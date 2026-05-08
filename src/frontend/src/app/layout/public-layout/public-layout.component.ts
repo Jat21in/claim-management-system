@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 
 @Component({
-  selector: 'public-layout',
+  selector: 'app-public-layout',
   standalone: true,
-  imports: [RouterOutlet],   // ✅ REQUIRED
+  imports: [RouterLink, RouterOutlet],
   templateUrl: './public-layout.component.html',
 })
 export class PublicLayoutComponent {}
