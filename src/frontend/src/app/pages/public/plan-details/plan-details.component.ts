@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgIf, NgFor, AsyncPipe } from '@angular/common';
 import { Observable, switchMap } from 'rxjs';
 import { PlanService, PublicPlan } from '../../../services/plan.service';
@@ -7,7 +7,15 @@ import { PlanService, PublicPlan } from '../../../services/plan.service';
 @Component({
   selector: 'app-plan-detail',
   standalone: true,
-  imports: [NgIf, NgFor, AsyncPipe],
+
+  // ✅ ADD RouterLink HERE
+  imports: [
+    NgIf,
+    NgFor,
+    AsyncPipe,
+    RouterLink
+  ],
+
   templateUrl: './plan-details.component.html'
 })
 export class PlanDetailComponent {
