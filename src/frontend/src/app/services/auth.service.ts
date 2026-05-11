@@ -26,10 +26,12 @@ export class AuthService {
     return this.http.post(`${this.base}/login`, payload);
   }
 
-  register(payload: any): Observable<any> {
-    return this.http.post(`${this.base}/register`, payload);
-  }
-
+  register(payload: any) {
+  return this.http.post(
+    `${environment.apiBaseUrl}/v1/auth/register`,
+    payload
+  );
+}
   // =====================
   // ✅ TOKEN MANAGEMENT
   // =====================

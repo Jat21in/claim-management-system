@@ -12,9 +12,9 @@
             {{ feature }}
         </li>
     </ul>
-    <button [routerLink]="['/auth/register']" [queryParams]="{ planId: plan?.planId }">
-    Select this Plan
-  </button>
+    <button type="button" [routerLink]="['/auth/register']" [queryParams]="{ planId: plan.planId }">
+  Select this Plan
+</button>
 
 </ng-container>
 
