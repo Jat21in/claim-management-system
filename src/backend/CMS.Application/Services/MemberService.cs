@@ -13,8 +13,8 @@ public sealed class MemberService : IMemberService
     private readonly IPlanRepository _planRepository;
 
     public MemberService(
-    IMemberRepository memberRepository,
-    IPlanRepository planRepository)
+        IMemberRepository memberRepository,
+        IPlanRepository planRepository)
     {
         _memberRepository = memberRepository;
         _planRepository = planRepository;
@@ -42,29 +42,30 @@ public sealed class MemberService : IMemberService
     }
 
     public async Task AssignPlanAsync(
-    Guid memberId,
-    AssignPlanRequest request,
-    CancellationToken cancellationToken)
+        Guid memberId,
+        AssignPlanRequest request,
+        CancellationToken cancellationToken)
     {
-        var member = await _memberRepository.GetByIdAsync(memberId, cancellationToken)
+        var member = await _memberRepository
+            .GetByIdAsync(memberId, cancellationToken)
             ?? throw new InvalidOperationException("Member not found.");
 
-        // ✅ Load EXISTING plan from DB
-        var plan = await _planRepository.GetByIdAsync(request.PlanId, cancellationToken)
+        var plan = await _planRepository
+            .GetByIdAsync(request.PlanId, cancellationToken)
             ?? throw new InvalidOperationException("Plan not found.");
 
-        // ✅ Domain-safe assignment
         member.AssignPlan(plan);
 
         await _memberRepository.UpdateAsync(member, cancellationToken);
     }
 
     public async Task UpdateProfileAsync(
-    Guid memberId,
-    UpdateMemberProfileRequest request,
-    CancellationToken cancellationToken)
+        Guid memberId,
+        UpdateMemberProfileRequest request,
+        CancellationToken cancellationToken)
     {
-        var member = await _memberRepository.GetByIdAsync(memberId, cancellationToken)
+        var member = await _memberRepository
+            .GetByIdAsync(memberId, cancellationToken)
             ?? throw new InvalidOperationException("Member not found.");
 
         var address = new Address(
@@ -78,7 +79,6 @@ public sealed class MemberService : IMemberService
 
         await _memberRepository.UpdateAsync(member, cancellationToken);
     }
-
 
     public async Task UpdateActivePlanAsync(
         Guid memberId,
@@ -99,8 +99,32 @@ public sealed class MemberService : IMemberService
             request.EndDate,
             request.InsuredAmount);
 
-
         await _memberRepository.UpdateAsync(member, cancellationToken);
     }
 
+    public async Task<MemberDashboardResponse> GetMyDashboardAsync(
+        Guid memberId,
+        CancellationToken cancellationToken)
+    {
+        var member = await _memberRepository
+            .GetByIdWithActivePlanAsync(memberId, cancellationToken)
+            ?? throw new InvalidOperationException("Member not found.");
+
+        if (member.ActivePlan is null)
+            throw new InvalidOperationException("No active plan assigned.");
+
+        return new MemberDashboardResponse
+        {
+            FullName = member.FullName,
+            Email = member.Email,
+            ActivePlan = new ActivePlanDto
+            {
+                Id = member.ActivePlan.PlanId,
+                Name = member.ActivePlan.Name,
+                InsuredAmount = member.ActivePlan.InsuredAmount,
+                StartDate = member.ActivePlan.StartDate,
+                EndDate = member.ActivePlan.EndDate
+            }
+        };
+    }
 }

@@ -24,7 +24,7 @@ public sealed class PlanConfiguration : IEntityTypeConfiguration<Plan>
                .IsRequired()
                .HasMaxLength(1000);
 
-        // ✅ THIS LINE FIXES YOUR WARNING
+        // THIS LINE FIXES YOUR WARNING
         builder.Property(p => p.InsuredAmount)
                .HasPrecision(18, 2);
 

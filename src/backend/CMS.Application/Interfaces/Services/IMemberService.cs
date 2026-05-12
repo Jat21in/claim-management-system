@@ -1,6 +1,8 @@
 ﻿using CMS.Application.DTOs.Member;
 using CMS.Application.DTOs.Plan;
 
+namespace CMS.Application.Interfaces.Services;
+
 public interface IMemberService
 {
     Task<Guid> RegisterMemberAsync(
@@ -17,9 +19,12 @@ public interface IMemberService
         UpdateMemberProfileRequest request,
         CancellationToken cancellationToken);
 
-    // ✅ ADD THIS
     Task UpdateActivePlanAsync(
         Guid memberId,
         UpdatePlanRequest request,
+        CancellationToken cancellationToken);
+
+    Task<MemberDashboardResponse> GetMyDashboardAsync(
+        Guid memberId,
         CancellationToken cancellationToken);
 }

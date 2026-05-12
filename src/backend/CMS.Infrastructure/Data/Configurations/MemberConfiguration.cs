@@ -24,7 +24,7 @@ public sealed class MemberConfiguration : IEntityTypeConfiguration<Member>
             .HasMaxLength(500);
 
 
-        // ✅ Address owned type mapping (CRUCIAL)
+        //  Address owned type mapping (CRUCIAL)
         builder.OwnsOne(m => m.Address, address =>
         {
             address.Property(a => a.Street)

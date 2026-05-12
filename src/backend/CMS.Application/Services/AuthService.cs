@@ -50,7 +50,7 @@ public sealed class AuthService : IAuthService
         RegisterRequest request,
         CancellationToken cancellationToken)
     {
-        // ✅ Fast existence check
+        // Fast existence check
         if (await _memberRepository.ExistsByEmailAsync(request.Email, cancellationToken))
             throw new InvalidOperationException("Email already exists");
 
@@ -58,14 +58,14 @@ public sealed class AuthService : IAuthService
             request.FullName,
             request.Email,
             request.DateOfBirth,
-            Address.Empty() // ✅ domain‑approved default
+            Address.Empty() //  domain‑approved default
         );
 
         member.SetPasswordHash(
             _passwordHasher.Hash(request.Password)
         );
 
-        // ✅ Optional plan selection during registration
+        //  Optional plan selection during registration
         if (request.SelectedPlanId.HasValue)
         {
             var plan = await _planRepository.GetByIdAsync(

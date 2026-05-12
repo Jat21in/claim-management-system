@@ -9,7 +9,7 @@ namespace CMS.Application.DTOs.Auth
         public string Password { get; init; } = null!;
         public DateTime DateOfBirth { get; init; }
 
-        // ✅ OPTIONAL:
+        //  OPTIONAL:
         // Used when user selects a plan BEFORE registration
         // Null means user will choose a plan later
         public Guid? SelectedPlanId { get; init; }

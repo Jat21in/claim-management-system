@@ -1,20 +1,4 @@
-﻿//namespace CMS.Domain.Enums;
-
-//public enum ClaimStatus
-//{
-//    Submitted,
-//    Approved,
-//    Rejected,
-//    Paid
-//}
-
-
-namespace CMS.Domain.Enums;
-
-/// <summary>
-/// Represents the lifecycle state of a claim.
-/// This enum models a closed set of valid domain states.
-/// </summary>
+﻿namespace CMS.Domain.Enums;
 public enum ClaimStatus
 {
     /// <summary>

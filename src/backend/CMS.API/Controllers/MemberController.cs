@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
+namespace CMS.API.Controllers;
+
 [Authorize]
 [ApiController]
 [Route("api/v1/members")]
@@ -16,9 +18,28 @@ public sealed class MembersController : ControllerBase
         _memberService = memberService;
     }
 
+    ///  Dashboard endpoint
+    /// Used by: Dashboard, Profile (read), Claims eligibility
+
+    [HttpGet("me")]
+    public async Task<ActionResult<MemberDashboardResponse>> GetMyDetails()
+    {
+        var memberId = Guid.Parse(
+            User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var result = await _memberService.GetMyDashboardAsync(
+            memberId,
+            HttpContext.RequestAborted);
+
+        return Ok(result);
+    }
+
+    ///  Update member profile
+    /// Used by: Profile page (address, contact, DOB later)
+    
     [HttpPut("profile")]
     public async Task<IActionResult> UpdateProfile(
-        UpdateMemberProfileRequest request)
+        [FromBody] UpdateMemberProfileRequest request)
     {
         var memberId = Guid.Parse(
             User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -28,6 +49,9 @@ public sealed class MembersController : ControllerBase
             request,
             HttpContext.RequestAborted);
 
-        return Ok(new { message = "Profile updated successfully" });
+        return Ok(new
+        {
+            message = "Profile updated successfully"
+        });
     }
 }

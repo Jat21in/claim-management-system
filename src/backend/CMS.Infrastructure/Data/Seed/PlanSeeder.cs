@@ -7,7 +7,7 @@ public static class PlanSeeder
 {
     public static async Task SeedAsync(CmsDbContext context)
     {
-        // ✅ Prevent duplicate seeding
+        //  Prevent duplicate seeding
         if (await context.Plans.AnyAsync())
             return;
 

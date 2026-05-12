@@ -4,7 +4,7 @@ public sealed class Money
 {
     public decimal Amount { get; private set; }
 
-    // ✅ Required by EF Core (DO NOT USE DIRECTLY)
+    //  Required by EF Core (DO NOT USE DIRECTLY)
     private Money() { }
 
     public Money(decimal amount)
