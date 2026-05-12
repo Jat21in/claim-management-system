@@ -1,0 +1,23 @@
+<h3 class="text-lg font-semibold mb-3">Submit a Claim</h3>
+
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+
+    <!-- Claim Date -->
+    <input type="date" formControlName="claimDate" class="w-full px-3 py-2 border rounded" />
+
+    <!-- Amount -->
+    <input type="number" formControlName="amount" placeholder="Claim amount" class="w-full px-3 py-2 border rounded" />
+
+    <!-- Description -->
+    <textarea formControlName="description" rows="3" placeholder="Description (optional)" class="w-full px-3 py-2 border rounded"></textarea>
+
+    <!-- Error -->
+    <p *ngIf="error" class="text-red-500 text-sm">
+        {{ error }}
+    </p>
+
+    <button type="submit" [disabled]="loading" class="px-4 py-2 bg-accent text-black font-semibold rounded disabled:opacity-60">
+    {{ loading ? 'Submitting...' : 'Submit Claim' }}
+  </button>
+
+</form>

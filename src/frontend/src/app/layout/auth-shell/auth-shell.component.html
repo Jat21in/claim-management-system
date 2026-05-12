@@ -1,0 +1,32 @@
+<div class="min-h-screen flex bg-bg">
+
+    <!-- LEFT: Visual -->
+    <div class="hidden lg:flex w-1/2 items-center justify-center relative">
+        <app-auth-visual></app-auth-visual>
+    </div>
+
+    <!-- RIGHT: Unified Auth Canvas -->
+    <div class="w-full lg:w-1/2 flex items-center justify-center">
+        <div class="w-full max-w-md p-8 bg-surface backdrop-blur-xl rounded-2xl shadow-xl">
+
+            <!-- Toggle -->
+            <div class="relative flex bg-white/5 rounded-xl p-1 mb-6">
+                <button class="flex-1 py-2 text-sm font-semibold z-10 transition-colors" [class.text-white]="mode === 'login'" (click)="goToLogin()">
+          Login
+        </button>
+                <button class="flex-1 py-2 text-sm font-semibold z-10 transition-colors" [class.text-white]="mode === 'register'" (click)="goToRegister()">
+          Register
+        </button>
+
+                <div class="absolute top-1 bottom-1 w-1/2 bg-accent rounded-lg
+                    transition-transform duration-300" [class.translate-x-full]="mode === 'register'">
+                </div>
+            </div>
+
+            <!-- ✅ THE DECK -->
+            <app-auth-deck [mode]="mode"></app-auth-deck>
+
+        </div>
+    </div>
+
+</div>

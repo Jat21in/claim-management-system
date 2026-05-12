@@ -12,7 +12,7 @@
             {{ feature }}
         </li>
     </ul>
-    <button type="button" [routerLink]="['/auth/register']" [queryParams]="{ planId: plan.planId }">
+    <button type="button" [routerLink]="['/auth']" [queryParams]="{ mode: 'register', planId: plan.planId }">
   Select this Plan
 </button>
 

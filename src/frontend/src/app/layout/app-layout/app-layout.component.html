@@ -1,7 +1,18 @@
-<nav style="padding: 12px; border-bottom: 1px solid #ddd;">
-    <a routerLink="/app/dashboard" style="margin-right: 16px;">Dashboard</a>
-    <a routerLink="/app/claims" style="margin-right: 16px;">My Claims</a>
-    <a routerLink="/app/profile">Profile</a>
+<nav style="padding: 12px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+
+    <!-- Left: Primary navigation -->
+    <div>
+        <a routerLink="/app/dashboard" style="margin-right: 16px;">Dashboard</a>
+        <a routerLink="/app/claims/new" style="margin-right: 16px;">Submit Claim</a>
+        <a routerLink="/app/claims" style="margin-right: 16px;">My Claims</a>
+        <a routerLink="/app/profile">Profile</a>
+    </div>
+
+    <!-- Right: Logout -->
+    <button (click)="logout()" style="padding: 6px 12px; cursor: pointer;">
+    Logout
+  </button>
+
 </nav>
 
 <hr />

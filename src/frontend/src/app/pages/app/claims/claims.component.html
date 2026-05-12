@@ -1,1 +1,51 @@
-<h1>My Claims</h1>
+<h1 class="text-xl font-semibold mb-4">My Claims</h1>
+
+<!-- ✅ Loading -->
+<div *ngIf="loading">
+    Loading claims…
+</div>
+
+<!-- ✅ Error -->
+<div *ngIf="error" class="text-red-500">
+    {{ error }}
+</div>
+
+<!-- ✅ Empty State -->
+<div *ngIf="!loading && !error && claims.length === 0" class="p-6 border border-dashed rounded-lg text-center text-gray-400">
+
+    <p class="text-lg mb-2">No claims yet</p>
+    <p class="text-sm">
+        When you submit a claim, it will appear here.
+    </p>
+
+</div>
+
+<!-- ✅ Claims List -->
+<table *ngIf="!loading && claims.length > 0" class="w-full border-collapse mt-4">
+
+    <thead>
+        <tr class="border-b text-left text-gray-400">
+            <th class="p-2">Date</th>
+            <th class="p-2">Amount</th>
+            <th class="p-2">Status</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr *ngFor="let claim of claims" class="border-b hover:bg-white/5">
+
+            <td class="p-2">
+                {{ claim.claimDate | date }}
+            </td>
+
+            <td class="p-2">
+                ₹{{ claim.amount }}
+            </td>
+
+            <td class="p-2">
+                {{ claim.status }}
+            </td>
+
+        </tr>
+    </tbody>
+</table>

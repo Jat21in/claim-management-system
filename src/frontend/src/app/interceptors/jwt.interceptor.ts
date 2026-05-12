@@ -1,31 +1,20 @@
+import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import {
-  HttpInterceptorFn
-} from '@angular/common/http';
-import { AuthService } from '../services/auth.service';
-import { Router } from '@angular/router';
+import { AuthService } from '../auth/auth.service';
 
-export const authInterceptor: HttpInterceptorFn = (req, next) => {
+export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
-  const router = inject(Router);
-
   const token = auth.getToken();
 
-  // ✅ If token exists but is expired → logout immediately
-  if (token && auth.isTokenExpired()) {
-    auth.logout();
-    router.navigate(['/login']);
-    return next(req); // do NOT attach token
+  if (!token) {
+    return next(req);
   }
 
-  // ✅ Attach token only if valid
-  if (token) {
-    req = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-  }
+  const authReq = req.clone({
+    setHeaders: {
+      Authorization: `Bearer ${token}`
+    }
+  });
 
-  return next(req);
+  return next(authReq);
 };

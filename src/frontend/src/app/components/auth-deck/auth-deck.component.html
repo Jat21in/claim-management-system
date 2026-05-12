@@ -1,0 +1,8 @@
+<div [@slide]="mode" class="relative">
+    <app-login *ngIf="mode === 'login'"></app-login>
+    <app-register *ngIf="mode === 'register'"></app-register>
+</div>
+
+<div class="mt-6 text-center text-sm opacity-70 cursor-pointer hover:opacity-100" routerLink="/plans">
+    Skip for now → Explore plans
+</div>
