@@ -8,7 +8,7 @@ public sealed class Address
     public string Country { get; private set; } = null!;
     public string PostalCode { get; private set; } = null!;
 
-    // ✅ Required by EF Core
+    // Required by EF Core
     private Address() { }
 
     public Address(

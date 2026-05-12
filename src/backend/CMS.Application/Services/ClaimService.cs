@@ -32,7 +32,7 @@ public sealed class ClaimService : IClaimService
 
         await _claimRepository.AddAsync(claim, ct);
 
-        return claim.ClaimId; // ✅ IMPORTANT
+        return claim.ClaimId; // IMPORTANT
     }
 
 }

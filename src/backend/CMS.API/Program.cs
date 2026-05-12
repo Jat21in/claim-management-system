@@ -56,7 +56,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 
-// ✅ DATABASE SEEDING (✅ CORRECT PLACE)
+//  DATABASE SEEDING 
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<CmsDbContext>();
@@ -76,7 +76,7 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowFrontend");   // ✅ ADD THIS LINE
+app.UseCors("AllowFrontend");   
 
 app.UseAuthentication();
 app.UseAuthorization();
