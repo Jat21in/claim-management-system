@@ -1,2 +1,181 @@
-<h1>Landing Page</h1>
-<p>Public home page</p>
+<div class="landing-wrapper">
+
+    <!-- LEFT -->
+    <div class="left-section">
+
+        <!-- ✅ STATIC TITLE -->
+        <h1 class="hero-title">
+            <span class="gradient-text">
+        Smart Claim Management, Reinvented
+      </span>
+        </h1>
+
+        <p class="hero-subtitle">
+            Seamless claim tracking, faster approvals, and complete transparency — built for the modern policyholder.
+        </p>
+
+        <!-- ✅ KEEP SUBTEXT TYPING -->
+        <div class="typewriter">
+            <span>{{ typedText }}</span>
+            <span class="cursor">|</span>
+        </div>
+
+        <button class="cta-btn" routerLink="/plans">
+      Explore Plans
+    </button>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right-section">
+        <div class="glow"></div>
+        <div #lottieContainer class="lottie-container"></div>
+    </div>
+
+</div>
+
+
+<div class="partners-inline">
+
+    <!-- ✅ LEFT TEXT (2 lines) -->
+    <div class="partners-text">
+        Trusted by <br />
+        <span>leading platforms</span>
+    </div>
+
+    <!-- ✅ DIVIDER -->
+    <div class="divider">|</div>
+
+    <!-- ✅ MARQUEE -->
+    <div class="partners-marquee" #marquee>
+
+        <div class="partners-track">
+
+            <!-- ✅ SET 1 -->
+            <img src="assets/logos/asus.svg" alt="Asus" />
+            <img src="assets/logos/stripe.svg" alt="Stripe" />
+            <img src="assets/logos/visa.svg" alt="Visa" />
+            <img src="assets/logos/razorpay.svg" alt="Razorpay" />
+            <img src="assets/logos/tripadvisor.svg" alt="TripAdvisor" />
+            <img src="assets/logos/qatarairways.svg" alt="Qatar Airways" />
+            <img src="assets/logos/slackware.svg" alt="Slackware" />
+            <img src="assets/logos/polestar.svg" alt="Polestar" />
+            <img src="assets/logos/swiggy.svg" alt="Swiggy" />
+            <img src="assets/logos/zomato.svg" alt="Zomato" />
+            <img src="assets/logos/hdfcbank.svg" alt="HDFC" />
+
+            <!-- ✅ DUPLICATE -->
+            <img src="assets/logos/asus.svg" alt="Asus" />
+            <img src="assets/logos/stripe.svg" alt="Stripe" />
+            <img src="assets/logos/visa.svg" alt="Visa" />
+            <img src="assets/logos/razorpay.svg" alt="Razorpay" />
+            <img src="assets/logos/tripadvisor.svg" alt="TripAdvisor" />
+            <img src="assets/logos/qatarairways.svg" alt="Qatar Airways" />
+            <img src="assets/logos/slackware.svg" alt="Slackware" />
+            <img src="assets/logos/polestar.svg" alt="Polestar" />
+            <img src="assets/logos/swiggy.svg" alt="Swiggy" />
+            <img src="assets/logos/zomato.svg" alt="Zomato" />
+            <img src="assets/logos/hdfcbank.svg" alt="HDFC" />
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ✅ BENTO GALLERY -->
+<div class="gallery-wrap">
+
+    <div class="gallery gallery--bento" id="gallery-8">
+
+        <div class="gallery__item">
+            <img src="assets/bento/1.jpg" alt="Portrait 1" />
+        </div>
+        <div class="gallery__item">
+            <img src="assets/bento/2.jpg" alt="Portrait 2" />
+        </div>
+        <!-- <div class="gallery__item">
+            <img src="assets/bento/3.jpg" alt="Portrait 3" />
+        </div> -->
+        <div class="gallery__item featured">
+
+            <img src="assets/bento/3.jpg" alt="Portrait 3" />
+            <!-- ✅ TEXT OVERLAY -->
+            <div class="zoom-content">
+                <h2>Reimagining Claims</h2>
+                <p>Fast. Transparent. Intelligent.</p>
+            </div>
+
+        </div>
+        <div class="gallery__item">
+            <img src="assets/bento/4.jpg" alt="Portrait 4" />
+        </div>
+        <div class="gallery__item">
+            <img src="assets/bento/5.jpg" alt="Portrait 5" />
+        </div>
+        <div class="gallery__item">
+            <img src="assets/bento/6.jpg" alt="Portrait 6" />
+        </div>
+        <div class="gallery__item">
+            <img src="assets/bento/7.jpg" alt="Portrait 7" />
+        </div>
+        <div class="gallery__item">
+            <img src="assets/bento/8.jpg" alt="Portrait 8" />
+        </div>
+
+    </div>
+</div>
+
+<div class="about-section">
+
+    <div class="about-container">
+
+        <!-- LEFT -->
+        <div class="about-left">
+            <h2 class="about-title">
+                Transforming Claim Management
+            </h2>
+
+            <p class="about-subtitle">
+                A smarter, faster, and more transparent way to handle insurance claims.
+            </p>
+
+            <p class="about-description">
+                Our Claim Management System is built to eliminate delays, reduce manual effort, and provide complete visibility across the claim lifecycle. From submission to approval, every step is optimized for speed, accuracy, and trust.
+            </p>
+
+            <p class="about-description">
+                Designed for both policyholders and administrators, we bridge the gap between users and insurers through automation, real-time insights, and seamless digital workflows. Every interaction is crafted to enhance clarity, accountability, and user confidence.
+            </p>
+
+            <!-- ✅ NEW ADDITION (1–2 lines, premium touch) -->
+            <p class="about-description">
+                With intelligent automation and a user-centric design, our platform ensures faster resolutions while maintaining compliance, security, and scalability for modern insurance ecosystems.
+            </p>
+        </div>
+
+        <!-- RIGHT (FEATURE CARDS) -->
+        <div class="right-section">
+
+            <div class="glow"></div>
+
+            <!-- ✅ NEW FRAME -->
+            <div class="frame-container">
+
+                <!-- OLD IMAGE -->
+                <img [src]="previousImage" class="frame-image old" [class.fade-out]="isTransitioning" />
+
+                <!-- NEW IMAGE -->
+                <img [src]="currentImage" class="frame-image new" [class.fade-in]="isTransitioning" />
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<h1>new section coming soon</h1>

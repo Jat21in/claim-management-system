@@ -1,5 +1,17 @@
 <h1 class="text-xl font-semibold mb-4">My Claims</h1>
 
+<!-- ✅ SORT DROPDOWN -->
+<div class="mb-4">
+    <select (change)="onSortChange($any($event.target).value)" class="px-3 py-1 border rounded">
+
+    <option value="latest">Latest</option>
+    <option value="oldest">Oldest</option>
+    <option value="amount-desc">Amount High → Low</option>
+    <option value="amount-asc">Amount Low → High</option>
+
+  </select>
+</div>
+
 <!-- ✅ Loading -->
 <div *ngIf="loading">
     Loading claims…
@@ -11,7 +23,7 @@
 </div>
 
 <!-- ✅ Empty State -->
-<div *ngIf="!loading && !error && claims.length === 0" class="p-6 border border-dashed rounded-lg text-center text-gray-400">
+<div *ngIf="!loading && !error && sortedClaims.length === 0" class="p-6 border border-dashed rounded-lg text-center text-gray-400">
 
     <p class="text-lg mb-2">No claims yet</p>
     <p class="text-sm">
@@ -20,8 +32,8 @@
 
 </div>
 
-<!-- ✅ Claims List -->
-<table *ngIf="!loading && claims.length > 0" class="w-full border-collapse mt-4">
+<!-- ✅ Claims Table -->
+<table *ngIf="!loading && sortedClaims.length > 0" class="w-full border-collapse mt-4">
 
     <thead>
         <tr class="border-b text-left text-gray-400">
@@ -32,18 +44,38 @@
     </thead>
 
     <tbody>
-        <tr *ngFor="let claim of claims" class="border-b hover:bg-white/5">
+        <tr *ngFor="let claim of sortedClaims" class="border-b hover:bg-white/5">
 
             <td class="p-2">
                 {{ claim.claimDate | date }}
             </td>
 
             <td class="p-2">
-                ₹{{ claim.amount }}
+                ₹{{ claim.amount | number:'1.0-0' }}
             </td>
 
             <td class="p-2">
-                {{ claim.status }}
+
+                <span *ngIf="claim.status === 'Submitted'" class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800">
+          Submitted
+        </span>
+
+                <span *ngIf="claim.status === 'Approved'" class="px-2 py-1 text-xs rounded bg-green-100 text-green-800">
+          Approved
+        </span>
+
+                <span *ngIf="claim.status === 'Rejected'" class="px-2 py-1 text-xs rounded bg-red-100 text-red-800">
+          Rejected
+        </span>
+
+                <span *ngIf="
+          claim.status !== 'Submitted' &&
+          claim.status !== 'Approved' &&
+          claim.status !== 'Rejected'
+        " class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">
+          {{ claim.status }}
+        </span>
+
             </td>
 
         </tr>

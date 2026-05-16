@@ -10,6 +10,12 @@ import { finalize } from 'rxjs';
 import { ClaimService } from '../../../services/claim.service';
 import { Claim } from '../../../claims/models/claim.model';
 
+type SortOption =
+  | 'latest'
+  | 'oldest'
+  | 'amount-desc'
+  | 'amount-asc';
+
 @Component({
   selector: 'app-claims',
   standalone: true,
@@ -23,13 +29,16 @@ export class ClaimsComponent implements OnInit {
 
   loading = true;
   error: string | null = null;
+
   claims: Claim[] = [];
+  sortedClaims: Claim[] = [];
+
+  sortBy: SortOption = 'latest';
 
   ngOnInit(): void {
-    // ✅ initial load
     this.fetchClaims();
 
-    // ✅ refresh when a claim is submitted
+    // ✅ refresh after submit
     this.claimService.refreshClaims$
       .subscribe(() => {
         this.fetchClaims();
@@ -40,7 +49,6 @@ export class ClaimsComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    // ✅ ensure loader renders immediately
     this.cdr.markForCheck();
 
     this.claimService.getMyClaims()
@@ -53,6 +61,7 @@ export class ClaimsComponent implements OnInit {
       .subscribe({
         next: (claims: Claim[]) => {
           this.claims = claims;
+          this.applySort(); // ✅ apply sorting after fetch
           this.cdr.markForCheck();
         },
         error: () => {
@@ -60,5 +69,46 @@ export class ClaimsComponent implements OnInit {
           this.cdr.markForCheck();
         }
       });
+  }
+
+  // ✅ CORE SORT LOGIC
+  applySort(): void {
+    const data = [...this.claims];
+
+    switch (this.sortBy) {
+      case 'latest':
+        this.sortedClaims = data.sort(
+          (a, b) =>
+            new Date(b.claimDate).getTime() -
+            new Date(a.claimDate).getTime()
+        );
+        break;
+
+      case 'oldest':
+        this.sortedClaims = data.sort(
+          (a, b) =>
+            new Date(a.claimDate).getTime() -
+            new Date(b.claimDate).getTime()
+        );
+        break;
+
+      case 'amount-desc':
+        this.sortedClaims = data.sort(
+          (a, b) => b.amount - a.amount
+        );
+        break;
+
+      case 'amount-asc':
+        this.sortedClaims = data.sort(
+          (a, b) => a.amount - b.amount
+        );
+        break;
+    }
+  }
+
+  onSortChange(value: string): void {
+    this.sortBy = value as SortOption;
+    this.applySort();
+    this.cdr.markForCheck();
   }
 }

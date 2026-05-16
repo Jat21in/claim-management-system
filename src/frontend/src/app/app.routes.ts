@@ -21,7 +21,7 @@ import { ProfileComponent } from './pages/app/profile/profile.component';
 
 // guards
 import { authGuard } from './guards/auth.guard';
-import { SubmitClaimComponent } from './claims/submit-claim/submit-claim.component';
+import { SubmitClaimComponent } from './pages/app/claims/submit-claim/submit-claim.component';
 
 export const routes: Routes = [
   /**
