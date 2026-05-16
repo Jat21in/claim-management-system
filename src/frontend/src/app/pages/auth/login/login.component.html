@@ -1,3 +1,16 @@
-<h1>Login</h1>
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
 
-<button (click)="login()">Mock Login</button>
+    <input formControlName="email" type="email" placeholder="Email" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg" />
+
+    <input formControlName="password" type="password" placeholder="Password" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg" />
+
+    <!-- ✅ error works because NgIf is imported -->
+    <p *ngIf="error" class="text-red-400 text-sm">
+        {{ error }}
+    </p>
+
+    <button type="submit" [disabled]="loading" class="w-full py-2 bg-accent text-black font-semibold rounded-lg disabled:opacity-60">
+    {{ loading ? 'Signing in…' : 'Login' }}
+  </button>
+
+</form>

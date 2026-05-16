@@ -1,3 +1,40 @@
-<div *ngIf="selectedPlanId" style="margin-bottom: 12px; padding: 8px; border: 1px solid #ddd;">
-    <strong>Selected Plan:</strong> {{ selectedPlanId }}
-</div>
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4 text-white">
+    <!-- Full Name -->
+    <input formControlName="fullName" placeholder="Full name" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg" />
+
+    <!-- Email -->
+    <input formControlName="email" type="email" placeholder="Email" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg" />
+
+    <!-- Password -->
+    <input formControlName="password" type="password" placeholder="Password" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg" />
+
+    <!-- ✅ Date of Birth -->
+    <input formControlName="dateOfBirth" type="date" [max]="maxDob" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg
+           text-white date-white" />
+
+    <!-- Validation -->
+    <p *ngIf="form.controls.dateOfBirth.touched && form.controls.dateOfBirth.invalid" class="text-red-400 text-xs">
+        Please select a valid date of birth
+    </p>
+
+    <!-- Selected Plan Info -->
+    <p *ngIf="selectedPlanId" class="text-xs text-gray-400">
+        Selected plan will be linked on registration
+    </p>
+
+    <!-- Success -->
+    <p *ngIf="success" class="text-green-400 text-sm">
+        {{ success }}
+    </p>
+
+    <!-- Error -->
+    <p *ngIf="error" class="text-red-400 text-sm">
+        {{ error }}
+    </p>
+
+    <!-- Submit -->
+    <button type="submit" [disabled]="loading" class="w-full py-2 bg-accent text-black font-semibold rounded-lg
+           disabled:opacity-60">
+    {{ loading ? 'Creating…' : 'Create account' }}
+  </button>
+</form>

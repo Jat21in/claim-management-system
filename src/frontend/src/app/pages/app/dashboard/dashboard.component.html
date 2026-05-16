@@ -1,1 +1,26 @@
-<h1>Dashboard</h1>
+<div *ngIf="loading">Loading dashboard…</div>
+
+<div *ngIf="error" class="error">
+    {{ error }}
+</div>
+
+<div *ngIf="!loading && data">
+    <h2>Welcome back, {{ data.fullName }}</h2>
+
+    <section *ngIf="data.activePlan; else noPlan" style="margin-top:16px; padding:16px; border:1px solid #ddd;">
+        <h3>Your Active Plan</h3>
+
+        <p><strong>Plan:</strong> {{ data.activePlan.name }}</p>
+        <p><strong>Insured Amount:</strong> ₹{{ data.activePlan.insuredAmount }}</p>
+
+        <p>
+            <strong>Valid:</strong> {{ data.activePlan.startDate | date }} → {{ data.activePlan.endDate | date }}
+        </p>
+    </section>
+
+    <ng-template #noPlan>
+        <p style="margin-top:16px; color:#888">
+            You do not have an active plan yet.
+        </p>
+    </ng-template>
+</div>

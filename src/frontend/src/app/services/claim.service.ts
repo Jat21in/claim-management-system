@@ -1,35 +1,45 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
+
 import { Claim } from '../claims/models/claim.model';
 
 @Injectable({ providedIn: 'root' })
 export class ClaimService {
 
-  private baseUrl = `${environment.apiBaseUrl}/api/v1/claims`;
+  private readonly baseUrl =
+    `${environment.apiBaseUrl}/v1/claims`;
 
-  private refresh$ = new BehaviorSubject<void>(undefined);
+  // ✅ REFRESH STREAM (STANDARD NAME)
+  private refreshSubject = new Subject<void>();
 
-  constructor(private http: HttpClient) {} // ✅ REQUIRED
-
-  get refreshClaims$() {
-    return this.refresh$.asObservable();
+  // ✅ Expose as read‑only observable
+  get refreshClaims$(): Observable<void> {
+    return this.refreshSubject.asObservable();
   }
 
-  triggerRefresh() {
-    this.refresh$.next();
-  }
+  constructor(private http: HttpClient) {}
 
+  // ✅ GET claims
   getMyClaims(): Observable<Claim[]> {
     return this.http.get<Claim[]>(this.baseUrl);
   }
 
+  // ✅ POST claim
   submitClaim(payload: {
-  claimDate: string;
-  amount: number;
-  description?: string;
-}) {
-  return this.http.post(this.baseUrl, payload);
-}
+    claimDate: string;
+    amount: number;
+    description?: string;
+  }) {
+    return this.http.post<{ claimId: string }>(
+      this.baseUrl,
+      payload
+    );
+  }
+
+  // ✅ Trigger refresh after submit
+  triggerRefresh(): void {
+    this.refreshSubject.next();
+  }
 }
