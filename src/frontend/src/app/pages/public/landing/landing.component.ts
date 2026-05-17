@@ -13,6 +13,7 @@ import { RouterModule } from '@angular/router';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import lottie from 'lottie-web';
+import Flip from 'gsap/Flip';
 
 @Component({
   selector: 'app-landing',
@@ -24,7 +25,7 @@ import lottie from 'lottie-web';
 export class LandingComponent implements AfterViewInit, OnDestroy {
 
   /* =========================
-     ✅ VIEW CHILDREN
+     ✅ VIEW CHILDREN (existing)
   ========================= */
 
   @ViewChild('lottieContainer', { static: true })
@@ -32,6 +33,21 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
 
   @ViewChild('marquee', { static: false })
   marquee!: ElementRef;
+
+  /* =========================
+     ✅ NEW FEATURES SECTION VIEW CHILDREN
+  ========================= */
+
+  @ViewChild('comparisonSection') comparisonSection!: ElementRef;
+  @ViewChild('afterImage') afterImage!: ElementRef;
+  @ViewChild('afterImg') afterImg!: ElementRef;
+  @ViewChild('featuresHeader') featuresHeader!: ElementRef;
+  @ViewChild('featuresPills') featuresPills!: ElementRef;
+  @ViewChild('divider') divider!: ElementRef;
+  @ViewChild('afterLabel') afterLabel!: ElementRef;
+
+  @ViewChild('modal') modal!: ElementRef;
+  @ViewChild('modalContent') modalContent!: ElementRef;
 
   /* =========================
      ✅ SUBTEXT TYPEWRITER
@@ -64,6 +80,97 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
 
   private imageInterval: any;
 
+  /* =========================
+     ✅ FEATURES DATA
+  ========================= */
+
+  features = [
+    { icon: '⚡', label: 'Instant Claim Submission' },
+    { icon: '🔍', label: 'Real-Time Tracking' },
+    { icon: '🛡️', label: 'Fraud Detection AI' },
+    { icon: '📊', label: 'Analytics Dashboard' },
+    { icon: '🔔', label: 'Smart Notifications' },
+    { icon: '🤝', label: 'Insurer Integration' },
+    { icon: '📱', label: 'Mobile-First Design' },
+    { icon: '🔒', label: 'Bank-Grade Security' },
+  ];
+
+  /* =========================
+     ✅ NEW: SHOWCASE FLIP MODAL
+  ========================= */
+
+  showcase = [
+    { title: 'Claim Dashboard', image: 'assets/features/f1.jpg' },
+    { title: 'Submit Claim', image: 'assets/features/f2.jpg' },
+    { title: 'Track Status', image: 'assets/features/f3.jpg' },
+    { title: 'Analytics', image: 'assets/features/f4.jpg' },
+    { title: 'Notifications', image: 'assets/features/f5.jpg' },
+    { title: 'Profile Management', image: 'assets/features/f6.jpg' },
+    { title: 'Track Status', image: 'assets/features/f3.jpg' },
+    { title: 'Analytics', image: 'assets/features/f4.jpg' },
+  ];
+
+  private activeFlipEl: HTMLElement | null = null;
+
+  toggleFlip(event: Event, index: number): void {
+    const box = event.currentTarget as HTMLElement;
+
+    // ✅ CLOSE if same element clicked
+    if (this.activeFlipEl === box) {
+      this.closeFlip();
+      return;
+    }
+
+    const state = Flip.getState(box);
+
+    this.modalContent.nativeElement.appendChild(box);
+    this.activeFlipEl = box;
+
+    gsap.set(this.modal.nativeElement, { autoAlpha: 1 });
+
+    Flip.from(state, {
+      duration: 0.7,
+      ease: 'power1.inOut'
+    });
+
+    gsap.to(this.modal.nativeElement.querySelector('.overlay'), {
+      autoAlpha: 0.65,
+      duration: 0.3
+    });
+  }
+
+  closeFlip(): void {
+    if (!this.activeFlipEl) return;
+
+    const box = this.activeFlipEl;
+    const state = Flip.getState(box);
+
+    // find original container
+    const containers = document.querySelectorAll('.boxes-container .box');
+    containers.forEach(container => {
+      if (!container.hasChildNodes()) {
+        container.appendChild(box);
+      }
+    });
+
+    Flip.from(state, {
+      duration: 0.7,
+      ease: 'power1.inOut'
+    });
+
+    gsap.to(this.modal.nativeElement.querySelector('.overlay'), {
+      autoAlpha: 0,
+      duration: 0.3
+    });
+
+    gsap.to(this.modal.nativeElement, {
+      autoAlpha: 0,
+      duration: 0.3
+    });
+
+    this.activeFlipEl = null;
+  }
+
   constructor(private cdr: ChangeDetectorRef) {}
 
   /* =========================
@@ -71,8 +178,7 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
   ========================= */
 
   ngAfterViewInit(): void {
-
-    gsap.registerPlugin(ScrollTrigger);
+    gsap.registerPlugin(ScrollTrigger, Flip);
 
     ScrollTrigger.config({
       autoRefreshEvents: "visibilitychange,DOMContentLoaded,load"
@@ -82,15 +188,17 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
     this.initHeroAnimation();
     this.startTypingEffect();
 
-    // ✅ All scroll-based animations delayed slightly
+    // All scroll-based animations delayed slightly
     setTimeout(() => {
       this.initParallax();
       this.initBentoGallery();
       this.initAboutAnimation();
       this.startImageRotation();
 
-      // ✅ NEW FEATURES SECTION
-      // this.initFeaturesAnimation();
+      // ✅ NEW FEATURES SECTION INITIALISATIONS
+      this.initFeaturesHeaderAnimation();
+      this.initComparisonScroll();
+      this.initFeaturesPillsAnimation();
 
     }, 400);
   }
@@ -99,6 +207,8 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
     if (this.imageInterval) {
       clearInterval(this.imageInterval);
     }
+    // Kill all ScrollTriggers to avoid memory leaks
+    ScrollTrigger.getAll().forEach(t => t.kill());
   }
 
   /* =========================
@@ -106,7 +216,6 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
   ========================= */
 
   private initHeroAnimation(): void {
-
     const tl = gsap.timeline();
 
     tl.from('.hero-title', { y: 60, opacity: 0, duration: 1 })
@@ -121,7 +230,6 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
   ========================= */
 
   private initLottie(): void {
-
     if (!this.lottieContainer) return;
 
     lottie.loadAnimation({
@@ -138,37 +246,28 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
   ========================= */
 
   private startTypingEffect(): void {
-
     let phraseIndex = 0;
     let charIndex = 0;
 
     const type = () => {
-
       if (charIndex < this.phrases[phraseIndex].length) {
-
         this.typedText += this.phrases[phraseIndex][charIndex++];
         this.cdr.detectChanges();
         setTimeout(type, 40);
-
       } else {
         setTimeout(erase, 1500);
       }
     };
 
     const erase = () => {
-
       if (charIndex > 0) {
-
         this.typedText = this.typedText.slice(0, -1);
         charIndex--;
         this.cdr.detectChanges();
         setTimeout(erase, 20);
-
       } else {
-
         phraseIndex = (phraseIndex + 1) % this.phrases.length;
         setTimeout(type, 300);
-
       }
     };
 
@@ -180,17 +279,13 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
   ========================= */
 
   private initParallax(): void {
-
     if (!this.marquee) return;
 
     const logos = this.marquee.nativeElement.querySelectorAll('img');
 
     logos.forEach((logo: HTMLElement) => {
-
       logo.addEventListener('mousemove', (e: MouseEvent) => {
-
         const rect = logo.getBoundingClientRect();
-
         const x = (e.clientX - rect.left) / rect.width - 0.5;
         const y = (e.clientY - rect.top) / rect.height - 0.5;
 
@@ -201,11 +296,9 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
           rotationY: x * 10,
           duration: 0.4
         });
-
       });
 
       logo.addEventListener('mouseleave', () => {
-
         gsap.to(logo, {
           x: 0,
           y: 0,
@@ -213,18 +306,15 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
           rotationY: 0,
           duration: 0.5
         });
-
       });
-
     });
   }
 
   /* =========================
-     ✅ BENTO SCROLL
+     ✅ BENTO SCROLL (GALLERY)
   ========================= */
 
   private initBentoGallery(): void {
-
     const galleryWrap = document.querySelector('.gallery-wrap');
     const gallery = document.querySelector('#gallery-8');
 
@@ -260,45 +350,32 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
     tl.to(gallery, { opacity: 0 });
   }
 
-  
   /* =========================
-     ✅ IMAGE ROTATION
+     ✅ ABOUT IMAGE ROTATION
   ========================= */
 
   private startImageRotation(): void {
-
     this.imageInterval = setInterval(() => {
-
-      const nextIndex =
-        (this.imageIndex + 1) % this.aboutImages.length;
-
+      const nextIndex = (this.imageIndex + 1) % this.aboutImages.length;
       const nextImage = this.aboutImages[nextIndex];
-
       this.transitionToImage(nextImage);
-
       this.imageIndex = nextIndex;
-
     }, 3000);
   }
 
   private transitionToImage(newImage: string): void {
-
     if (this.currentImage === newImage) return;
 
     this.previousImage = this.currentImage;
-
     const img = new Image();
     img.src = newImage;
 
     img.onload = () => {
-
       this.currentImage = newImage;
-
       requestAnimationFrame(() => {
         this.isTransitioning = true;
         this.cdr.detectChanges();
       });
-
       setTimeout(() => {
         this.isTransitioning = false;
       }, 900);
@@ -306,11 +383,10 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
   }
 
   /* =========================
-     ✅ ABOUT ANIMATION
+     ✅ ABOUT SECTION ANIMATION
   ========================= */
 
   private initAboutAnimation(): void {
-
     gsap.from('.about-left', {
       y: 60,
       opacity: 0,
@@ -329,6 +405,119 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
       scrollTrigger: {
         trigger: '.about-section',
         start: 'top 75%'
+      }
+    });
+  }
+
+  /* =========================
+     ✅ NEW FEATURES: HEADER FADE-IN
+  ========================= */
+
+  private initFeaturesHeaderAnimation(): void {
+    if (!this.featuresHeader) return;
+
+    gsap.to(this.featuresHeader.nativeElement, {
+      y: 0,
+      opacity: 1,
+      duration: 1,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: this.featuresHeader.nativeElement,
+        start: 'top 80%',
+      }
+    });
+
+    // Animate eyebrow, title lines, subtitle staggered
+    gsap.from(
+      this.featuresHeader.nativeElement.querySelectorAll(
+        '.features-eyebrow, .features-title, .features-subtitle'
+      ),
+      {
+        y: 30,
+        opacity: 0,
+        stagger: 0.15,
+        duration: 0.9,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: this.featuresHeader.nativeElement,
+          start: 'top 80%',
+        }
+      }
+    );
+  }
+
+  /* =========================
+     ✅ NEW FEATURES: IMAGE COMPARISON REVEAL (SCROLL)
+  ========================= */
+
+  private initComparisonScroll(): void {
+    if (!this.comparisonSection || !this.afterImage || !this.afterImg || !this.divider || !this.afterLabel) return;
+
+    const section = this.comparisonSection.nativeElement;
+    const after = this.afterImage.nativeElement;
+    const afterImgEl = this.afterImg.nativeElement;
+    const dividerEl = this.divider.nativeElement;
+    const afterLabelEl = this.afterLabel.nativeElement;
+
+    const tl = gsap.timeline({
+      defaults: { ease: 'none' },
+      scrollTrigger: {
+        trigger: section,
+        start: 'center center',
+        end: () => '+=' + section.offsetWidth,
+        scrub: 1,
+        pin: true,
+        anticipatePin: 1,
+        onUpdate: (self) => {
+          // Show divider handle once reveal starts
+          if (self.progress > 0.05 && self.progress < 0.95) {
+            gsap.set(dividerEl, { opacity: 1 });
+          } else {
+            gsap.set(dividerEl, { opacity: 0 });
+          }
+        }
+      }
+    });
+
+    // Core reveal — after panel slides in from right, image counter-translates
+    tl.fromTo(after, { xPercent: 100, x: 0 }, { xPercent: 0 })
+      .fromTo(afterImgEl, { xPercent: -100, x: 0 }, { xPercent: 0 }, 0);
+
+    // Divider tracks the reveal edge
+    tl.fromTo(dividerEl, { left: '100%' }, { left: '0%' }, 0);
+
+    // After label fades in during second half of reveal
+    tl.fromTo(afterLabelEl, { opacity: 0, x: 30 }, { opacity: 1, x: 0, ease: 'power2.out' }, 0.5);
+  }
+
+  /* =========================
+     ✅ NEW FEATURES: PILLS STAGGER ANIMATION
+  ========================= */
+
+  private initFeaturesPillsAnimation(): void {
+    if (!this.featuresPills) return;
+
+    const pillsEl = this.featuresPills.nativeElement;
+
+    gsap.to(pillsEl, {
+      opacity: 1,
+      y: 0,
+      duration: 0.6,
+      scrollTrigger: {
+        trigger: pillsEl,
+        start: 'top 85%',
+      }
+    });
+
+    gsap.from(pillsEl.querySelectorAll('.pill'), {
+      y: 20,
+      opacity: 0,
+      stagger: 0.07,
+      duration: 0.5,
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: pillsEl,
+        start: 'top 85%',
       }
     });
   }
