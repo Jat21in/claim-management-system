@@ -179,70 +179,95 @@
 
 <section class="features-section">
 
-  <!-- ✅ SECTION HEADER -->
-  <div class="features-header" #featuresHeader>
-    <span class="features-eyebrow">Why Choose Us</span>
-    <h2 class="features-title">
-      Built Different.<br />
-      <span class="gradient-text">Designed to Deliver.</span>
-    </h2>
-    <p class="features-subtitle">
-      See how our platform transforms the claims experience — from chaos to clarity.
-    </p>
-  </div>
-
-  <!-- ✅ COMPARISON STRIP -->
-  <div class="comparisonSection" #comparisonSection>
-
-    <!-- BEFORE -->
-    <div class="comparisonImage beforeImage">
-      <img src="assets/features/f1.jpg" alt="Before — old claims process" />
-      <div class="comparison-label before-label">
-        <span class="label-tag">Submit Claim Tracking</span>
-        <p class="label-title">Track claims in real-time</p>
-        <ul class="label-list">
-          <li>One-click submission</li>
-          <li>Real-time approvals</li>
-          <li>Full transparency</li>
-        </ul>
-      </div>
+    <!-- ✅ SECTION HEADER -->
+    <div class="features-header" #featuresHeader>
+        <span class="features-eyebrow">Why Choose Us</span>
+        <h2 class="features-title">
+            Built Different.<br />
+            <span class="gradient-text">Designed to Deliver.</span>
+        </h2>
+        <p class="features-subtitle">
+            See how our platform transforms the claims experience — from chaos to clarity.
+        </p>
     </div>
 
-    <!-- AFTER -->
-    <div class="comparisonImage afterImage" #afterImage>
-      <img src="/assets/features/f2.jpg" alt="After — modern claims platform" #afterImg />
-      <div class="comparison-label after-label" #afterLabel>
-        <span class="label-tag accent">Fast Approvals</span>
-        <p class="label-title">Get approved faster</p>
-        <ul class="label-list">
-          <li>AI-powered reviews</li>
-          <li>Instant notifications</li>
-          <li>24/7 support</li>
-        </ul>
-      </div>
-    </div>
+    <!-- ✅ COMPARISON STRIP -->
+    <div class="comparisonSection" #comparisonSection>
 
-    
+        <!-- BEFORE -->
+        <div class="comparisonImage beforeImage">
+            <img src="assets/features/f1.jpg" alt="Before — old claims process" />
+            <div class="comparison-label before-label">
+                <span class="label-tag">Submit Claim Tracking</span>
+                <p class="label-title">Track claims in real-time</p>
+                <ul class="label-list">
+                    <li>One-click submission</li>
+                    <li>Real-time approvals</li>
+                    <li>Full transparency</li>
+                </ul>
+            </div>
+        </div>
 
-    <!-- ✅ DIVIDER LINE -->
-    <div class="comparison-divider" #divider>
-      <div class="divider-line"></div>
-      <div class="divider-handle">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <!-- AFTER -->
+        <div class="comparisonImage afterImage" #afterImage>
+            <img src="/assets/features/f2.jpg" alt="After — modern claims platform" #afterImg />
+            <div class="comparison-label after-label" #afterLabel>
+                <span class="label-tag accent">Fast Approvals</span>
+                <p class="label-title">Get approved faster</p>
+                <ul class="label-list">
+                    <li>AI-powered reviews</li>
+                    <li>Instant notifications</li>
+                    <li>24/7 support</li>
+                </ul>
+            </div>
+        </div>
+
+
+
+        <!-- ✅ DIVIDER LINE -->
+        <div class="comparison-divider" #divider>
+            <div class="divider-line"></div>
+            <div class="divider-handle">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path d="M6 10l4-4 4 4M6 10l4 4 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-      </div>
+            </div>
+        </div>
+
     </div>
 
-  </div>
-
-  <!-- ✅ FEATURE PILLS BELOW -->
-  <div class="features-pills" #featuresPills>
-    <div class="pill" *ngFor="let f of features">
-      <span class="pill-icon">{{ f.icon }}</span>
-      <span class="pill-text">{{ f.label }}</span>
+    <!-- ✅ FEATURE PILLS BELOW -->
+    <div class="features-pills" #featuresPills>
+        <div class="pill" *ngFor="let f of features">
+            <span class="pill-icon">{{ f.icon }}</span>
+            <span class="pill-text">{{ f.label }}</span>
+        </div>
     </div>
-  </div>
 
 </section>
+
+
+<!-- ✅ INTERACTIVE PRODUCT SHOWCASE -->
+<section class="showcase-section">
+
+    <h2 class="showcase-title">Explore the Product</h2>
+
+    <div class="boxes-container" #boxesContainer>
+        <div class="box" *ngFor="let item of showcase; let i = index">
+
+            <div class="box-content" [ngStyle]="{ 'background-image': 'url(' + item.image + ')' }" (click)="toggleFlip($event, i)">
+                <span class="box-label">{{ item.title }}</span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ✅ MODAL -->
+    <div class="modal" #modal>
+        <div class="overlay" #overlay (click)="closeFlip()"></div>
+        <div class="content" #modalContent></div>
+    </div>
+
+</section>
+
 <h1>new section coming soon</h1>

@@ -13,6 +13,7 @@ import { RouterModule } from '@angular/router';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import lottie from 'lottie-web';
+import Flip from 'gsap/Flip';
 
 @Component({
   selector: 'app-landing',
@@ -44,6 +45,9 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
   @ViewChild('featuresPills') featuresPills!: ElementRef;
   @ViewChild('divider') divider!: ElementRef;
   @ViewChild('afterLabel') afterLabel!: ElementRef;
+
+  @ViewChild('modal') modal!: ElementRef;
+  @ViewChild('modalContent') modalContent!: ElementRef;
 
   /* =========================
      ✅ SUBTEXT TYPEWRITER
@@ -91,6 +95,82 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
     { icon: '🔒', label: 'Bank-Grade Security' },
   ];
 
+  /* =========================
+     ✅ NEW: SHOWCASE FLIP MODAL
+  ========================= */
+
+  showcase = [
+    { title: 'Claim Dashboard', image: 'assets/features/f1.jpg' },
+    { title: 'Submit Claim', image: 'assets/features/f2.jpg' },
+    { title: 'Track Status', image: 'assets/features/f3.jpg' },
+    { title: 'Analytics', image: 'assets/features/f4.jpg' },
+    { title: 'Notifications', image: 'assets/features/f5.jpg' },
+    { title: 'Profile Management', image: 'assets/features/f6.jpg' },
+    { title: 'Track Status', image: 'assets/features/f3.jpg' },
+    { title: 'Analytics', image: 'assets/features/f4.jpg' },
+  ];
+
+  private activeFlipEl: HTMLElement | null = null;
+
+  toggleFlip(event: Event, index: number): void {
+    const box = event.currentTarget as HTMLElement;
+
+    // ✅ CLOSE if same element clicked
+    if (this.activeFlipEl === box) {
+      this.closeFlip();
+      return;
+    }
+
+    const state = Flip.getState(box);
+
+    this.modalContent.nativeElement.appendChild(box);
+    this.activeFlipEl = box;
+
+    gsap.set(this.modal.nativeElement, { autoAlpha: 1 });
+
+    Flip.from(state, {
+      duration: 0.7,
+      ease: 'power1.inOut'
+    });
+
+    gsap.to(this.modal.nativeElement.querySelector('.overlay'), {
+      autoAlpha: 0.65,
+      duration: 0.3
+    });
+  }
+
+  closeFlip(): void {
+    if (!this.activeFlipEl) return;
+
+    const box = this.activeFlipEl;
+    const state = Flip.getState(box);
+
+    // find original container
+    const containers = document.querySelectorAll('.boxes-container .box');
+    containers.forEach(container => {
+      if (!container.hasChildNodes()) {
+        container.appendChild(box);
+      }
+    });
+
+    Flip.from(state, {
+      duration: 0.7,
+      ease: 'power1.inOut'
+    });
+
+    gsap.to(this.modal.nativeElement.querySelector('.overlay'), {
+      autoAlpha: 0,
+      duration: 0.3
+    });
+
+    gsap.to(this.modal.nativeElement, {
+      autoAlpha: 0,
+      duration: 0.3
+    });
+
+    this.activeFlipEl = null;
+  }
+
   constructor(private cdr: ChangeDetectorRef) {}
 
   /* =========================
@@ -98,7 +178,7 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
   ========================= */
 
   ngAfterViewInit(): void {
-    gsap.registerPlugin(ScrollTrigger);
+    gsap.registerPlugin(ScrollTrigger, Flip);
 
     ScrollTrigger.config({
       autoRefreshEvents: "visibilitychange,DOMContentLoaded,load"
