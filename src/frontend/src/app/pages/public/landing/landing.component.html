@@ -245,29 +245,3 @@
     </div>
 
 </section>
-
-
-<!-- ✅ INTERACTIVE PRODUCT SHOWCASE -->
-<section class="showcase-section">
-
-    <h2 class="showcase-title">Explore the Product</h2>
-
-    <div class="boxes-container" #boxesContainer>
-        <div class="box" *ngFor="let item of showcase; let i = index">
-
-            <div class="box-content" [ngStyle]="{ 'background-image': 'url(' + item.image + ')' }" (click)="toggleFlip($event, i)">
-                <span class="box-label">{{ item.title }}</span>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- ✅ MODAL -->
-    <div class="modal" #modal>
-        <div class="overlay" #overlay (click)="closeFlip()"></div>
-        <div class="content" #modalContent></div>
-    </div>
-
-</section>
-
-<h1>new section coming soon</h1>
