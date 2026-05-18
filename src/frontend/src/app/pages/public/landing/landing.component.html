@@ -1,2 +1,57 @@
-<h1>Landing Page</h1>
-<p>Public home page</p>
+<div class="landing-wrapper">
+
+    <!-- ✅ MAIN CONTENT -->
+    <div class="main-content">
+
+        <!-- Background blobs -->
+        <div class="bg-blur blob1"></div>
+        <div class="bg-blur blob2"></div>
+
+        <div class="container">
+
+            <!-- HERO -->
+            <div class="hero">
+
+                <!-- LEFT TEXT -->
+                <div class="hero-text">
+
+                    <h1>
+                        {{ displayTitle }}<br>
+                        <span class="shimmer">
+                            {{ displaySubtitle }}
+                        </span>
+                    </h1>
+
+                    <p>
+                        A powerful platform to submit, track, and manage healthcare claims with
+                        real-time insights and complete transparency.
+                    </p>
+
+                    <div class="actions">
+
+                        <a routerLink="/register" class="action-card primary">
+                            <h4>Get Started →</h4>
+                            <span>Create your account</span>
+                        </a>
+
+                        <a routerLink="/login" class="action-card">
+                            <h4>Login</h4>
+                            <span>Access dashboard</span>
+                        </a>
+
+                    </div>
+
+                </div>
+
+                <!-- RIGHT VISUAL -->
+                <div class="hero-visual">
+                    <div id="lottie-container" class="lottie-box"></div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
