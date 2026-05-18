@@ -1,23 +1,251 @@
-<h1>Our Health Plans</h1>
+<div class="pricing-wrapper" (mousemove)="onMouseMove($event)" (mouseleave)="resetGlow()">
 
-<ng-container *ngIf="plans$ | async as plans; else loading">
-    <div *ngFor="let plan of plans" style="margin-bottom:20px">
-        <h2>{{ plan.name }}</h2>
-        <p>{{ plan.description }}</p>
+  <!-- ✅ CURSOR GLOW -->
+  <div class="cursor-glow" [style.transform]="'translate(' + glowX + 'px,' + glowY + 'px) translate(-50%, -50%)'"
+    [style.background]="'radial-gradient(circle,' + glowColor + ' 0%, rgba(99,102,241,0.25) 25%, transparent 70%)'">
+  </div>
 
-        <p><strong>Coverage:</strong> ₹{{ plan.insuredAmount }}</p>
-        <p><strong>Duration:</strong> {{ plan.durationInMonths }} months</p>
+  <!-- ✅ HERO -->
+  <div class="heading-section">
+    <h1 class="heading">
+      <span class="letter left" style="--i:0">P</span>
+      <span class="letter right" style="--i:1">o</span>
+      <span class="letter left" style="--i:2">w</span>
+      <span class="letter right" style="--i:3">e</span>
+      <span class="letter left" style="--i:4">r</span>
 
-        <ul>
-            <li *ngFor="let feature of plan.features">
-                {{ feature }}
-            </li>
-        </ul>
+      <span>&nbsp;</span>
 
-        <a [routerLink]="['/plans', plan.planId]">View Details</a>
+      <span class="letter left" style="--i:5">Y</span>
+      <span class="letter right" style="--i:6">o</span>
+      <span class="letter left" style="--i:7">u</span>
+      <span class="letter right" style="--i:8">r</span>
+
+      <span>&nbsp;</span>
+
+      <span class="letter left" style="--i:9">H</span>
+      <span class="letter right" style="--i:10">e</span>
+      <span class="letter left" style="--i:11">a</span>
+      <span class="letter right" style="--i:12">l</span>
+      <span class="letter left" style="--i:13">t</span>
+      <span class="letter right" style="--i:14">h</span>
+      <span class="letter left" style="--i:15">c</span>
+      <span class="letter right" style="--i:16">a</span>
+      <span class="letter left" style="--i:17">r</span>
+      <span class="letter right" style="--i:18">e</span>
+
+      <br />
+
+      <span class="letter highlight" style="--i:19">W</span>
+      <span class="letter highlight" style="--i:20">i</span>
+      <span class="letter highlight" style="--i:21">t</span>
+      <span class="letter highlight" style="--i:22">h</span>
+      <span class="letter highlight" style="--i:23">o</span>
+      <span class="letter highlight" style="--i:24">u</span>
+      <span class="letter highlight" style="--i:25">t</span>
+
+      <span>&nbsp;</span>
+      <span class="letter highlight" style="--i:26">C</span>
+      <span class="letter highlight" style="--i:27">o</span>
+      <span class="letter highlight" style="--i:28">m</span>
+      <span class="letter highlight" style="--i:29">p</span>
+      <span class="letter highlight" style="--i:30">l</span>
+      <span class="letter highlight" style="--i:31">e</span>
+      <span class="letter highlight" style="--i:32">x</span>
+      <span class="letter highlight" style="--i:33">i</span>
+      <span class="letter highlight" style="--i:34">t</span>
+      <span class="letter highlight" style="--i:35">y</span>
+    </h1>
+
+    <p class="subheading">
+      Transparent plans, seamless claims, and complete control —
+      built for modern healthcare experiences.
+    </p>
+  </div>
+
+  <!-- ✅ BILLING SWITCH -->
+  <div class="billing-switch">
+    <span [class.active]="billing === 'monthly'">Monthly</span>
+
+    <label class="switch">
+      <input type="checkbox" [checked]="billing === 'yearly'" (change)="toggleBilling($event)" />
+      <span class="slider"></span>
+    </label>
+
+
+    <div class="yearly-wrapper">
+
+      <span class="discount-badge" *ngIf="billing === 'yearly'" [class.animate]="priceChanging">
+        15% off
+      </span>
+
     </div>
-</ng-container>
 
-<ng-template #loading>
-    <p>Loading plans...</p>
-</ng-template>
+    <span [class.active]="billing === 'yearly'">Yearly</span>
+  </div>
+
+  <!-- ✅ PLANS -->
+  <div class="pricing-grid">
+
+    <!-- ✅ ELITE -->
+    <div class="pricing-card" (mouseenter)="setGlowColor('gold')" (mouseleave)="resetGlowColor()">
+
+      <h2 class="plan-name">Elite Family</h2>
+
+      <div class="price">
+
+        <span class="currency">$</span>
+
+        <span class="amount">
+          {{ animatedPrices.elite }}
+        </span>
+
+        <span class="billing">
+          / {{ billing === 'monthly' ? 'month' : 'year' }}
+        </span>
+
+      </div>
+      <div class="sub-price">
+        <span class="highlight-amount">+$20</span> / person per month
+      </div>
+
+      <div class="divider"></div>
+
+      <ul class="features">
+        <li>
+          <span class="tick"></span>
+          Family Coverage
+        </li>
+        <li>
+          <span class="tick"></span>ICU & Doctor Support
+        </li>
+        <li>
+          <span class="tick"></span>Maternity Care
+        </li>
+        <li>
+          <span class="tick"></span>Diagnostics & Tests
+        </li>
+        <li>
+          <span class="tick"></span>Cashless Claims
+        </li>
+      </ul>
+
+      <a class="cta-btn" [routerLink]="['/plans', planMap['elite']]">
+
+        <div class="cta-inner">
+          <span class="text-default">Schedule a demo</span>
+          <span class="text-hover">Get started</span>
+        </div>
+
+      </a>
+
+    </div>
+
+    <!-- ✅ BASIC (FOCUS CARD) -->
+    <div class="pricing-card popular-card" (mouseenter)="setGlowColor('silver')" (mouseleave)="resetGlowColor()">
+
+      <div class="best-value-badge">Best Value</div>
+
+      <h2 class="plan-name">Essential Care</h2>
+
+      <div class="price">
+
+        <span class="currency">$</span>
+
+        <span class="amount">
+          {{ animatedPrices.basic }}
+        </span>
+
+        <span class="billing">
+          / {{ billing === 'monthly' ? 'month' : 'year' }}
+        </span>
+
+      </div>
+      <div class="sub-price">
+        <span class="highlight-amount">+$20</span> / person per month
+      </div>
+
+      <div class="divider"></div>
+
+      <ul class="features">
+        <li>
+          <span class="tick"></span>Doctor Visits
+        </li>
+        <li>
+          <span class="tick"></span>Hospital Cover
+        </li>
+        <li>
+          <span class="tick"></span>Diagnostics
+        </li>
+        <li>
+          <span class="tick"></span>Pharmacy Cover
+        </li>
+        <li>
+          <span class="tick"></span>Outpatient Benefits
+        </li>
+      </ul>
+
+      <a class="cta-btn" [routerLink]="['/plans', planMap['basic']]">
+
+        <div class="cta-inner">
+          <span class="text-default">Schedule a demo</span>
+          <span class="text-hover">Get started</span>
+        </div>
+
+      </a>
+
+    </div>
+
+    <!-- ✅ PRO -->
+    <div class="pricing-card" (mouseenter)="setGlowColor('blue')" (mouseleave)="resetGlowColor()">
+
+      <h2 class="plan-name">Advanced Plus</h2>
+
+      <div class="price">
+
+        <span class="currency">$</span>
+
+        <span class="amount">
+          {{ animatedPrices.advanced }}
+        </span>
+
+        <span class="billing">
+          / {{ billing === 'monthly' ? 'month' : 'year' }}
+        </span>
+
+      </div>
+      <div class="sub-price">
+        <span class="highlight-amount">+$20</span> / person per month
+      </div>
+
+      <div class="divider"></div>
+
+      <ul class="features">
+        <li>
+          <span class="tick"></span>Unlimited Doctors
+        </li>
+        <li>
+          <span class="tick"></span>Emergency Care
+        </li>
+        <li>
+          <span class="tick"></span>Priority Support
+        </li>
+        <li>
+          <span class="tick"></span>Fast Claims
+        </li>
+        <li>
+          <span class="tick"></span>Annual Checkup
+        </li>
+      </ul>
+
+      <a class="cta-btn" [routerLink]="['/plans', planMap['advanced']]">
+
+        <div class="cta-inner">
+          <span class="text-default">Schedule a demo</span>
+          <span class="text-hover">Get started</span>
+        </div>
+
+      </a>
+    </div>
+  </div>
+</div>
