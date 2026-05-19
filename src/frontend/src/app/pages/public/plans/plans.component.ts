@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { NgIf, NgFor, AsyncPipe, DecimalPipe } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { Observable } from 'rxjs';
 import { PlanService, PublicPlan } from '../../../services/plan.service';
 import { RouterLink } from '@angular/router';
@@ -9,10 +9,7 @@ import { RouterLink } from '@angular/router';
   standalone: true,
   imports: [
     NgIf,
-    NgFor,
-    AsyncPipe,
     RouterLink,
-    DecimalPipe,
   ],
 
   templateUrl: './plans.component.html',
