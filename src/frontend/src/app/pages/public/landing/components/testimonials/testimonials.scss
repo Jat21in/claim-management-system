@@ -1,0 +1,249 @@
+/* ============================================
+   ✅ SECTION BASE
+============================================ */
+
+.testimonials-section {
+    background: #0b0f1a;
+    color: #fff;
+    padding: 120px 60px;
+    position: relative;
+}
+
+
+/* ============================================
+   ✅ HEADER (FULL FIX)
+============================================ */
+
+.testimonials-header {
+    text-align: center;
+    margin-bottom: 100px;
+}
+
+
+/* Force reuse your feature styles properly */
+
+.testimonials-header .features-title {
+    font-size: clamp(36px, 5vw, 62px);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 20px;
+}
+
+.testimonials-header .features-subtitle {
+    font-size: 18px;
+    color: #7a8499;
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+
+/* ============================================
+   ✅ CONTAINER + GRID
+============================================ */
+
+.testimonials-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.testimonials-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 80px;
+    @media (min-width: 768px) {
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+    }
+}
+
+
+/* ============================================
+   ✅ IMAGE STACK (FIXED PROPERLY)
+============================================ */
+
+.image-section {
+    position: relative;
+    height: 360px;
+}
+
+.image-carousel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+
+/* BASE */
+
+.testimonial-image {
+    position: absolute;
+    inset: 0;
+    transition: all 0.5s ease;
+    will-change: transform, opacity, filter;
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 20px;
+        box-shadow: 0 0 40px rgba(79, 156, 255, 0.2), 0 0 80px rgba(124, 92, 255, 0.15);
+    }
+}
+
+
+/* ACTIVE */
+
+.testimonial-image.active {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    z-index: 10;
+}
+
+
+/* BACK STACK */
+
+.testimonial-image:not(.active) {
+    transform: scale(0.87) translateY(28px);
+    opacity: 0.45;
+    filter: blur(2px) brightness(0.8);
+}
+
+
+/* ============================================
+   ✅ CONTENT SECTION
+============================================ */
+
+.content-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+
+/* TAG */
+
+.testimonial-tag {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #4f9cff;
+    border: 1px solid rgba(79, 156, 255, 0.3);
+    background: rgba(79, 156, 255, 0.06);
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 20px;
+}
+
+
+/* TEXT BLOCK */
+
+.testimonial-content {
+    animation: fadeInUp 0.5s ease;
+}
+
+
+/* NAME */
+
+.testimonial-name {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #fff;
+}
+
+
+/* ROLE */
+
+.testimonial-designation {
+    font-size: 14px;
+    color: #7a8499;
+    margin-bottom: 18px;
+}
+
+
+/* QUOTE */
+
+.testimonial-quote {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #b0b6c3;
+    max-width: 520px;
+}
+
+
+/* ============================================
+   ✅ BUTTONS (FIXED STYLE)
+============================================ */
+
+.navigation-buttons {
+    display: flex;
+    gap: 16px;
+    margin-top: 40px;
+}
+
+.nav-button {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f9cff, #7c5cff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(79, 156, 255, 0.4), 0 0 40px rgba(124, 92, 255, 0.25);
+    transition: all 0.3s ease;
+}
+
+.nav-button:hover {
+    transform: translateY(-3px) scale(1.08);
+    box-shadow: 0 0 30px rgba(79, 156, 255, 0.6), 0 0 60px rgba(124, 92, 255, 0.4);
+}
+
+.nav-button:active {
+    transform: scale(0.95);
+}
+
+
+/* ============================================
+   ✅ ANIMATIONS
+============================================ */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ============================================
+   ✅ RESPONSIVE
+============================================ */
+
+@media (max-width: 768px) {
+    .testimonials-section {
+        padding: 80px 20px;
+    }
+    .testimonials-grid {
+        gap: 50px;
+    }
+    .image-section {
+        height: 240px;
+    }
+    .testimonial-name {
+        font-size: 22px;
+    }
+    .testimonial-quote {
+        font-size: 15px;
+    }
+    .navigation-buttons {
+        justify-content: center;
+    }
+}

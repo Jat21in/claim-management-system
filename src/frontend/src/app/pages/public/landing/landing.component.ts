@@ -118,11 +118,13 @@ import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import lottie from 'lottie-web';
 import Flip from 'gsap/Flip';
+import { AnimatedTestimonialsComponent } from './components/testimonials/testimonials';
+import { ContactComponent } from './components/contact/contact.component';
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, AnimatedTestimonialsComponent, ContactComponent],
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.scss']
 })
@@ -165,6 +167,45 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
     'Secure. Transparent. Reliable...'
   ];
 
+  dummyTestimonials = [
+  {
+    name: 'Amit Sharma',
+    designation: 'Policy Holder',
+    quote: 'Earlier, filing a claim meant endless calls and uncertainty. With this platform, everything changed. From submission to approval, every step was transparent and incredibly fast. I felt completely in control throughout the process.',
+    src: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=3560&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  },
+  {
+    name: 'Priya Mehta',
+    designation: 'Software Engineer',
+    quote: 'What impressed me the most was real-time tracking. I could see exactly what stage my claim was in. No guesswork, no anxiety — just clarity. This is how modern insurance systems should work.',
+    src: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  },
+  {
+    name: 'Rahul Verma',
+    designation: 'Entrepreneur',
+    quote: 'Speed matters in business, and this system delivers. My claim was processed faster than expected, with zero friction. The automation and notifications kept me informed without any manual effort.',
+    src: 'https://images.unsplash.com/photo-1623582854588-d60de57fa33f?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  },
+  {
+    name: 'Neha Kapoor',
+    designation: 'Product Designer',
+    quote: 'The interface is beautifully designed and incredibly intuitive. Every step feels natural, and I never felt lost at any point. It’s rare to see such a seamless blend of design and functionality.',
+    src: 'https://images.pexels.com/photos/30004490/pexels-photo-30004490.jpeg?auto=compress&cs=tinysrgb&w=1200'
+  },
+  {
+    name: 'Arjun Singh',
+    designation: 'Corporate Professional',
+    quote: 'This platform removed all the stress from the claim process. Automated updates, fast approvals, and complete transparency made it a smooth and reliable experience. I trust it completely now.',
+    src: 'https://images.unsplash.com/photo-1636041293178-808a6762ab39?q=80&w=3464&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  },
+  {
+    name: 'Lisa Thompson',
+    designation: 'Marketing Manager',
+    quote: 'I was amazed by how quickly everything moved. The system kept me updated at every step, and I didn’t have to follow up once. It’s efficient, reliable, and built for real-world users.',
+    src: 'https://images.unsplash.com/photo-1624561172888-ac93c696e10c?q=80&w=2592&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  }
+];
+
   /* =========================
      ✅ ABOUT IMAGE TRANSITION
   ========================= */
@@ -180,6 +221,15 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
     '/assets/about/3.jpg',
     '/assets/about/4.jpg',
     '/assets/about/1.jpg'
+  ];
+
+  features = [
+    { icon: '⚡', label: 'Lightning Fast' },
+    { icon: '🔒', label: 'Secure' },
+    { icon: '📊', label: 'Real-time Tracking' },
+    { icon: '✅', label: 'Instant Approval' },
+    { icon: '💳', label: 'Cashless Claims' },
+    { icon: '🤝', label: '24/7 Support' }
   ];
 
   private imageInterval: any;
