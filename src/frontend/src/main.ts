@@ -7,12 +7,13 @@ import { jwtInterceptor } from './app/interceptors/jwt.interceptor';
 import { routes } from './app/app.routes';
 import { App } from './app/app';
 
+
 bootstrapApplication(App, {
   providers: [
     provideHttpClient(
       withInterceptors([jwtInterceptor])
     ),
     provideRouter(routes),
-    provideAnimations() // ✅ REQUIRED
+    provideAnimations(), // ✅ REQUIRED
   ]
 }).catch(err => console.error(err));

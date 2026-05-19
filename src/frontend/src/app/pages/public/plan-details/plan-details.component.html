@@ -3,21 +3,40 @@
     <h1>{{ plan.name }}</h1>
     <p>{{ plan.description }}</p>
 
-    <p><strong>Coverage:</strong> ₹{{ plan.insuredAmount }}</p>
-    <p><strong>Duration:</strong> {{ plan.durationInMonths }} months</p>
+   
+<p><strong>Coverage:</strong> {{ plan.insuredAmount | currency:'USD':'symbol':'1.0-0' }}</p>
+  <p><strong>Duration:</strong> {{ plan.durationInMonths }} months</p>
 
     <h3>Features</h3>
+    
     <ul>
         <li *ngFor="let feature of plan.features">
             {{ feature }}
         </li>
     </ul>
-    <button type="button" [routerLink]="['/auth']" [queryParams]="{ mode: 'register', planId: plan.planId }">
+    <button
+  type="button"
+  [routerLink]="['/auth/register']"
+  [queryParams]="{ planId: plan.planId }">
   Select this Plan
 </button>
 
 </ng-container>
 
 <ng-template #loading>
-    <h1>Loading plan details...</h1>
+    <div class="loading-state">
+  <h2>Loading plan details...</h2>
+</div>
 </ng-template>
+
+
+
+
+
+
+
+
+
+
+
+

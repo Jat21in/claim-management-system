@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { NgIf, NgFor, AsyncPipe } from '@angular/common';
+import { NgIf, NgFor, AsyncPipe, CurrencyPipe } from '@angular/common';
 import { Observable, switchMap } from 'rxjs';
 import { PlanService, PublicPlan } from '../../../services/plan.service';
 
@@ -13,7 +13,8 @@ import { PlanService, PublicPlan } from '../../../services/plan.service';
     NgIf,
     NgFor,
     AsyncPipe,
-    RouterLink
+    RouterLink,
+    CurrencyPipe
   ],
 
   templateUrl: './plan-details.component.html'
