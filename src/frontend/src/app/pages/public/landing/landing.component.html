@@ -1,4 +1,4 @@
-<div class="landing-wrapper">
+<div id="home" class="landing-wrapper">
 
     <!-- LEFT -->
     <div class="left-section">
@@ -6,8 +6,8 @@
         <!-- ✅ STATIC TITLE -->
         <h1 class="hero-title">
             <span class="gradient-text">
-        Smart Claim Management, Reinvented
-      </span>
+                Smart Claim Management, Reinvented
+            </span>
         </h1>
 
         <p class="hero-subtitle">
@@ -21,8 +21,8 @@
         </div>
 
         <button class="cta-btn" routerLink="/plans">
-      Explore Plans
-    </button>
+            Explore Plans
+        </button>
 
     </div>
 
@@ -126,7 +126,7 @@
     </div>
 </div>
 
-<div class="about-section">
+<div id="about" class="about-section">
 
     <div class="about-container">
 
@@ -141,16 +141,21 @@
             </p>
 
             <p class="about-description">
-                Our Claim Management System is built to eliminate delays, reduce manual effort, and provide complete visibility across the claim lifecycle. From submission to approval, every step is optimized for speed, accuracy, and trust.
+                Our Claim Management System is built to eliminate delays, reduce manual effort, and provide complete
+                visibility across the claim lifecycle. From submission to approval, every step is optimized for speed,
+                accuracy, and trust.
             </p>
 
             <p class="about-description">
-                Designed for both policyholders and administrators, we bridge the gap between users and insurers through automation, real-time insights, and seamless digital workflows. Every interaction is crafted to enhance clarity, accountability, and user confidence.
+                Designed for both policyholders and administrators, we bridge the gap between users and insurers through
+                automation, real-time insights, and seamless digital workflows. Every interaction is crafted to enhance
+                clarity, accountability, and user confidence.
             </p>
 
             <!-- ✅ NEW ADDITION (1–2 lines, premium touch) -->
             <p class="about-description">
-                With intelligent automation and a user-centric design, our platform ensures faster resolutions while maintaining compliance, security, and scalability for modern insurance ecosystems.
+                With intelligent automation and a user-centric design, our platform ensures faster resolutions while
+                maintaining compliance, security, and scalability for modern insurance ecosystems.
             </p>
         </div>
 
@@ -177,7 +182,8 @@
 </div>
 
 
-<section class="features-section">
+
+<section id="features" class="features-section">
 
     <!-- ✅ SECTION HEADER -->
     <div class="features-header" #featuresHeader>
@@ -229,20 +235,34 @@
             <div class="divider-line"></div>
             <div class="divider-handle">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path d="M6 10l4-4 4 4M6 10l4 4 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+                    <path d="M6 10l4-4 4 4M6 10l4 4 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
             </div>
         </div>
 
     </div>
 
     <!-- ✅ FEATURE PILLS BELOW -->
-    <div class="features-pills" #featuresPills>
+    <!-- <div class="features-pills" #featuresPills>
         <div class="pill" *ngFor="let f of features">
             <span class="pill-icon">{{ f.icon }}</span>
             <span class="pill-text">{{ f.label }}</span>
         </div>
-    </div>
+    </div> -->
 
 </section>
 
+<div id="testimonials">
+
+    <app-animated-testimonials [testimonials]="dummyTestimonials" [autoplay]="true"></app-animated-testimonials>
+</div>
+
+<div id="contact">
+    <app-contact></app-contact>
+
+</div>
+
+<div class="footer">
+    <app-footer></app-footer>
+</div>

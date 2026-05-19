@@ -1,6 +1,6 @@
 <section class="testimonials-section">
 
-    <!-- ✅ HEADER -->
+    <!-- ✅ HEADER - now uses exact same styles as Feature header -->
     <div class="testimonials-header">
         <span class="features-eyebrow">Testimonials</span>
 
@@ -14,52 +14,34 @@
         </p>
     </div>
 
-    <!-- ✅ CONTENT -->
+    <!-- ✅ CONTENT (unchanged) -->
     <div class="testimonials-container" *ngIf="testimonials.length">
-
         <div class="testimonials-grid">
-
-            <!-- IMAGE STACK -->
             <div class="image-section">
                 <div class="image-carousel">
-
-                    <div *ngFor="let t of testimonials; let i = index" class="testimonial-image" [class.active]="isActive(i)" [style.zIndex]="isActive(i) ? 40 : testimonials.length - i" [style.opacity]="isActive(i) ? 1 : 0.5">
-
+                    <div *ngFor="let t of testimonials; let i = index" 
+                         class="testimonial-image" 
+                         [class.active]="isActive(i)" 
+                         [style.zIndex]="isActive(i) ? 40 : testimonials.length - i" 
+                         [style.opacity]="isActive(i) ? 1 : 0.5">
                         <img [src]="t.src" [alt]="t.name" />
                     </div>
-
                 </div>
             </div>
 
-            <!-- TEXT -->
             <div class="content-section">
-
                 <span class="testimonial-tag">Verified Experience</span>
-
                 <div class="testimonial-content">
-                    <h3 class="testimonial-name">
-                        {{ testimonials[active]?.name }}
-                    </h3>
-
-                    <p class="testimonial-designation">
-                        {{ testimonials[active]?.designation }}
-                    </p>
-
-                    <p class="testimonial-quote">
-                        {{ testimonials[active]?.quote }}
-                    </p>
+                    <h3 class="testimonial-name">{{ testimonials[active]?.name }}</h3>
+                    <p class="testimonial-designation">{{ testimonials[active]?.designation }}</p>
+                    <p class="testimonial-quote">{{ testimonials[active]?.quote }}</p>
                 </div>
-
-                <!-- CONTROLS -->
                 <div class="navigation-buttons">
                     <button (click)="handlePrev()" class="nav-button">←</button>
                     <button (click)="handleNext()" class="nav-button">→</button>
                 </div>
-
             </div>
-
         </div>
-
     </div>
 
 </section>

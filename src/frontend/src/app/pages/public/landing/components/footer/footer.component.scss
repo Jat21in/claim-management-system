@@ -1,0 +1,236 @@
+// ============================================================
+// FOOTER COMPONENT — Updated to match ContactUs theme
+// ============================================================
+
+// ── Tokens (aligned with ContactUs component) ─────────────────
+$bg-darker:       #020617;      // main footer background
+$bg-input:        #1e293b;      // social button background
+$text-head:       #ffffff;
+$text-link:       #a1a5b4;      // same as contact $text-secondary
+$text-link-hov:   #3b82f6;      // primary accent from contact
+$text-desc:       #a1a5b4;      // brand description, same as $text-secondary
+$divider:         #334155;      // contact's $border-color
+$font:            'DM Sans', 'Helvetica Neue', Arial, sans-serif;
+
+// Social brand colours (unchanged)
+$linkedin: #0a66c2;
+$twitter:   #1d9bf0;
+$slack-bg:  #4a154b;
+
+// ── Google Font import ────────────────────────────────────────
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
+
+// ── Root container ────────────────────────────────────────────
+.footer {
+  position: relative;
+  background: $bg-darker;                // solid dark background
+  font-family: $font;
+  overflow: hidden;
+  padding: 3.5rem 0 0;
+
+  // ── Inner content wrapper ───────────────────────────────────
+  &__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 3rem;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  // ── 5-column link grid ───────────────────────────────────────
+  &__columns {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2rem;
+
+    @media (max-width: 900px)  { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 600px)  { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 380px)  { grid-template-columns: 1fr; }
+  }
+
+  &__col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__col-heading {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $text-head;
+    letter-spacing: 0.01em;
+    margin: 0 0 0.25rem;
+  }
+
+  &__link-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  &__link {
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: $text-link;
+    text-decoration: none;
+    transition: color 0.18s ease;
+    line-height: 1.5;
+
+    &:hover,
+    &:focus-visible {
+      color: $text-link-hov;   // primary blue accent
+      outline: none;
+    }
+  }
+
+  // ── Brand panel (right column) ────────────────────────────────
+  &__brand {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 220px;
+    max-width: 280px;
+
+    @media (max-width: 1024px) {
+      max-width: 100%;
+      border-top: 1px solid $divider;
+      padding-top: 2rem;
+    }
+  }
+
+ &__brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;           // consistent with header gap
+  text-decoration: none;
+}
+
+&__logo-box {
+  font-size: 1.8rem;      // same size as header icon
+  line-height: 1;
+  background: linear-gradient(135deg, #a855f7, #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  // remove any background, width/height constraints
+  width: auto;
+  height: auto;
+  background-color: transparent; // override previous background
+}
+
+&__brand-name {
+  font-weight: 700;
+  font-size: 1.5rem;      // match header logo-text
+  letter-spacing: -0.02em;
+  color: white;           // "Claim" stays white
+}
+
+&__brand-highlight {
+  background: linear-gradient(135deg, #a855f7, #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+  &__brand-desc {
+    font-size: 0.8rem;
+    line-height: 1.65;
+    color: $text-desc;         // now uses $text-secondary from contact
+    margin: 0;
+  }
+
+  // ── Social buttons ────────────────────────────────────────────
+  &__socials {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+  }
+
+  &__social-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: $bg-input;           // matches contact’s input background
+    color: #ffffff;
+    transition: background 0.2s ease, transform 0.15s ease;
+    text-decoration: none;
+
+    svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+
+    &--linkedin:hover { background: $linkedin; }
+    &--twitter:hover  { background: $twitter;  }
+    &--slack:hover    { background: $slack-bg;  }
+  }
+
+  // ── Divider ───────────────────────────────────────────────────
+  &__divider {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    height: 1px;
+    background: $divider;       // contact’s border colour
+  }
+
+  // ── Bottom copyright bar ───────────────────────────────────────
+  &__bottom {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.25rem 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  &__copy {
+    font-size: 0.8rem;
+    color: $text-desc;          // consistent with contact secondary text
+    margin: 0;
+    letter-spacing: 0.005em;
+  }
+
+  // ── Watermark text ─────────────────────────────────────────────
+  &__watermark {
+    position: absolute;
+    bottom: -0.12em;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: clamp(7rem, 22vw, 16rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.07);  // slightly more visible on darker bg
+    background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+    z-index: 1;
+  }
+}
+
+// ── Accessibility ──────────────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  .footer__social-btn { transition: none; }
+}

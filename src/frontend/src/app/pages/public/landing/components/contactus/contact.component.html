@@ -1,0 +1,136 @@
+<div class="contact-container">
+  <!-- Left Section: Header and Info -->
+  <div class="contact-left">
+    <div class="contact-header">
+      <svg class="mail-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+      </svg>
+      <h1 class="contact-title">Contact us</h1>
+    </div>
+
+    <p class="contact-description">
+      We are always looking for ways to improve our products and services.
+      Contact us and let us know how we can help you.
+    </p>
+
+    <!-- Contact Info -->
+    <div class="contact-info">
+      <a href="mailto:contact@yoursaas.ai" class="info-item">contact&#64;yoursaas.ai</a>
+      <span class="info-separator">•</span>
+      <a href="tel:+18001234521" class="info-item">+1 (800) 123 XX21</a>
+      <span class="info-separator">•</span>
+      <a href="mailto:support@yoursaas.ai" class="info-item">support&#64;yoursaas.ai</a>
+    </div>
+
+    <!-- Globe Section — replaces the static SVG world map -->
+    <div class="map-container">
+      <canvas #globeCanvas class="globe-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- Right Section: Contact Form -->
+  <div class="contact-right">
+    <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="contact-form">
+
+      <!-- Full Name -->
+      <div class="form-group">
+        <label for="fullName" class="form-label">Full name</label>
+        <input
+          id="fullName"
+          type="text"
+          formControlName="fullName"
+          class="form-input"
+          [class.form-input-error]="hasError('fullName')"
+          placeholder="Manu Arora"
+          autocomplete="name"
+        />
+        <span class="form-error" *ngIf="hasError('fullName')">
+          {{ getErrorMessage('fullName') }}
+        </span>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email" class="form-label">Email Address</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          class="form-input"
+          [class.form-input-error]="hasError('email')"
+          placeholder="support@aceternity.com"
+          autocomplete="email"
+        />
+        <span class="form-error" *ngIf="hasError('email')">
+          {{ getErrorMessage('email') }}
+        </span>
+      </div>
+
+      <!-- Company -->
+      <div class="form-group">
+        <label for="company" class="form-label">Company</label>
+        <input
+          id="company"
+          type="text"
+          formControlName="company"
+          class="form-input"
+          [class.form-input-error]="hasError('company')"
+          placeholder="Aceternity Labs LLC"
+          autocomplete="organization"
+        />
+        <span class="form-error" *ngIf="hasError('company')">
+          {{ getErrorMessage('company') }}
+        </span>
+      </div>
+
+      <!-- Message -->
+      <div class="form-group">
+        <label for="message" class="form-label">Message</label>
+        <textarea
+          id="message"
+          formControlName="message"
+          class="form-textarea"
+          [class.form-input-error]="hasError('message')"
+          placeholder="Type your message here"
+          rows="6"
+        ></textarea>
+        <span class="form-error" *ngIf="hasError('message')">
+          {{ getErrorMessage('message') }}
+        </span>
+      </div>
+
+      <!-- Submit -->
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="submit-btn"
+          [disabled]="isSubmitting"
+          [class.btn-loading]="isSubmitting"
+        >
+          <span class="btn-text" *ngIf="!isSubmitting">Submit</span>
+          <span class="btn-text" *ngIf="isSubmitting">
+            <span class="spinner"></span> Sending...
+          </span>
+        </button>
+      </div>
+
+      <!-- Success -->
+      <div class="success-message" *ngIf="submitSuccess">
+        <svg class="success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <p>Thank you! Your message has been sent successfully.</p>
+      </div>
+
+      <!-- Error -->
+      <div class="error-message" *ngIf="submitError">
+        <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <p>Something went wrong. Please try again.</p>
+      </div>
+    </form>
+  </div>
+</div>
