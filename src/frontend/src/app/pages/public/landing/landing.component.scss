@@ -136,7 +136,11 @@
     padding: 30px 60px;
     border-top: 1px solid rgba(255, 255, 255, 0.05); // ✅ subtle integration line
 }
-
+@media (max-width: 768px) {
+  .partners-inline {
+    padding: 20px;
+  }
+}
 
 /* ✅ TEXT (acts like inline block) */
 
@@ -268,13 +272,21 @@
 
 /* ✅ BENTO GRID */
 
-.gallery--bento {
-    display: grid;
-    gap: 1vh;
-    grid-template-columns: repeat(3, 32.5vw);
-    grid-template-rows: repeat(4, 23vh);
-}
+// .gallery--bento {
+//     display: grid;
+//     gap: 1vh;
+//     grid-template-columns: repeat(3, 32.5vw);
+//     grid-template-rows: repeat(4, 23vh);
+// }
 
+.gallery--bento {
+  grid-template-columns: repeat(3, 1fr);  // ✅ Use fr units
+  gap: 1vh;
+  max-width: 100%;
+  overflow-x: hidden;
+  display: grid;
+  grid-template-rows: repeat(4, 23vh);
+}
 
 /* ✅ FINAL STATE */
 
@@ -469,7 +481,9 @@
 
 .frame-container {
     position: relative;
-    width: 520px;
+     width: 100%;
+    max-width: 520px;
+    aspect-ratio: 1 / 1;
     height: 520px;
     overflow: hidden;
     border-radius: 10px 140px 10px 60px;
