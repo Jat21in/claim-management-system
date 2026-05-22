@@ -10,6 +10,10 @@ public sealed class MemberConfiguration : IEntityTypeConfiguration<Member>
     {
         builder.HasKey(m => m.MemberId);
 
+        // Map the explicit FK
+        builder.Property(m => m.ActivePlanId)
+            .HasColumnName("ActivePlanPlanId");  // Match existing column name
+
         builder.Property(m => m.FullName)
             .IsRequired()
             .HasMaxLength(200);
@@ -57,11 +61,9 @@ public sealed class MemberConfiguration : IEntityTypeConfiguration<Member>
             .WithOne()
             .HasForeignKey(c => c.MemberId);
 
-        builder
-    .HasOne(m => m.ActivePlan)
-    .WithMany()                       // Plan does not need navigation
-    .HasForeignKey("ActivePlanPlanId")// Explicit FK
-    .OnDelete(DeleteBehavior.Restrict);
-
+        builder.HasOne(m => m.ActivePlan)
+            .WithMany()
+            .HasForeignKey(m => m.ActivePlanId)  // 👈 Use explicit property
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
