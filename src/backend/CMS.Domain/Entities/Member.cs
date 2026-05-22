@@ -7,7 +7,7 @@ public sealed class Member : IAuditable
 {
     // Identity
     public Guid MemberId { get; private set; }
-
+    public Guid? ActivePlanId { get; private set; }  // 👈 NEW
 
     // Core Data
     public string FullName { get; private set; } = null!;
@@ -72,6 +72,7 @@ public sealed class Member : IAuditable
             throw new ArgumentNullException(nameof(plan));
 
         ActivePlan = plan;
+        ActivePlanId = plan.PlanId;  // 👈 SET THE FK EXPLICITLY
         UpdatedAt = DateTime.UtcNow;
     }
 
