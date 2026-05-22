@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface PublicPlan {
@@ -24,10 +25,19 @@ export class PlanService {
     console.log('[PlanService] Base URL:', this.baseUrl);
   }
 
-  getPublicPlans(): Observable<PublicPlan[]> {
+  // /src/frontend/src/app/services/plan.service.ts
+
+getPublicPlans(): Observable<PublicPlan[]> {
     console.log('[PlanService] Fetching all plans');
-    return this.http.get<PublicPlan[]>(this.baseUrl);
-  }
+    return this.http.get<PublicPlan[]>(this.baseUrl).pipe(
+        tap((plans: PublicPlan[]) => {
+            console.log('📋 Plans from API:', plans);
+            plans.forEach(plan => {
+                console.log(`Plan: ${plan.name}, ID: ${plan.planId}, Type: ${typeof plan.planId}`);
+            });
+        })
+    );
+}
 
   getPlanById(planId: string): Observable<PublicPlan> {
     const url = `${this.baseUrl}/${planId}`;

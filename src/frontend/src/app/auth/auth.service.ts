@@ -48,18 +48,27 @@ export class AuthService {
   // =====================
   // ✅ REGISTER
   // =====================
-  register(payload: {
+  // /src/frontend/src/app/auth/auth.service.ts
+
+register(payload: {
     fullName: string;
     email: string;
     password: string;
     dateOfBirth: string;
     selectedPlanId?: string;
-  }) {
+}) {
+    console.log('🚀 AuthService.register called with:', payload);
+
+    // ✅ Don't modify the payload - send as is
+    // The backend will handle null/undefined appropriately
+
+    console.log('📤 Sending to backend:', payload);
+
     return this.http.post(
-      `${environment.apiBaseUrl}/auth/register`,
-      payload
+        `${environment.apiBaseUrl}/auth/register`,
+        payload
     );
-  }
+}
 
   // =====================
   // ✅ AUTH STATE

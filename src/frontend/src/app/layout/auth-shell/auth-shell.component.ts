@@ -5,8 +5,8 @@ import {
   OnInit,
   inject
 } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs';
+import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
+import { filter, Subject, takeUntil } from 'rxjs';
 
 import { AuthVisualComponent } from '../../components/auth-visual/auth-visual.component';
 import { AuthDeckComponent } from '../../components/auth-deck/auth-deck.component';
@@ -19,42 +19,64 @@ import { AuthDeckComponent } from '../../components/auth-deck/auth-deck.componen
 })
 export class AuthShellComponent implements OnInit, AfterViewInit, OnDestroy {
 
-  // ✅ SINGLE SOURCE OF TRUTH
   mode: 'login' | 'register' = 'login';
 
   private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
 
-  /** cursor handlers */
+  // ✅ Cleanup handler
+  private destroy$ = new Subject<void>();
+
+  // ✅ Proper typing
   private mouseMoveHandler!: (e: MouseEvent) => void;
   private mouseLeaveHandler!: () => void;
   private blurHandler!: () => void;
 
   // ===================================================
-  // ✅ ROUTE → UI SYNC (CORRECT & FINAL)
+  // ✅ INIT
   // ===================================================
   ngOnInit(): void {
     this.router.events
-      .pipe(filter(e => e instanceof NavigationEnd))
+      .pipe(
+        filter(e => e instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
       .subscribe(() => {
-        this.mode = this.router.url.includes('/auth/login')
-          ? 'login'
-          : 'register';
+        const url = this.router.url;
+
+        // ✅ Reliable mode detection
+        if (url.includes('/auth/login')) {
+          this.mode = 'login';
+        } else if (url.includes('/auth/register')) {
+          this.mode = 'register';
+        }
+
+        console.log('🔍 URL:', url);
+        console.log('🔍 Mode:', this.mode);
+
+        // ✅ ALWAYS get fresh query params
+        const planId = this.activatedRoute.snapshot.queryParamMap.get('planId');
+        console.log('🔍 planId:', planId);
       });
   }
 
   // ===================================================
-  // ✅ NAVIGATION METHODS
+  // ✅ NAVIGATION (preserve params safely)
   // ===================================================
   goToLogin(): void {
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(['/auth/login'], {
+      queryParamsHandling: 'merge'   // ✅ better than manual snapshot
+    });
   }
 
   goToRegister(): void {
-    this.router.navigate(['/auth/register']);
+    this.router.navigate(['/auth/register'], {
+      queryParamsHandling: 'merge'
+    });
   }
 
   // ===================================================
-  // ✅ CURSOR EFFECTS (UNCHANGED)
+  // ✅ CURSOR EFFECT
   // ===================================================
   ngAfterViewInit(): void {
     const root = document.documentElement;
@@ -78,7 +100,15 @@ export class AuthShellComponent implements OnInit, AfterViewInit, OnDestroy {
     window.addEventListener('blur', this.blurHandler);
   }
 
+  // ===================================================
+  // ✅ CLEANUP
+  // ===================================================
   ngOnDestroy(): void {
+    // ✅ Kill subscriptions
+    this.destroy$.next();
+    this.destroy$.complete();
+
+    // ✅ Remove event listeners
     window.removeEventListener('mousemove', this.mouseMoveHandler);
     window.removeEventListener('mouseleave', this.mouseLeaveHandler);
     window.removeEventListener('blur', this.blurHandler);

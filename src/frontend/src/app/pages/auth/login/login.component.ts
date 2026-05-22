@@ -8,10 +8,7 @@ import { AuthService } from '../../../auth/auth.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    NgIf
-  ],
+  imports: [ReactiveFormsModule, NgIf],
   templateUrl: './login.component.html',
 })
 export class LoginComponent implements OnInit {
@@ -23,11 +20,10 @@ export class LoginComponent implements OnInit {
 
   loading = false;
   error: string | null = null;
+  successMessage: string | null = null;  // ✅ Add success message
 
-  // ✅ Define redirect URL properly
   redirectUrl = '/app/dashboard';
 
-  // ✅ Define rememberMe if you want it
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
@@ -35,9 +31,23 @@ export class LoginComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    // ✅ Support redirects from AuthGuard
-    this.redirectUrl =
-      this.route.snapshot.queryParams['redirect'] || '/app/dashboard';
+    this.redirectUrl = this.route.snapshot.queryParams['redirect'] || '/app/dashboard';
+
+    // ✅ Show success message if coming from registration
+    if (this.route.snapshot.queryParams['registered'] === 'true') {
+      this.successMessage = 'Account created successfully! Please login with your credentials.';
+
+      // ✅ Auto-fill email if provided
+      const email = this.route.snapshot.queryParams['email'];
+      if (email) {
+        this.form.patchValue({ email });
+      }
+
+      // Auto-clear success message after 5 seconds
+      setTimeout(() => {
+        this.successMessage = null;
+      }, 5000);
+    }
   }
 
   submit(): void {
@@ -47,7 +57,8 @@ export class LoginComponent implements OnInit {
     }
 
     this.loading = true;
-    this.error = null; // ✅ FIXED (not undefined)
+    this.error = null;
+    this.successMessage = null;
 
     const { email, password, rememberMe } = this.form.value;
 
