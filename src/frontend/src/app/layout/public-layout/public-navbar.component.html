@@ -1,42 +1,48 @@
 <nav class="public-navbar">
-  <div class="nav-container">
-    <!-- Logo -->
-    <a class="nav-logo" (click)="scrollToSection('home')">
-      <span class="logo-icon">✦</span>
-      <span class="logo-text">Claim<span class="logo-highlight">Core</span></span>
-    </a>
+    <div class="nav-container">
+        <!-- Logo -->
+        <a class="nav-logo" (click)="scrollToSection('home')">
+            <span class="logo-icon">✦</span>
+            <span class="logo-text">Claim<span class="logo-highlight">Core</span></span>
+        </a>
 
-    <!-- Desktop Links -->
-    <div class="nav-links desktop-nav">
-      <a (click)="scrollToSection('about')">About</a>
-      <a (click)="scrollToSection('features')">Features</a>
-      <a (click)="scrollToSection('testimonials')">Testimonials</a>
-      <a (click)="scrollToSection('contact')">Contact</a>
-    </div>
+        <!-- Desktop Links -->
+        <div class="nav-links desktop-nav">
+            <a (click)="scrollToSection('about')">About</a>
+            <a (click)="scrollToSection('features')">Features</a>
+            <a (click)="scrollToSection('testimonials')">Testimonials</a>
+            <a (click)="scrollToSection('contact')">Contact</a>
+        </div>
 
-    <!-- Right side animated button -->
-    <div class="nav-actions">
-      <a class="explore-plan-btn" routerLink="/plans">
-        <span>Explore Plans</span>
-        <span class="btn-arrow">→</span>
-      </a>
+        <!-- Right side animated button -->
+        <div class="nav-actions">
+            <a class="explore-plan-btn" routerLink="/plans">
+                <span>Explore Plans</span>
+                <span class="btn-arrow">→</span>
+            </a>
 
-      <!-- Mobile Hamburger -->
-      <button class="mobile-menu-btn" (click)="toggleMobileMenu()" [class.active]="mobileMenuOpen">
+            <!-- Right: Logout -->
+            <a class="explore-plan-btn" routerLink="/auth/login">
+                <span>Login</span>
+                <span class="btn-icon">👤</span>
+            </a>
+
+            <!-- Mobile Hamburger -->
+            <button class="mobile-menu-btn" (click)="toggleMobileMenu()" [class.active]="mobileMenuOpen">
         <span></span><span></span><span></span>
       </button>
+        </div>
     </div>
-  </div>
 
-  <!-- Mobile Overlay Menu -->
-  <div class="mobile-menu" [class.open]="mobileMenuOpen">
-    <div class="mobile-menu-inner">
-      <a (click)="scrollToSection('about')">About</a>
-      <a (click)="scrollToSection('features')">Features</a>
-      <a (click)="scrollToSection('testimonials')">Testimonials</a>
-      <a (click)="scrollToSection('contact')">Contact</a>
-      <div class="mobile-divider"></div>
-      <a class="mobile-plan-link" routerLink="/plans" (click)="closeMenu()">Explore Plans →</a>
+    <!-- Mobile Overlay Menu -->
+    <div class="mobile-menu" [class.open]="mobileMenuOpen">
+        <div class="mobile-menu-inner">
+            <a (click)="scrollToSection('about')">About</a>
+            <a (click)="scrollToSection('features')">Features</a>
+            <a (click)="scrollToSection('testimonials')">Testimonials</a>
+            <a (click)="scrollToSection('contact')">Contact</a>
+            <div class="mobile-divider"></div>
+            <a class="mobile-plan-link" routerLink="/plans" (click)="closeMenu()">Explore Plans →</a>
+        </div>
     </div>
-  </div>
 </nav>

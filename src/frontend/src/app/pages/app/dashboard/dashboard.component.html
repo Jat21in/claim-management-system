@@ -1,26 +1,263 @@
-<div *ngIf="loading">Loading dashboard…</div>
+<div class="dashboard-wrapper">
+    <!-- LOADING STATE -->
+    <div *ngIf="loading" class="loading-state" @fadeInUp>
+        <div class="loading-spinner"></div>
+        <p>Loading your dashboard...</p>
+    </div>
 
-<div *ngIf="error" class="error">
-    {{ error }}
-</div>
+    <!-- ERROR STATE -->
+    <div *ngIf="error && !loading" class="error-banner" @fadeInUp>
+        <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+        <div>
+            <h3>Unable to Load Dashboard</h3>
+            <p>{{ error }}</p>
+        </div>
+    </div>
 
-<div *ngIf="!loading && data">
-    <h2>Welcome back, {{ data.fullName }}</h2>
+    <!-- MAIN DASHBOARD CONTENT -->
+    <div *ngIf="!loading && data && !error" class="dashboard-content">
 
-    <section *ngIf="data.activePlan; else noPlan" style="margin-top:16px; padding:16px; border:1px solid #ddd;">
-        <h3>Your Active Plan</h3>
+        <!-- ===== WELCOME SECTION ===== -->
+        <section class="welcome-section" @fadeInUp>
+            <div class="welcome-container">
+                <!-- Left: Greeting & Time -->
+                <div class="greeting-left">
+                    <div class="time-of-day-icon">{{ getSunMoonIcon() }}</div>
+                    <div class="greeting-content">
+                        <h1 class="greeting-title">{{ getTimeBasedGreeting() }}, <span class="user-name">{{ data.fullName }}</span></h1>
+                        <p class="greeting-subtitle">
+                            {{ typedGreeting }}<span class="cursor">|</span>
+                        </p>
+                    </div>
+                </div>
 
-        <p><strong>Plan:</strong> {{ data.activePlan.name }}</p>
-        <p><strong>Insured Amount:</strong> ₹{{ data.activePlan.insuredAmount }}</p>
+                <!-- Right: Current Time & Date -->
+                <div class="time-right">
+                    <div class="time-display">
+                        <div class="digital-time">{{ currentTime }}</div>
+                        <div class="digital-date">{{ currentDate }}</div>
+                    </div>
+                </div>
+            </div>
 
-        <p>
-            <strong>Valid:</strong> {{ data.activePlan.startDate | date }} → {{ data.activePlan.endDate | date }}
-        </p>
-    </section>
+            <!-- Animated gradient background -->
+            <div class="welcome-gradient"></div>
+        </section>
 
-    <ng-template #noPlan>
-        <p style="margin-top:16px; color:#888">
-            You do not have an active plan yet.
-        </p>
-    </ng-template>
+        <!-- ===== STATS CARDS GRID ===== -->
+        <section class="stats-section" @slideInLeft>
+            <h2 class="section-title">Your Coverage Overview</h2>
+
+            <div class="stats-grid">
+                <!-- Claims Submitted Card -->
+                <div class="stat-card claims-submitted" @scaleIn>
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Claims Submitted</div>
+                        <div class="stat-value">{{ stats.claimsSubmitted }}</div>
+                        <div class="stat-subtext">This year</div>
+                    </div>
+                    <div class="stat-accent"></div>
+                </div>
+
+                <!-- Claims Approved Card -->
+                <div class="stat-card claims-approved" @scaleIn>
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Claims Approved</div>
+                        <div class="stat-value">{{ stats.claimsApproved }}</div>
+                        <div class="stat-subtext">Success rate: {{ stats.approvalRate }}%</div>
+                    </div>
+                    <div class="stat-accent"></div>
+                </div>
+
+                <!-- Total Coverage Card -->
+                <div class="stat-card total-coverage" @scaleIn>
+                    <div class="stat-icon">🛡️</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Coverage</div>
+                        <div class="stat-value">{{ formatCurrency(stats.totalCoverage) }}</div>
+                        <div class="stat-subtext">Active coverage</div>
+                    </div>
+                    <div class="stat-accent"></div>
+                </div>
+
+                <!-- Days Until Renewal Card -->
+                <div class="stat-card renewal-days" @scaleIn>
+                    <div class="stat-icon">⏱️</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Days Till Renewal</div>
+                        <div class="stat-value">{{ stats.daysUntilRenewal }}</div>
+                        <div class="stat-subtext">{{ getStatusText('renewal') }}</div>
+                    </div>
+                    <div class="stat-accent"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== ACTIVE PLAN SECTION ===== -->
+        <section class="plan-section" @fadeInUp>
+            <h2 class="section-title">Your Active Plan</h2>
+
+            <div *ngIf="data.activePlan; else noPlan" class="plan-card">
+                <!-- Plan Header -->
+                <div class="plan-header">
+                    <div class="plan-info">
+                        <h3 class="plan-name">{{ data.activePlan.name }}</h3>
+                        <p class="plan-email">{{ data.email }}</p>
+                    </div>
+                    <div class="plan-badge">ACTIVE</div>
+                </div>
+
+                <!-- Plan Details Grid -->
+                <div class="plan-details-grid">
+                    <!-- Insured Amount -->
+                    <div class="plan-detail">
+                        <div class="detail-label">Insured Amount</div>
+                        <div class="detail-value">{{ formatCurrency(data.activePlan.insuredAmount) }}</div>
+                        <div class="detail-icon">💰</div>
+                    </div>
+
+                    <!-- Valid From -->
+                    <div class="plan-detail">
+                        <div class="detail-label">Coverage Start</div>
+                        <div class="detail-value">{{ data.activePlan.startDate | date: 'MMM dd, yyyy' }}</div>
+                        <div class="detail-icon">📅</div>
+                    </div>
+
+                    <!-- Valid Until -->
+                    <div class="plan-detail">
+                        <div class="detail-label">Coverage Expires</div>
+                        <div class="detail-value">{{ data.activePlan.endDate | date: 'MMM dd, yyyy' }}</div>
+                        <div class="detail-icon">🔔</div>
+                    </div>
+
+                    <!-- Days Remaining -->
+                    <div class="plan-detail">
+                        <div class="detail-label">Coverage Duration</div>
+                        <div class="detail-value">{{ stats.daysUntilRenewal }} days</div>
+                        <div class="detail-icon">⏳</div>
+                    </div>
+                </div>
+
+                <!-- Plan Actions -->
+                <div class="plan-actions">
+                    <button class="action-btn primary">View Full Details</button>
+                    <button class="action-btn secondary">Renew Plan</button>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="coverage-progress">
+                    <div class="progress-label">
+                        <span>Coverage Timeline</span>
+                        <span class="progress-percent">{{ coverageRemainingPercent }}% remaining</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" [style.width.%]="coverageRemainingPercent"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Plan Template -->
+            <ng-template #noPlan>
+                <div class="no-plan-container">
+                    <div class="no-plan-icon">🚫</div>
+                    <h3>No Active Plan</h3>
+                    <p>You don't have an active insurance plan yet. Let's get you covered!</p>
+                    <button class="explore-btn">Explore Plans</button>
+                </div>
+            </ng-template>
+        </section>
+
+        <!-- ===== QUICK ACTIONS ===== -->
+        <section class="actions-section" @slideInLeft>
+            <h2 class="section-title">Quick Actions</h2>
+
+            <div class="actions-grid">
+                <a href="/app/claims/new" class="action-card submit-claim">
+                    <div class="action-icon">📝</div>
+                    <div class="action-text">
+                        <h4>Submit New Claim</h4>
+                        <p>File a new insurance claim</p>
+                    </div>
+                    <div class="action-arrow">→</div>
+                </a>
+
+                <a href="/app/claims" class="action-card view-claims">
+                    <div class="action-icon">📂</div>
+                    <div class="action-text">
+                        <h4>View All Claims</h4>
+                        <p>Check your claim history</p>
+                    </div>
+                    <div class="action-arrow">→</div>
+                </a>
+
+                <a href="/app/profile" class="action-card edit-profile">
+                    <div class="action-icon">👤</div>
+                    <div class="action-text">
+                        <h4>Edit Profile</h4>
+                        <p>Update your information</p>
+                    </div>
+                    <div class="action-arrow">→</div>
+                </a>
+
+                <a href="/plans" class="action-card upgrade-plan">
+                    <div class="action-icon">⭐</div>
+                    <div class="action-text">
+                        <h4>Upgrade Plan</h4>
+                        <p>Explore better coverage options</p>
+                    </div>
+                    <div class="action-arrow">→</div>
+                </a>
+            </div>
+        </section>
+
+        <!-- ===== STATUS INDICATORS ===== -->
+        <section class="indicators-section" @fadeInUp>
+            <h2 class="section-title">Health Check</h2>
+
+            <div class="indicators-grid">
+                <!-- Approval Rate -->
+                <div class="indicator-card approval" [class]="'status-' + getStatusColor('approval')">
+                    <div class="indicator-header">
+                        <h4>Approval Rate</h4>
+                        <span class="status-badge">{{ getStatusText('approval') }}</span>
+                    </div>
+                    <div class="indicator-value">{{ stats.approvalRate }}%</div>
+                    <div class="indicator-bar">
+                        <div class="indicator-fill" [style.width.%]="stats.approvalRate"></div>
+                    </div>
+                </div>
+
+                <!-- Renewal Status -->
+                <div class="indicator-card renewal" [class]="'status-' + getStatusColor('renewal')">
+                    <div class="indicator-header">
+                        <h4>Renewal Status</h4>
+                        <span class="status-badge">{{ getStatusText('renewal') }}</span>
+                    </div>
+                    <div class="indicator-value">{{ stats.daysUntilRenewal }} days</div>
+                    <div class="indicator-message">
+                        <small>Your plan {{ stats.daysUntilRenewal > 30 ? 'is secure' : 'needs attention' }}</small>
+                    </div>
+                </div>
+
+                <!-- Account Status -->
+                <div class="indicator-card account success">
+                    <div class="indicator-header">
+                        <h4>Account Status</h4>
+                        <span class="status-badge">Active</span>
+                    </div>
+                    <div class="indicator-value">✓</div>
+                    <div class="indicator-message">
+                        <small>All documents verified</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
 </div>

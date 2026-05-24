@@ -1,1 +1,82 @@
-<h1>Change Plan</h1>
+<div class="change-plan-page">
+
+    <div class="page-header">
+        <h1 class="page-title">Change Plan</h1>
+        <p class="page-sub">Switch or upgrade your insurance coverage</p>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading plans…</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="loadError" class="error-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+    </svg> {{ loadError }}
+    </div>
+
+    <ng-container *ngIf="!loading">
+
+        <!-- Success / Error feedback -->
+        <div class="feedback-success" *ngIf="success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 6L9 17l-5-5"/>
+      </svg> {{ success }}
+        </div>
+
+        <div class="feedback-error" *ngIf="error">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+      </svg> {{ error }}
+        </div>
+
+        <!-- Plan cards -->
+        <div class="plans-grid">
+
+            <div class="plan-card" *ngFor="let plan of plans" [class.selected]="selectedPlanId === plan.planId" (click)="select(plan)">
+
+                <div class="plan-card-top">
+                    <div class="plan-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+                    </div>
+                    <div class="selected-check" *ngIf="selectedPlanId === plan.planId">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+                    </div>
+                </div>
+
+                <h3 class="plan-name">{{ plan.name }}</h3>
+                <p class="plan-desc">{{ plan.description }}</p>
+
+                <div class="plan-coverage">
+                    <span class="coverage-label">Coverage</span>
+                    <span class="coverage-val">₹{{ plan.insuredAmount | number }}</span>
+                </div>
+
+                <div class="plan-features" *ngIf="plan.features?.length">
+                    <div class="feature-item" *ngFor="let f of plan.features.slice(0, 4)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg> {{ f }}
+                    </div>
+                </div>
+
+                <div class="plan-footer">
+                    <span class="duration-chip">{{ plan.durationInMonths }} months</span>
+                    <button class="btn-select" [class.active]="selectedPlanId === plan.planId" [disabled]="saving" (click)="$event.stopPropagation(); confirm(plan)">
+            {{ selectedPlanId === plan.planId && saving ? 'Assigning…' : 'Select Plan' }}
+          </button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </ng-container>
+</div>

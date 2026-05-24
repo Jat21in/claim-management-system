@@ -5,22 +5,20 @@ import {
   ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { ClaimService } from '../../../services/claim.service';
 import { Claim } from '../../../claims/models/claim.model';
 
-type SortOption =
-  | 'latest'
-  | 'oldest'
-  | 'amount-desc'
-  | 'amount-asc';
+type SortOption = 'latest' | 'oldest' | 'amount-desc' | 'amount-asc';
 
 @Component({
   selector: 'app-claims',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './claims.component.html'
+  imports: [CommonModule, RouterLink],
+  templateUrl: './claims.component.html',
+  styleUrls: ['./claims.component.scss']
 })
 export class ClaimsComponent implements OnInit {
 
@@ -37,31 +35,20 @@ export class ClaimsComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchClaims();
-
-    // ✅ refresh after submit
-    this.claimService.refreshClaims$
-      .subscribe(() => {
-        this.fetchClaims();
-      });
+    this.claimService.refreshClaims$.subscribe(() => this.fetchClaims());
   }
 
   private fetchClaims(): void {
     this.loading = true;
     this.error = null;
-
     this.cdr.markForCheck();
 
     this.claimService.getMyClaims()
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.cdr.markForCheck();
-        })
-      )
+      .pipe(finalize(() => { this.loading = false; this.cdr.markForCheck(); }))
       .subscribe({
         next: (claims: Claim[]) => {
           this.claims = claims;
-          this.applySort(); // ✅ apply sorting after fetch
+          this.applySort();
           this.cdr.markForCheck();
         },
         error: () => {
@@ -71,43 +58,26 @@ export class ClaimsComponent implements OnInit {
       });
   }
 
-  // ✅ CORE SORT LOGIC
   applySort(): void {
     const data = [...this.claims];
-
     switch (this.sortBy) {
       case 'latest':
-        this.sortedClaims = data.sort(
-          (a, b) =>
-            new Date(b.claimDate).getTime() -
-            new Date(a.claimDate).getTime()
-        );
+        this.sortedClaims = data.sort((a, b) => new Date(b.claimDate).getTime() - new Date(a.claimDate).getTime());
         break;
-
       case 'oldest':
-        this.sortedClaims = data.sort(
-          (a, b) =>
-            new Date(a.claimDate).getTime() -
-            new Date(b.claimDate).getTime()
-        );
+        this.sortedClaims = data.sort((a, b) => new Date(a.claimDate).getTime() - new Date(b.claimDate).getTime());
         break;
-
       case 'amount-desc':
-        this.sortedClaims = data.sort(
-          (a, b) => b.amount - a.amount
-        );
+        this.sortedClaims = data.sort((a, b) => b.amount - a.amount);
         break;
-
       case 'amount-asc':
-        this.sortedClaims = data.sort(
-          (a, b) => a.amount - b.amount
-        );
+        this.sortedClaims = data.sort((a, b) => a.amount - b.amount);
         break;
     }
   }
 
-  onSortChange(value: string): void {
-    this.sortBy = value as SortOption;
+  onSortChange(value: SortOption): void {
+    this.sortBy = value;
     this.applySort();
     this.cdr.markForCheck();
   }
