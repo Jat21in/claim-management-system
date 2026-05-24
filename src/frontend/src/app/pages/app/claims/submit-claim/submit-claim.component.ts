@@ -2,14 +2,15 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ClaimService } from '../../../../services/claim.service';
 
 @Component({
   selector: 'app-submit-claim',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './submit-claim.component.html',
+  styleUrls: ['./submit-claim.component.scss'],
 })
 export class SubmitClaimComponent {
   private fb = inject(FormBuilder);
@@ -21,8 +22,8 @@ export class SubmitClaimComponent {
   success: string | null = null;
 
   form = this.fb.group({
-    claimDate: ['', Validators.required],
-    amount: [null, [Validators.required, Validators.min(1)]],
+    claimDate:   ['', Validators.required],
+    amount:      [null, [Validators.required, Validators.min(1)]],
     description: [''],
   });
 
@@ -33,10 +34,7 @@ export class SubmitClaimComponent {
     }
 
     const selectedDate = new Date(this.form.value.claimDate!);
-    const today = new Date();
-
-    // ✅ FUTURE DATE BLOCK
-    if (selectedDate > today) {
+    if (selectedDate > new Date()) {
       this.error = 'Claim date cannot be in the future';
       return;
     }
@@ -50,26 +48,11 @@ export class SubmitClaimComponent {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: () => {
-          this.success = 'Claim submitted successfully ✅';
-
-          // ✅ refresh list
+          this.success = 'Claim submitted successfully';
           this.claimService.triggerRefresh();
-
-          this.router.navigate(['/app/claims'], {
-            replaceUrl: true,
-          });
-
-          // ✅ soft reset (UX friendly)
-          this.form.patchValue({
-            claimDate: '',
-            amount: null,
-            description: '',
-          });
-
-          // ✅ auto-clear success
           setTimeout(() => {
-            this.success = null;
-          }, 3000);
+            this.router.navigate(['/app/claims'], { replaceUrl: true });
+          }, 1200);
         },
         error: (err) => {
           this.error = err?.error?.message ?? 'Failed to submit claim';

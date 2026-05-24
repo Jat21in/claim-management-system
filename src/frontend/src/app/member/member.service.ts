@@ -19,7 +19,7 @@ export interface MemberProfile {
 @Injectable({ providedIn: 'root' })
 export class MemberService {
 
-  private base = `${environment.apiBaseUrl}/api/v1/members`;
+  private base = `${environment.apiBaseUrl}/v1/members`;
 
   constructor(private http: HttpClient) {}
 

@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { Observable } from 'rxjs';
 
 export interface PublicPlan {
   planId: string;
@@ -14,34 +13,32 @@ export interface PublicPlan {
   isFeatured: boolean;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class PlanService {
-  private readonly baseUrl =
-    `${environment.apiBaseUrl}/v1/public/plans`;
+  // ✅ Correct base URL – no '/public'
+  private base = `${environment.apiBaseUrl}/v1/plans`;
 
   constructor(private http: HttpClient) {
-    console.log('[PlanService] Base URL:', this.baseUrl);
+    console.log('[PlanService] Base URL:', this.base); // should log without /public
   }
 
-  // /src/frontend/src/app/services/plan.service.ts
-
-getPublicPlans(): Observable<PublicPlan[]> {
-    console.log('[PlanService] Fetching all plans');
-    return this.http.get<PublicPlan[]>(this.baseUrl).pipe(
-        tap((plans: PublicPlan[]) => {
-            console.log('📋 Plans from API:', plans);
-            plans.forEach(plan => {
-                console.log(`Plan: ${plan.name}, ID: ${plan.planId}, Type: ${typeof plan.planId}`);
-            });
-        })
-    );
-}
+  // Get all public plans (still uses public endpoint)
+  getPublicPlans(): Observable<PublicPlan[]> {
+    // ✅ Public plans endpoint is separate
+    return this.http.get<PublicPlan[]>(`${environment.apiBaseUrl}/v1/public/plans`);
+  }
 
   getPlanById(planId: string): Observable<PublicPlan> {
-    const url = `${this.baseUrl}/${planId}`;
-    console.log('[PlanService] Fetching plan by ID:', url);
-    return this.http.get<PublicPlan>(url);
+    return this.http.get<PublicPlan>(`${environment.apiBaseUrl}/v1/public/plans/${planId}`);
+  }
+
+  // ✅ Assign a new plan (authenticated)
+  assignPlan(planId: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/assign`, { planId });
+  }
+
+  // ✅ Update current plan (authenticated)
+  updatePlan(payload: { endDate: string; insuredAmount: number }): Observable<void> {
+    return this.http.put<void>(`${this.base}/update`, payload);
   }
 }

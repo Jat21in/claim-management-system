@@ -9,6 +9,7 @@ import { AuthShellComponent } from './layout/auth-shell/auth-shell.component';
 import { LandingComponent } from './pages/public/landing/landing.component';
 import { PlansComponent } from './pages/public/plans/plans.component';
 import { PlanDetailComponent } from './pages/public/plan-details/plan-details.component';
+import { ChangePlanComponent } from './pages/app/change-plan/change-plan.component';
 
 // auth pages
 import { LoginComponent } from './pages/auth/login/login.component';
@@ -63,6 +64,7 @@ export const routes: Routes = [
     { path: 'claims', component: ClaimsComponent },
     { path: 'claims/new', component: SubmitClaimComponent }, // ✅ ADD THIS
     { path: 'profile', component: ProfileComponent },
+    {path: 'change-plan', component: ChangePlanComponent},
   ],
 },
 
