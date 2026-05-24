@@ -1,4 +1,5 @@
-﻿using CMS.Application.DTOs.Plan;
+﻿using CMS.Application.DTOs.Member;
+using CMS.Application.DTOs.Plan;
 using CMS.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,4 +32,18 @@ public sealed class PlanController : ControllerBase
 
         return Ok(new { message = "Plan updated successfully" });
     }
+
+    [HttpPost("assign")]
+    public async Task<IActionResult> AssignPlan([FromBody] AssignPlanRequest request)
+    {
+        var memberId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        await _memberService.AssignPlanAsync(
+            memberId,
+            request,
+            HttpContext.RequestAborted);
+
+        return Ok(new { message = "Plan assigned successfully" });
+    }
+
 }

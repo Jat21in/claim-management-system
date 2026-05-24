@@ -81,9 +81,9 @@ public sealed class MemberService : IMemberService
     }
 
     public async Task UpdateActivePlanAsync(
-        Guid memberId,
-        UpdatePlanRequest request,
-        CancellationToken cancellationToken)
+    Guid memberId,
+    UpdatePlanRequest request,
+    CancellationToken cancellationToken)
     {
         var member = await _memberRepository
             .GetByIdWithActivePlanAsync(memberId, cancellationToken)
@@ -92,8 +92,15 @@ public sealed class MemberService : IMemberService
         if (member.ActivePlan is null)
             throw new InvalidOperationException("No active plan found.");
 
+        // Additional validations
+        if (request.EndDate <= DateTime.UtcNow)
+            throw new InvalidOperationException("End date must be in the future.");
+
+        if (request.InsuredAmount <= 0)
+            throw new ArgumentException("Insured amount must be positive.");
+
         if (request.EndDate <= member.ActivePlan.EndDate)
-            throw new InvalidOperationException("End date must be after current end date.");
+            throw new InvalidOperationException("New end date must be after current end date.");
 
         member.ActivePlan.UpdateValidityAndCoverage(
             request.EndDate,
@@ -101,6 +108,7 @@ public sealed class MemberService : IMemberService
 
         await _memberRepository.UpdateAsync(member, cancellationToken);
     }
+
 
     public async Task<MemberDashboardResponse> GetMyDashboardAsync(
         Guid memberId,
