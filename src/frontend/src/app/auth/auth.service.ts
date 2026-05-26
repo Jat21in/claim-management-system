@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { jwtDecode } from 'jwt-decode';
 
 export interface LoginResponse {
   token: string;
@@ -14,6 +15,7 @@ export class AuthService {
 
   private readonly TOKEN_KEY = 'cms_token';
   private readonly EXPIRY_KEY = 'cms_expiry';
+  private readonly ROLE_KEY = 'user_role'; // ✅ added
 
   constructor(
     private http: HttpClient,
@@ -39,7 +41,23 @@ export class AuthService {
           storage.setItem(this.TOKEN_KEY, res.token);
           storage.setItem(this.EXPIRY_KEY, res.expiresAt);
 
-          // ✅ optional but recommended
+          // ✅ Decode JWT & store role
+          try {
+            const decoded: any = jwtDecode(res.token);
+
+            const role =
+              decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
+              decoded['role'] ||
+              decoded['Role'] ||
+              'Member';
+
+            storage.setItem(this.ROLE_KEY, role);
+          } catch (err) {
+            console.error('JWT decode failed:', err);
+            storage.setItem(this.ROLE_KEY, 'Member');
+          }
+
+          // ✅ Start expiry tracking
           this.startExpiryWatcher(res.expiresAt);
         })
       );
@@ -48,27 +66,21 @@ export class AuthService {
   // =====================
   // ✅ REGISTER
   // =====================
-  // /src/frontend/src/app/auth/auth.service.ts
-
-register(payload: {
+  register(payload: {
     fullName: string;
     email: string;
     password: string;
     dateOfBirth: string;
     selectedPlanId?: string;
-}) {
+  }) {
     console.log('🚀 AuthService.register called with:', payload);
-
-    // ✅ Don't modify the payload - send as is
-    // The backend will handle null/undefined appropriately
-
     console.log('📤 Sending to backend:', payload);
 
     return this.http.post(
-        `${environment.apiBaseUrl}/auth/register`,
-        payload
+      `${environment.apiBaseUrl}/auth/register`,
+      payload
     );
-}
+  }
 
   // =====================
   // ✅ AUTH STATE
@@ -77,6 +89,13 @@ register(payload: {
     return (
       localStorage.getItem(this.TOKEN_KEY) ??
       sessionStorage.getItem(this.TOKEN_KEY)
+    );
+  }
+
+  getUserRole(): string | null {
+    return (
+      localStorage.getItem(this.ROLE_KEY) ??
+      sessionStorage.getItem(this.ROLE_KEY)
     );
   }
 
@@ -99,14 +118,16 @@ register(payload: {
   logout(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.EXPIRY_KEY);
+    localStorage.removeItem(this.ROLE_KEY);
+
     sessionStorage.removeItem(this.TOKEN_KEY);
     sessionStorage.removeItem(this.EXPIRY_KEY);
+    sessionStorage.removeItem(this.ROLE_KEY);
 
-    // this.router.navigate(['/auth/login']);
     this.router.navigate(['/auth'], {
-  queryParams: { mode: 'login' },
-  replaceUrl: true,
-});
+      queryParams: { mode: 'login' },
+      replaceUrl: true,
+    });
   }
 
   // =====================

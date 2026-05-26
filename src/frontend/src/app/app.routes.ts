@@ -55,17 +55,21 @@ export const routes: Routes = [
    * 🧠 App (authenticated)
    */
   {
-  path: 'app',
-  component: AppLayoutComponent,
-  canActivate: [authGuard],
-  children: [
-    { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-    { path: 'dashboard', component: DashboardComponent },
-    { path: 'claims', component: ClaimsComponent },
-    { path: 'claims/new', component: SubmitClaimComponent }, // ✅ ADD THIS
-    { path: 'profile', component: ProfileComponent },
-    {path: 'change-plan', component: ChangePlanComponent},
-  ],
+    path: 'app',
+    component: AppLayoutComponent,
+    canActivate: [authGuard],
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: DashboardComponent },
+      { path: 'claims', component: ClaimsComponent },
+      { path: 'claims/new', component: SubmitClaimComponent }, // ✅ ADD THIS
+      { path: 'profile', component: ProfileComponent },
+      { path: 'change-plan', component: ChangePlanComponent },
+    ],
+  },
+  {
+  path: 'admin',
+  loadChildren: () => import('./admin/admin.routes').then(m => m.ADMIN_ROUTES)
 },
 
   /**
