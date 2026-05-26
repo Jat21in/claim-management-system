@@ -23,12 +23,29 @@ public sealed class ClaimRepository : IClaimRepository
     public async Task<List<Claim>> GetByMemberIdAsync(Guid memberId, CancellationToken ct)
     {
         return await _db.Claims
+            .Include(c => c.Member)
             .Where(c => c.MemberId == memberId)
             .ToListAsync(ct);
     }
 
     public async Task<Claim?> GetByIdAsync(Guid claimId, CancellationToken ct)
     {
-        return await _db.Claims.FirstOrDefaultAsync(c => c.ClaimId == claimId, ct);
+        return await _db.Claims
+            .Include(c => c.Member)
+            .FirstOrDefaultAsync(c => c.ClaimId == claimId, ct);
+    }
+
+    public async Task<IEnumerable<Claim>> GetAllAsync(CancellationToken ct)
+    {
+        return await _db.Claims
+            .Include(c => c.Member)
+            //.AsNoTracking()
+            .ToListAsync(ct);
+    }
+
+    public async Task UpdateAsync(Claim claim, CancellationToken ct)
+    {
+        _db.Claims.Update(claim);
+        await _db.SaveChangesAsync(ct);
     }
 }

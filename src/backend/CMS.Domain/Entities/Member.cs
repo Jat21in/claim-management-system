@@ -15,6 +15,7 @@ public sealed class Member : IAuditable
     public DateTime DateOfBirth { get; private set; }
     public Address Address { get; private set; } = null!;
     public string? ContactNumber { get; private set; }
+    public string Role { get; private set; } = "Member";  // "Admin", "ClaimsProcessor", "Member"
 
     // Authentication
     public string PasswordHash { get; private set; } = null!;
@@ -94,7 +95,8 @@ public sealed class Member : IAuditable
             memberId: MemberId,
             planId: ActivePlan.PlanId,
             claimDate: DateOnly.FromDateTime(claimDate),
-            claimAmount: claimAmount
+            claimAmount: claimAmount,
+            description: description   // ✅ FIX
         );
 
         _claims.Add(claim);

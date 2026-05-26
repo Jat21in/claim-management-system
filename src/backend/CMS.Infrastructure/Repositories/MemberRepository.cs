@@ -57,4 +57,13 @@ public sealed class MemberRepository : IMemberRepository
                 m => m.MemberId == memberId,
                 cancellationToken);
     }
+
+    public async Task<IEnumerable<Member>> GetAllAsync(CancellationToken ct)
+    {
+        return await _dbContext.Members
+            .Include(m => m.ActivePlan)
+            .Include(m => m.Claims)
+            .AsNoTracking()
+            .ToListAsync(ct);
+    }
 }
