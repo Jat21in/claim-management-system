@@ -7,6 +7,7 @@
         <a routerLink="/app/claims" style="margin-right: 16px;">My Claims</a>
         <a routerLink="/app/profile" style="margin-right: 16px;">Profile</a>
         <a routerLink="/app/change-plan" style="margin-right: 16px;">Change Plan</a>
+        <a *ngIf="isAdmin" routerLink="/admin" style="color: #a5b4fc;">🔧 Admin Panel</a>
     </div>
 
     <!-- Right: Logout -->
