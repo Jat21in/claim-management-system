@@ -1,167 +1,83 @@
 import { Component, OnInit } from '@angular/core';
-import { NgIf } from '@angular/common';
-import { Observable } from 'rxjs';
-import { PlanService, PublicPlan } from '../../../services/plan.service';
+import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { PlanService, PublicPlan } from '../../../services/plan.service';
+import { FooterComponent } from '../landing/components/footer/footer.component';
+
+interface FAQ {
+  question: string;
+  answer: string;
+  open: boolean;
+}
 
 @Component({
   selector: 'app-plans',
   standalone: true,
-  imports: [
-    NgIf,
-    RouterLink,
-  ],
-
+  imports: [CommonModule, RouterLink, FooterComponent],
   templateUrl: './plans.component.html',
   styleUrls: ['./plans.component.scss']
 })
 export class PlansComponent implements OnInit {
+  plans: PublicPlan[] = [];
+  loading = true;
+  error: string | null = null;
+  viewMode: 'grid' | 'compare' = 'grid';
 
-  planMap: { [key: string]: string } = {
-  'Elite Family': 'elite-id',
-  'Essential Care': 'basic-id',
-  'Advanced Plus': 'advanced-id'
-};
-
-
-  animatedPrices = {
-  elite: 99,
-  basic: 29,
-  advanced: 59
-};
-
-targetPrices = {
-  elite: 99,
-  basic: 29,
-  advanced: 59
-};
-
-animatePrice(key: keyof typeof this.animatedPrices) {
-  const duration = 400;
-  const start = this.animatedPrices[key];
-  const end = this.targetPrices[key];
-
-  const startTime = performance.now();
-
-  const animate = (time: number) => {
-    const progress = Math.min((time - startTime) / duration, 1);
-
-    this.animatedPrices[key] =
-      Math.floor(start + (end - start) * progress);
-
-    if (progress < 1) {
-      requestAnimationFrame(animate);
+  faqs: FAQ[] = [
+    {
+      question: 'How do I choose the right plan?',
+      answer: 'Consider your healthcare needs, budget, and family size. Our Essential plan is great for individuals, Premium for comprehensive coverage, and Family plan for complete family protection.',
+      open: false
+    },
+    {
+      question: 'Can I upgrade my plan later?',
+      answer: 'Yes! You can upgrade your plan at any time. The new coverage will be activated immediately, and you\'ll only pay the difference in premium.',
+      open: false
+    },
+    {
+      question: 'What is the claim process?',
+      answer: 'Simply submit your medical reports online, our AI system will process them, and you\'ll receive a decision within 2-3 business days.',
+      open: false
+    },
+    {
+      question: 'Are there any waiting periods?',
+      answer: 'Most benefits start immediately. Some specific treatments may have a 30-day waiting period. Check the plan details for specifics.',
+      open: false
     }
-  };
+  ];
 
-  requestAnimationFrame(animate);
-}
-priceChanging = false;
+  constructor(private planService: PlanService) {}
 
-toggleBilling(event: any) {
-  
-  this.priceChanging = true;
-
-  this.billing = event.target.checked ? 'yearly' : 'monthly';
-
-  if (this.billing === 'monthly') {
-    this.targetPrices = {
-      elite: 99,
-      basic: 29,
-      advanced: 59
-    };
-  } else {
-    this.targetPrices = {
-      elite: 999,
-      basic: 299,
-      advanced: 599
-    };
+  ngOnInit(): void {
+    this.loadPlans();
   }
 
-  this.animatePrice('elite');
-  this.animatePrice('basic');
-  this.animatePrice('advanced');
+  loadPlans(): void {
+    this.loading = true;
+    this.error = null;
 
-  setTimeout(() => {
-    this.priceChanging = false;
-  }, 300);
-}
-
-getDigits(value: number): string[] {
-  return value.toString().split('');
-}
-
-getPlanId(type: 'elite' | 'basic' | 'advanced'): string | null {
-  return this.planMap[type] || null;
-}
-
-  billing: 'monthly' | 'yearly' = 'monthly';
-
-  glowColor = 'rgba(99,102,241,0.4)'; 
-
-  setGlowColor(type: string) {  if (type === 'gold') {    this.glowColor = 'rgba(255,215,0,0.6)';  } else if (type === 'silver') {    this.glowColor = 'rgba(192,192,192,0.6)';  } else if (type === 'blue') {    this.glowColor = 'rgba(59,130,246,0.6)';  }}
-
-resetGlowColor() {
-  this.glowColor = 'rgba(99,102,241,0.4)';
-}
-
-  glowX = 0;
-  glowY = 0;
-
-  glowTargetX = 0;
-  glowTargetY = 0;
-
-  selectedPlan: string | null = null;
-
-  selectPlan(id: string) {
-    this.selectedPlan = id;
+    this.planService.getPublicPlans().subscribe({
+      next: (plans) => {
+        this.plans = plans;
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'Failed to load plans. Please try again.';
+        this.loading = false;
+      }
+    });
   }
 
-  onMouseMove(event: MouseEvent) {
-
-    const x = event.clientX;
-    const y = event.clientY;
-
-    this.glowTargetX = x;
-    this.glowTargetY = y;
+  selectPlan(plan: PublicPlan): void {
+    // Navigate to register with selected plan
+    window.location.href = `/auth/register?planId=${plan.planId}`;
   }
 
-  
-resetGlow() {
-    this.glowTargetX = window.innerWidth / 2;
-    this.glowTargetY = window.innerHeight / 2;
+  toggleFaq(index: number): void {
+    this.faqs[index].open = !this.faqs[index].open;
   }
 
-ngOnInit() {
-
-  this.planService.getPublicPlans().subscribe(res => {
-
-    console.log('API DATA:', res);
-
-    // ✅ FORCE MAPPING BY INDEX
-    this.planMap = {
-      elite: res[0]?.planId || '',
-      basic: res[1]?.planId || '',
-      advanced: res[2]?.planId || ''
-    };
-
-    console.log('FINAL MAP:', this.planMap);
-  });
-
-  this.animate();
-}
-  animate() {
-    
-this.glowX += (this.glowTargetX - this.glowX) * 0.12;
-  this.glowY += (this.glowTargetY - this.glowY) * 0.12;
-
-
-    requestAnimationFrame(() => this.animate());
-  }
-
-  plans$: Observable<PublicPlan[]>;
-
-  constructor(private planService: PlanService) {
-    this.plans$ = this.planService.getPublicPlans();
+  scrollToPlans(): void {
+    document.querySelector('.plans-grid')?.scrollIntoView({ behavior: 'smooth' });
   }
 }

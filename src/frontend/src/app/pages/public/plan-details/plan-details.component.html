@@ -1,27 +1,215 @@
-<!-- /src/frontend/src/app/pages/public/plan-details/plan-details.component.html -->
+<div class="plan-details-page" *ngIf="plan$ | async as plan; else loading">
+    <!-- Hero Section -->
+    <div class="details-hero">
+        <div class="hero-background"></div>
+        <div class="hero-content">
+            <div class="plan-badge" [class.featured]="plan.isFeatured">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg> {{ plan.isFeatured ? 'Most Popular Plan' : 'Premium Plan' }}
+            </div>
+            <h1 class="plan-title">{{ plan.name }}</h1>
+            <div class="plan-price-large">
+                <span class="price">₹{{ plan.insuredAmount | number }}</span>
+                <span class="period">/ total coverage</span>
+            </div>
+            <p class="plan-description-large">{{ plan.description }}</p>
+            <div class="hero-actions">
+                <button class="btn-primary" (click)="navigateToRegister()">
+          Get Started Now
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+                <button class="btn-secondary" (click)="scrollToFeatures()">
+          View Features
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+            </div>
+        </div>
+    </div>
 
-<ng-container *ngIf="plan$ | async as plan; else loading">
-    <h1>{{ plan.name }}</h1>
-    <p>{{ plan.description }}</p>
+    <!-- Features Section -->
+    <div class="features-section" id="features">
+        <div class="section-header">
+            <span class="section-badge">What's Included</span>
+            <h2>Plan Features & Benefits</h2>
+            <p>Everything you get with the {{ plan.name }}</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card" *ngFor="let feature of plan.features">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+                </div>
+                <h3>{{ feature }}</h3>
+                <p>Comprehensive coverage included in this plan</p>
+            </div>
+        </div>
+    </div>
 
-    <p><strong>Coverage:</strong> {{ plan.insuredAmount | currency:'USD':'symbol':'1.0-0' }}</p>
-    <p><strong>Duration:</strong> {{ plan.durationInMonths }} months</p>
+    <!-- Plan Details Grid -->
+    <div class="details-grid">
+        <div class="detail-card">
+            <div class="detail-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+            </div>
+            <h3>Coverage Duration</h3>
+            <p>{{ plan.durationInMonths }} months of comprehensive protection</p>
+            <span class="detail-value">{{ plan.durationInMonths }} Months</span>
+        </div>
+        <div class="detail-card">
+            <div class="detail-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 2a10 10 0 0 1 10 10c0 3.5-2 6.5-5 8l-2 2h-6l-2-2c-3-1.5-5-4.5-5-8a10 10 0 0 1 10-10z"/>
+          <path d="M12 8v4M12 16h.01"/>
+        </svg>
+            </div>
+            <h3>Claim Settlement</h3>
+            <p>Fast and hassle-free claim processing</p>
+            <span class="detail-value">24-48 Hours</span>
+        </div>
+        <div class="detail-card">
+            <div class="detail-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 12V8H4v12h16v-4M12 2v4M4 4l4 4M20 4l-4 4"/>
+        </svg>
+            </div>
+            <h3>Network Hospitals</h3>
+            <p>Access to premium healthcare providers</p>
+            <span class="detail-value">5000+ Hospitals</span>
+        </div>
+    </div>
 
-    <h3>Features</h3>
-    <ul>
-        <li *ngFor="let feature of plan.features">
-            {{ feature }}
-        </li>
-    </ul>
+    <!-- Comparison Table -->
+    <div class="comparison-section">
+        <div class="section-header">
+            <h2>Compare With Other Plans</h2>
+            <p>See how {{ plan.name }} stacks up against alternatives</p>
+        </div>
+        <div class="comparison-table-wrapper">
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Features</th>
+                        <th>{{ plan.name }}</th>
+                        <th>Standard Plan</th>
+                        <th>Basic Plan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Coverage Amount</td>
+                        <td class="highlight">₹{{ plan.insuredAmount | number }}</td>
+                        <td>₹500,000</td>
+                        <td>₹300,000</td>
+                    </tr>
+                    <tr>
+                        <td>Duration</td>
+                        <td class="highlight">{{ plan.durationInMonths }} months</td>
+                        <td>12 months</td>
+                        <td>12 months</td>
+                    </tr>
+                    <tr>
+                        <td>Hospital Network</td>
+                        <td class="highlight">5000+ hospitals</td>
+                        <td>3000+ hospitals</td>
+                        <td>1500+ hospitals</td>
+                    </tr>
+                    <tr>
+                        <td>Cashless Claims</td>
+                        <td class="highlight">✓ Yes</td>
+                        <td>✓ Yes</td>
+                        <td>✓ Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Pre-existing Coverage</td>
+                        <td class="highlight">✓ Covered</td>
+                        <td>After 2 years</td>
+                        <td>After 3 years</td>
+                    </tr>
+                    <tr>
+                        <td>Maternity Benefits</td>
+                        <td class="highlight">✓ Included</td>
+                        <td>Optional</td>
+                        <td>✗ Not included</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-    <!-- ✅ Use click handler instead of routerLink -->
-    <button type="button" (click)="navigateToRegister()" class="cta-btn">
-        Select this Plan
-    </button>
-</ng-container>
+    <!-- Testimonials -->
+    <div class="testimonials-section">
+        <div class="section-header">
+            <h2>What Our Members Say</h2>
+            <p>Trusted by thousands of happy customers</p>
+        </div>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="testimonial-quote">"</div>
+                <p>The claim process was seamless. Got my approval within 24 hours!"</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">R</div>
+                    <div>
+                        <div class="author-name">Rajesh Kumar</div>
+                        <div class="author-plan">Premium Plan Holder</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="testimonial-quote">"</div>
+                <p>Excellent coverage and support team. Highly recommended!</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">S</div>
+                    <div>
+                        <div class="author-name">Priya Sharma</div>
+                        <div class="author-plan">Family Plan Holder</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="testimonial-quote">"</div>
+                <p>Best decision I made for my family's health security.</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">A</div>
+                    <div>
+                        <div class="author-name">Amit Patel</div>
+                        <div class="author-plan">Essential Plan</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="cta-bottom">
+        <div class="cta-content">
+            <h3>Ready to secure your future?</h3>
+            <p>Join thousands of satisfied customers who trust us for their insurance needs</p>
+            <button class="cta-button" (click)="navigateToRegister()">
+        Get {{ plan.name }} Now
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
+        </div>
+    </div>
+</div>
 
 <ng-template #loading>
-    <div class="loading-state">
-        <h2>Loading plan details...</h2>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading plan details...</p>
     </div>
 </ng-template>
+
+<div class="footer">
+    <app-footer></app-footer>
+</div>

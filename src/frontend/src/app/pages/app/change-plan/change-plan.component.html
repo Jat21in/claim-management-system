@@ -1,82 +1,177 @@
-<div class="change-plan-page">
-
+<div class="change-plan-container">
     <div class="page-header">
-        <h1 class="page-title">Change Plan</h1>
-        <p class="page-sub">Switch or upgrade your insurance coverage</p>
+        <div>
+            <h1 class="page-title">Change Insurance Plan</h1>
+            <p class="page-subtitle">Compare and upgrade your coverage with our premium plans</p>
+        </div>
+        <button class="btn-secondary" routerLink="/app/dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Back to Dashboard
+    </button>
     </div>
 
-    <!-- Loading -->
+    <!-- Current Plan Card -->
+    <div class="current-plan-card" *ngIf="currentPlan">
+        <div class="current-plan-badge">Current Plan</div>
+        <div class="current-plan-content">
+            <div class="plan-icon-large">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+            </div>
+            <div class="current-plan-info">
+                <h3>{{ currentPlan.name }}</h3>
+                <p>{{ currentPlan.description }}</p>
+                <div class="plan-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Coverage Amount</span>
+                        <span class="detail-value">₹{{ currentPlan.insuredAmount | number }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Duration</span>
+                        <span class="detail-value">{{ currentPlan.durationInMonths }} months</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Valid Until</span>
+                        <span class="detail-value">{{ getPlanValidity() }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
     <div *ngIf="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading plans…</p>
+        <p>Loading available plans...</p>
     </div>
 
-    <!-- Error -->
+    <!-- Error State -->
     <div *ngIf="loadError" class="error-banner">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
     </svg> {{ loadError }}
     </div>
 
-    <ng-container *ngIf="!loading">
-
-        <!-- Success / Error feedback -->
-        <div class="feedback-success" *ngIf="success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M20 6L9 17l-5-5"/>
-      </svg> {{ success }}
+    <!-- Available Plans Grid -->
+    <div class="plans-section" *ngIf="!loading">
+        <div class="section-header">
+            <h2>Available Plans</h2>
+            <p>Choose the plan that best fits your needs</p>
         </div>
 
-        <div class="feedback-error" *ngIf="error">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
-      </svg> {{ error }}
-        </div>
-
-        <!-- Plan cards -->
         <div class="plans-grid">
+            <div class="plan-card" *ngFor="let plan of plans" [class.selected]="selectedPlanId === plan.planId" [class.featured]="plan.isFeatured" (click)="selectPlan(plan)">
 
-            <div class="plan-card" *ngFor="let plan of plans" [class.selected]="selectedPlanId === plan.planId" (click)="select(plan)">
+                <div class="plan-badge" *ngIf="plan.isFeatured">Featured</div>
 
-                <div class="plan-card-top">
-                    <div class="plan-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
-                    </div>
-                    <div class="selected-check" *ngIf="selectedPlanId === plan.planId">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M20 6L9 17l-5-5"/>
-            </svg>
-                    </div>
+                <div class="plan-header">
+                    <div class="plan-name">{{ plan.name }}</div>
+                    <div class="plan-price">₹{{ plan.insuredAmount | number }}</div>
+                    <div class="plan-duration">for {{ plan.durationInMonths }} months</div>
                 </div>
 
-                <h3 class="plan-name">{{ plan.name }}</h3>
-                <p class="plan-desc">{{ plan.description }}</p>
+                <div class="plan-description">{{ plan.description }}</div>
 
-                <div class="plan-coverage">
-                    <span class="coverage-label">Coverage</span>
-                    <span class="coverage-val">₹{{ plan.insuredAmount | number }}</span>
-                </div>
-
-                <div class="plan-features" *ngIf="plan.features?.length">
-                    <div class="feature-item" *ngFor="let f of plan.features.slice(0, 4)">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M20 6L9 17l-5-5"/>
-            </svg> {{ f }}
+                <div class="plan-features">
+                    <div class="feature-item" *ngFor="let feature of plan.features.slice(0, 5)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+                        <span>{{ feature }}</span>
+                    </div>
+                    <div class="feature-more" *ngIf="plan.features.length > 5">
+                        +{{ plan.features.length - 5 }} more features
                     </div>
                 </div>
 
                 <div class="plan-footer">
-                    <span class="duration-chip">{{ plan.durationInMonths }} months</span>
-                    <button class="btn-select" [class.active]="selectedPlanId === plan.planId" [disabled]="saving" (click)="$event.stopPropagation(); confirm(plan)">
-            {{ selectedPlanId === plan.planId && saving ? 'Assigning…' : 'Select Plan' }}
+                    <button class="btn-select" [class.active]="selectedPlanId === plan.planId" [disabled]="saving && selectedPlanId === plan.planId" (click)="$event.stopPropagation(); confirmPlan(plan)">
+            <span *ngIf="!(saving && selectedPlanId === plan.planId)">Select Plan</span>
+            <div *ngIf="saving && selectedPlanId === plan.planId" class="btn-spinner-small"></div>
+            <span *ngIf="saving && selectedPlanId === plan.planId">Processing...</span>
           </button>
                 </div>
 
+                <div class="selected-overlay" *ngIf="selectedPlanId === plan.planId && !saving">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+                    <span>Selected</span>
+                </div>
             </div>
-
         </div>
+    </div>
 
-    </ng-container>
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" *ngIf="showConfirmModal" (click)="closeModal()">
+        <div class="modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Confirm Plan Change</h3>
+                <button class="modal-close" (click)="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="plan-comparison">
+                    <div class="comparison-item current">
+                        <div class="comparison-label">Current Plan</div>
+                        <div class="comparison-value">{{ currentPlan?.name }}</div>
+                        <div class="comparison-amount">₹{{ currentPlan?.insuredAmount | number }}</div>
+                    </div>
+                    <div class="comparison-arrow">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+                    </div>
+                    <div class="comparison-item new">
+                        <div class="comparison-label">New Plan</div>
+                        <div class="comparison-value">{{ selectedPlanForConfirm?.name }}</div>
+                        <div class="comparison-amount">₹{{ selectedPlanForConfirm?.insuredAmount | number }}</div>
+                    </div>
+                </div>
+
+                <div class="modal-warning" *ngIf="isDowngrade">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+                    <span>Warning: This is a downgrade. Your coverage amount will decrease.</span>
+                </div>
+
+                <div class="modal-info" *ngIf="!isDowngrade">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4M12 8h.01"/>
+          </svg>
+                    <span>Your new plan will be activated immediately.</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" (click)="closeModal()">Cancel</button>
+                <button class="btn-confirm" (click)="confirmChange()" [disabled]="processing">
+          {{ processing ? 'Processing...' : 'Confirm Change' }}
+        </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div class="feedback-success" *ngIf="success">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+      <polyline points="22 4 12 14.01 9 11.01"/>
+    </svg> {{ success }}
+    </div>
+
+    <div class="feedback-error" *ngIf="error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg> {{ error }}
+    </div>
 </div>

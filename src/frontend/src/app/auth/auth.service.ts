@@ -113,6 +113,24 @@ export class AuthService {
   }
 
   // =====================
+  // ✅ TOKEN HELPERS
+  // =====================
+  /**
+   * Decode the currently stored JWT token and return the payload.
+   * Returns null when no token is available or decoding fails.
+   */
+  getDecodedToken(): any | null {
+    const token = this.getToken();
+    if (!token) return null;
+    try {
+      return jwtDecode(token) as any;
+    } catch (err) {
+      console.warn('Failed to decode token', err);
+      return null;
+    }
+  }
+
+  // =====================
   // ✅ LOGOUT
   // =====================
   logout(): void {

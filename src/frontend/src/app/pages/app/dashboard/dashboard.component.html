@@ -1,263 +1,305 @@
-<div class="dashboard-wrapper">
-    <!-- LOADING STATE -->
-    <div *ngIf="loading" class="loading-state" @fadeInUp>
-        <div class="loading-spinner"></div>
-        <p>Loading your dashboard...</p>
-    </div>
-
-    <!-- ERROR STATE -->
-    <div *ngIf="error && !loading" class="error-banner" @fadeInUp>
-        <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <circle cx="12" cy="12" r="10"></circle>
-      <line x1="12" y1="8" x2="12" y2="12"></line>
-      <line x1="12" y1="16" x2="12.01" y2="16"></line>
-    </svg>
-        <div>
-            <h3>Unable to Load Dashboard</h3>
-            <p>{{ error }}</p>
+<div class="dashboard-container">
+    <!-- Hero Section with Welcome Message -->
+    <div class="hero-section">
+        <div class="hero-content">
+            <div class="welcome-badge">
+                <span class="welcome-icon">👋</span>
+                <span>Welcome back, {{ memberName }}</span>
+            </div>
+            <h1 class="hero-title">
+                Your Insurance Dashboard
+                <span class="hero-gradient">✨</span>
+            </h1>
+            <p class="hero-subtitle">
+                Track your coverage, monitor claims, and get AI-powered insights at a glance
+            </p>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat-card">
+                <div class="hero-stat-value">{{ healthScore }}%</div>
+                <div class="hero-stat-label">Health Score</div>
+                <div class="hero-stat-trend up">↑ 12% vs last month</div>
+            </div>
         </div>
     </div>
 
-    <!-- MAIN DASHBOARD CONTENT -->
-    <div *ngIf="!loading && data && !error" class="dashboard-content">
-
-        <!-- ===== WELCOME SECTION ===== -->
-        <section class="welcome-section" @fadeInUp>
-            <div class="welcome-container">
-                <!-- Left: Greeting & Time -->
-                <div class="greeting-left">
-                    <div class="time-of-day-icon">{{ getSunMoonIcon() }}</div>
-                    <div class="greeting-content">
-                        <h1 class="greeting-title">{{ getTimeBasedGreeting() }}, <span class="user-name">{{ data.fullName }}</span></h1>
-                        <p class="greeting-subtitle">
-                            {{ typedGreeting }}<span class="cursor">|</span>
-                        </p>
+    <!-- Active Plan Spotlight -->
+    <div class="plan-spotlight" *ngIf="activePlan">
+        <div class="spotlight-glow"></div>
+        <div class="spotlight-content">
+            <div class="spotlight-header">
+                <span class="spotlight-badge">Active Plan</span>
+                <button class="spotlight-action" routerLink="/app/change-plan">
+          Change Plan <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+            </div>
+            <div class="spotlight-plan-info">
+                <div class="plan-icon-wrapper">
+                    <div class="plan-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
                     </div>
                 </div>
+                <div class="plan-details">
+                    <h2 class="plan-name">{{ activePlan.name }}</h2>
+                    <div class="plan-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Coverage Amount</span>
+                            <span class="meta-value">₹{{ activePlan.insuredAmount | number }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Valid Until</span>
+                            <span class="meta-value">{{ getPlanValidity() }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Days Remaining</span>
+                            <span class="meta-value highlight">{{ daysRemaining }} days</span>
+                        </div>
+                    </div>
+                    <div class="coverage-bar">
+                        <div class="coverage-label">Coverage Utilization</div>
+                        <div class="coverage-progress">
+                            <div class="coverage-fill" [style.width]="coverageUtilization + '%'"></div>
+                        </div>
+                        <div class="coverage-stats">
+                            <span>₹{{ totalClaimedAmount | number }} used</span>
+                            <span>₹{{ remainingCoverage | number }} remaining</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                <!-- Right: Current Time & Date -->
-                <div class="time-right">
-                    <div class="time-display">
-                        <div class="digital-time">{{ currentTime }}</div>
-                        <div class="digital-date">{{ currentDate }}</div>
+    <!-- Key Metrics Grid -->
+    <div class="metrics-grid">
+        <div class="metric-card" (click)="navigateTo('/app/claims')">
+            <div class="metric-icon blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 12V8H4v12h16v-4M12 2v4M4 4l4 4M20 4l-4 4"/>
+        </svg>
+            </div>
+            <div class="metric-info">
+                <span class="metric-value">{{ totalClaims }}</span>
+                <span class="metric-label">Total Claims</span>
+            </div>
+            <div class="metric-trend">{{ getClaimTrend() }}</div>
+        </div>
+
+        <div class="metric-card" (click)="navigateTo('/app/claims')">
+            <div class="metric-icon green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+            </div>
+            <div class="metric-info">
+                <span class="metric-value">{{ approvedClaims }}</span>
+                <span class="metric-label">Approved</span>
+            </div>
+            <div class="metric-trend up">+{{ approvalRate }}% rate</div>
+        </div>
+
+        <div class="metric-card" (click)="navigateTo('/app/claims')">
+            <div class="metric-icon yellow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4M12 16h.01"/>
+        </svg>
+            </div>
+            <div class="metric-info">
+                <span class="metric-value">{{ pendingClaims }}</span>
+                <span class="metric-label">Pending</span>
+            </div>
+            <div class="metric-trend" [class]="pendingTrend > 0 ? 'up' : 'down'">
+                {{ pendingTrend > 0 ? '+' : '' }}{{ pendingTrend }} this week
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+            </div>
+            <div class="metric-info">
+                <span class="metric-value">{{ avgProcessingTime }}</span>
+                <span class="metric-label">Avg Processing Time</span>
+            </div>
+            <div class="metric-trend down">↓ 1.2 days</div>
+        </div>
+    </div>
+
+    <!-- Main Charts Row -->
+    <div class="charts-row">
+        <!-- Claim Analytics Card -->
+        <div class="chart-card large">
+            <div class="chart-header">
+                <div>
+                    <h3 class="chart-title">Claim Analytics</h3>
+                    <p class="chart-subtitle">7-day trend with AI predictions</p>
+                </div>
+                <div class="chart-controls">
+                    <button class="chart-btn" [class.active]="chartType === 'claims'" (click)="switchChartType('claims')">Claims</button>
+                    <button class="chart-btn" [class.active]="chartType === 'amount'" (click)="switchChartType('amount')">Amount</button>
+                </div>
+            </div>
+            <canvas #claimsChart></canvas>
+            <div class="chart-insights" *ngIf="aiPrediction">
+                <div class="insight-badge">AI Insight</div>
+                <span>{{ aiPrediction }}</span>
+            </div>
+        </div>
+
+        <!-- Status Distribution -->
+        <div class="chart-card">
+            <h3 class="chart-title">Claims Status</h3>
+            <div class="donut-container">
+                <canvas #statusChart></canvas>
+            </div>
+            <div class="status-legend">
+                <div class="legend-item">
+                    <span class="legend-dot approved"></span>
+                    <span>Approved</span>
+                    <strong>{{ approvedPercent }}%</strong>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot pending"></span>
+                    <span>Pending</span>
+                    <strong>{{ pendingPercent }}%</strong>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot rejected"></span>
+                    <span>Rejected</span>
+                    <strong>{{ rejectedPercent }}%</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Insights & Recommendations -->
+    <div class="ai-insights-section">
+        <div class="section-header">
+            <div class="header-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 2a10 10 0 0 1 10 10c0 3.5-2 6.5-5 8l-2 2h-6l-2-2c-3-1.5-5-4.5-5-8a10 10 0 0 1 10-10z"/>
+          <path d="M12 8v4M12 16h.01"/>
+        </svg>
+            </div>
+            <div>
+                <h3>AI-Powered Insights</h3>
+                <p>Personalized recommendations based on your claim history</p>
+            </div>
+        </div>
+        <div class="insights-grid">
+            <div class="insight-card" *ngFor="let insight of aiInsights">
+                <div class="insight-icon" [class]="insight.type">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 8v4M12 16h.01" *ngIf="insight.type === 'warning'"/>
+            <polyline points="20 6 9 17 4 12" *ngIf="insight.type === 'success'"/>
+            <circle cx="12" cy="12" r="10" *ngIf="insight.type === 'info'"/>
+          </svg>
+                </div>
+                <div class="insight-content">
+                    <h4>{{ insight.title }}</h4>
+                    <p>{{ insight.message }}</p>
+                    <button class="insight-action" *ngIf="insight.action" (click)="handleInsightAction(insight.action)">
+            {{ insight.actionLabel }}
+          </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Claims Activity -->
+    <div class="recent-section">
+        <div class="section-header">
+            <div class="header-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+            </div>
+            <div>
+                <h3>Recent Activity</h3>
+                <p>Your latest claims and updates</p>
+            </div>
+            <button class="view-all" routerLink="/app/claims">View All →</button>
+        </div>
+
+        <div class="activity-timeline">
+            <div class="timeline-item" *ngFor="let claim of recentClaims">
+                <div class="timeline-icon" [class]="claim.status.toLowerCase()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" *ngIf="claim.status === 'Pending'"/>
+            <path d="M20 6L9 17l-5-5" *ngIf="claim.status === 'Approved'"/>
+            <line x1="18" y1="6" x2="6" y2="18" *ngIf="claim.status === 'Rejected'"/>
+          </svg>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <span class="timeline-title">{{ claim.description || 'Medical Claim' }}</span>
+                        <span class="timeline-amount">₹{{ claim.amount | number }}</span>
+                    </div>
+                    <div class="timeline-meta">
+                        <span class="timeline-date">{{ claim.claimDate | date:'MMM dd, yyyy' }}</span>
+                        <span class="timeline-status" [class]="claim.status.toLowerCase()">{{ claim.status }}</span>
+                        <span *ngIf="claim.aiConfidenceScore" class="timeline-ai-score">
+              🤖 AI Score: {{ claim.aiConfidenceScore }}%
+            </span>
                     </div>
                 </div>
             </div>
 
-            <!-- Animated gradient background -->
-            <div class="welcome-gradient"></div>
-        </section>
-
-        <!-- ===== STATS CARDS GRID ===== -->
-        <section class="stats-section" @slideInLeft>
-            <h2 class="section-title">Your Coverage Overview</h2>
-
-            <div class="stats-grid">
-                <!-- Claims Submitted Card -->
-                <div class="stat-card claims-submitted" @scaleIn>
-                    <div class="stat-icon">📋</div>
-                    <div class="stat-content">
-                        <div class="stat-label">Claims Submitted</div>
-                        <div class="stat-value">{{ stats.claimsSubmitted }}</div>
-                        <div class="stat-subtext">This year</div>
-                    </div>
-                    <div class="stat-accent"></div>
-                </div>
-
-                <!-- Claims Approved Card -->
-                <div class="stat-card claims-approved" @scaleIn>
-                    <div class="stat-icon">✅</div>
-                    <div class="stat-content">
-                        <div class="stat-label">Claims Approved</div>
-                        <div class="stat-value">{{ stats.claimsApproved }}</div>
-                        <div class="stat-subtext">Success rate: {{ stats.approvalRate }}%</div>
-                    </div>
-                    <div class="stat-accent"></div>
-                </div>
-
-                <!-- Total Coverage Card -->
-                <div class="stat-card total-coverage" @scaleIn>
-                    <div class="stat-icon">🛡️</div>
-                    <div class="stat-content">
-                        <div class="stat-label">Total Coverage</div>
-                        <div class="stat-value">{{ formatCurrency(stats.totalCoverage) }}</div>
-                        <div class="stat-subtext">Active coverage</div>
-                    </div>
-                    <div class="stat-accent"></div>
-                </div>
-
-                <!-- Days Until Renewal Card -->
-                <div class="stat-card renewal-days" @scaleIn>
-                    <div class="stat-icon">⏱️</div>
-                    <div class="stat-content">
-                        <div class="stat-label">Days Till Renewal</div>
-                        <div class="stat-value">{{ stats.daysUntilRenewal }}</div>
-                        <div class="stat-subtext">{{ getStatusText('renewal') }}</div>
-                    </div>
-                    <div class="stat-accent"></div>
-                </div>
+            <div class="empty-timeline" *ngIf="recentClaims.length === 0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 12V8H4v12h16v-4M12 2v4M4 4l4 4M20 4l-4 4"/>
+        </svg>
+                <p>No claims yet</p>
+                <button routerLink="/app/claims/new" class="btn-primary">Submit Your First Claim</button>
             </div>
-        </section>
+        </div>
+    </div>
 
-        <!-- ===== ACTIVE PLAN SECTION ===== -->
-        <section class="plan-section" @fadeInUp>
-            <h2 class="section-title">Your Active Plan</h2>
-
-            <div *ngIf="data.activePlan; else noPlan" class="plan-card">
-                <!-- Plan Header -->
-                <div class="plan-header">
-                    <div class="plan-info">
-                        <h3 class="plan-name">{{ data.activePlan.name }}</h3>
-                        <p class="plan-email">{{ data.email }}</p>
-                    </div>
-                    <div class="plan-badge">ACTIVE</div>
-                </div>
-
-                <!-- Plan Details Grid -->
-                <div class="plan-details-grid">
-                    <!-- Insured Amount -->
-                    <div class="plan-detail">
-                        <div class="detail-label">Insured Amount</div>
-                        <div class="detail-value">{{ formatCurrency(data.activePlan.insuredAmount) }}</div>
-                        <div class="detail-icon">💰</div>
-                    </div>
-
-                    <!-- Valid From -->
-                    <div class="plan-detail">
-                        <div class="detail-label">Coverage Start</div>
-                        <div class="detail-value">{{ data.activePlan.startDate | date: 'MMM dd, yyyy' }}</div>
-                        <div class="detail-icon">📅</div>
-                    </div>
-
-                    <!-- Valid Until -->
-                    <div class="plan-detail">
-                        <div class="detail-label">Coverage Expires</div>
-                        <div class="detail-value">{{ data.activePlan.endDate | date: 'MMM dd, yyyy' }}</div>
-                        <div class="detail-icon">🔔</div>
-                    </div>
-
-                    <!-- Days Remaining -->
-                    <div class="plan-detail">
-                        <div class="detail-label">Coverage Duration</div>
-                        <div class="detail-value">{{ stats.daysUntilRenewal }} days</div>
-                        <div class="detail-icon">⏳</div>
-                    </div>
-                </div>
-
-                <!-- Plan Actions -->
-                <div class="plan-actions">
-                    <button class="action-btn primary">View Full Details</button>
-                    <button class="action-btn secondary">Renew Plan</button>
-                </div>
-
-                <!-- Progress Bar -->
-                <div class="coverage-progress">
-                    <div class="progress-label">
-                        <span>Coverage Timeline</span>
-                        <span class="progress-percent">{{ coverageRemainingPercent }}% remaining</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" [style.width.%]="coverageRemainingPercent"></div>
-                    </div>
-                </div>
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <div class="action-card" (click)="navigateTo('/app/claims/new')">
+            <div class="action-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
             </div>
-
-            <!-- No Plan Template -->
-            <ng-template #noPlan>
-                <div class="no-plan-container">
-                    <div class="no-plan-icon">🚫</div>
-                    <h3>No Active Plan</h3>
-                    <p>You don't have an active insurance plan yet. Let's get you covered!</p>
-                    <button class="explore-btn">Explore Plans</button>
-                </div>
-            </ng-template>
-        </section>
-
-        <!-- ===== QUICK ACTIONS ===== -->
-        <section class="actions-section" @slideInLeft>
-            <h2 class="section-title">Quick Actions</h2>
-
-            <div class="actions-grid">
-                <a href="/app/claims/new" class="action-card submit-claim">
-                    <div class="action-icon">📝</div>
-                    <div class="action-text">
-                        <h4>Submit New Claim</h4>
-                        <p>File a new insurance claim</p>
-                    </div>
-                    <div class="action-arrow">→</div>
-                </a>
-
-                <a href="/app/claims" class="action-card view-claims">
-                    <div class="action-icon">📂</div>
-                    <div class="action-text">
-                        <h4>View All Claims</h4>
-                        <p>Check your claim history</p>
-                    </div>
-                    <div class="action-arrow">→</div>
-                </a>
-
-                <a href="/app/profile" class="action-card edit-profile">
-                    <div class="action-icon">👤</div>
-                    <div class="action-text">
-                        <h4>Edit Profile</h4>
-                        <p>Update your information</p>
-                    </div>
-                    <div class="action-arrow">→</div>
-                </a>
-
-                <a href="/plans" class="action-card upgrade-plan">
-                    <div class="action-icon">⭐</div>
-                    <div class="action-text">
-                        <h4>Upgrade Plan</h4>
-                        <p>Explore better coverage options</p>
-                    </div>
-                    <div class="action-arrow">→</div>
-                </a>
+            <span>New Claim</span>
+        </div>
+        <div class="action-card" (click)="navigateTo('/app/profile')">
+            <div class="action-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
             </div>
-        </section>
-
-        <!-- ===== STATUS INDICATORS ===== -->
-        <section class="indicators-section" @fadeInUp>
-            <h2 class="section-title">Health Check</h2>
-
-            <div class="indicators-grid">
-                <!-- Approval Rate -->
-                <div class="indicator-card approval" [class]="'status-' + getStatusColor('approval')">
-                    <div class="indicator-header">
-                        <h4>Approval Rate</h4>
-                        <span class="status-badge">{{ getStatusText('approval') }}</span>
-                    </div>
-                    <div class="indicator-value">{{ stats.approvalRate }}%</div>
-                    <div class="indicator-bar">
-                        <div class="indicator-fill" [style.width.%]="stats.approvalRate"></div>
-                    </div>
-                </div>
-
-                <!-- Renewal Status -->
-                <div class="indicator-card renewal" [class]="'status-' + getStatusColor('renewal')">
-                    <div class="indicator-header">
-                        <h4>Renewal Status</h4>
-                        <span class="status-badge">{{ getStatusText('renewal') }}</span>
-                    </div>
-                    <div class="indicator-value">{{ stats.daysUntilRenewal }} days</div>
-                    <div class="indicator-message">
-                        <small>Your plan {{ stats.daysUntilRenewal > 30 ? 'is secure' : 'needs attention' }}</small>
-                    </div>
-                </div>
-
-                <!-- Account Status -->
-                <div class="indicator-card account success">
-                    <div class="indicator-header">
-                        <h4>Account Status</h4>
-                        <span class="status-badge">Active</span>
-                    </div>
-                    <div class="indicator-value">✓</div>
-                    <div class="indicator-message">
-                        <small>All documents verified</small>
-                    </div>
-                </div>
+            <span>Update Profile</span>
+        </div>
+        <div class="action-card" (click)="navigateTo('/app/change-plan')">
+            <div class="action-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
             </div>
-        </section>
-
+            <span>Upgrade Plan</span>
+        </div>
+        <div class="action-card" (click)="downloadReport()">
+            <div class="action-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+            </div>
+            <span>Download Report</span>
+        </div>
     </div>
 </div>
