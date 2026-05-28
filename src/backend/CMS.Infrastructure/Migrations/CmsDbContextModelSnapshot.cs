@@ -28,8 +28,20 @@ namespace CMS.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("AdminComments")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<double?>("AiConfidenceScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("float(5)");
+
+                    b.Property<string>("AiDecision")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("AiReasoning")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("AiVerifiedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<decimal>("ClaimAmount")
                         .HasColumnType("decimal(18,2)")
@@ -42,21 +54,28 @@ namespace CMS.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("MedicalReportContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("MedicalReportFileName")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("MedicalReportPath")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<long?>("MedicalReportSize")
+                        .HasColumnType("bigint");
 
                     b.Property<Guid>("MemberId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("MemberId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("PlanId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("ProcessedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("ProcessedBy")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
@@ -69,8 +88,6 @@ namespace CMS.Infrastructure.Migrations
                     b.HasKey("ClaimId");
 
                     b.HasIndex("MemberId");
-
-                    b.HasIndex("MemberId1");
 
                     b.ToTable("Claims");
                 });
@@ -177,15 +194,11 @@ namespace CMS.Infrastructure.Migrations
 
             modelBuilder.Entity("CMS.Domain.Entities.Claim", b =>
                 {
-                    b.HasOne("CMS.Domain.Entities.Member", null)
+                    b.HasOne("CMS.Domain.Entities.Member", "Member")
                         .WithMany("Claims")
                         .HasForeignKey("MemberId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("CMS.Domain.Entities.Member", "Member")
-                        .WithMany()
-                        .HasForeignKey("MemberId1");
 
                     b.Navigation("Member");
                 });

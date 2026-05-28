@@ -1,10 +1,14 @@
-using CMS.Application;
-using CMS.Infrastructure;
 using CMS.API.Middleware;
+using CMS.Application;
+using CMS.Application.Interfaces.Services;
+using CMS.Application.Services;
+using CMS.Infrastructure;
 using CMS.Infrastructure.Data;
 using CMS.Infrastructure.Data.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
+using System.Net;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,9 +32,12 @@ builder.Services
 
             IssuerSigningKey = new SymmetricSecurityKey(
         Encoding.UTF8.GetBytes(jwt["SecretKey"]!)
-    ),
+        ),
 
-            RoleClaimType = System.Security.Claims.ClaimTypes.Role   // ✅🔥 ADD THIS LINE
+            RoleClaimType = System.Security.Claims.ClaimTypes.Role,
+
+            // ✅🔥 THIS IS THE FIX YOU NEED
+            NameClaimType = System.Security.Claims.ClaimTypes.NameIdentifier
         };
     });
 
@@ -53,6 +60,19 @@ builder.Services.AddCors(options =>
                 .AllowAnyHeader()
                 .AllowAnyMethod();
         });
+});
+
+builder.Services.AddHttpClient<IAiVerificationService, GrokAiVerificationService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.ValueLengthLimit = int.MaxValue;
+    options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10MB
+    options.MemoryBufferThreshold = int.MaxValue;
 });
 
 var app = builder.Build();

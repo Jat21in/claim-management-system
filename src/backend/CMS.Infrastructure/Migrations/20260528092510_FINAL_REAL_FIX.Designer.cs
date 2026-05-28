@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CMS.Infrastructure.Migrations
 {
     [DbContext(typeof(CmsDbContext))]
-    [Migration("20260501113239_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260528092510_FINAL_REAL_FIX")]
+    partial class FINAL_REAL_FIX
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -31,6 +31,21 @@ namespace CMS.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<double?>("AiConfidenceScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("float(5)");
+
+                    b.Property<string>("AiDecision")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("AiReasoning")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("AiVerifiedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<decimal>("ClaimAmount")
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("ClaimAmount");
@@ -40,6 +55,25 @@ namespace CMS.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("MedicalReportContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("MedicalReportFileName")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("MedicalReportPath")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<long?>("MedicalReportSize")
+                        .HasColumnType("bigint");
 
                     b.Property<Guid>("MemberId")
                         .HasColumnType("uniqueidentifier");
@@ -67,8 +101,12 @@ namespace CMS.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ActivePlanPlanId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<Guid?>("ActivePlanId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ActivePlanPlanId");
+
+                    b.Property<string>("ContactNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -86,12 +124,21 @@ namespace CMS.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("MemberId");
 
-                    b.HasIndex("ActivePlanPlanId");
+                    b.HasIndex("ActivePlanId");
 
                     b.ToTable("Members");
                 });
@@ -102,35 +149,69 @@ namespace CMS.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("DurationInMonths")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("FeaturesJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal>("InsuredAmount")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("InsuredAmount");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFeatured")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
                     b.HasKey("PlanId");
 
-                    b.ToTable("Plans");
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Plans", (string)null);
                 });
 
             modelBuilder.Entity("CMS.Domain.Entities.Claim", b =>
                 {
-                    b.HasOne("CMS.Domain.Entities.Member", null)
+                    b.HasOne("CMS.Domain.Entities.Member", "Member")
                         .WithMany("Claims")
                         .HasForeignKey("MemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Member");
                 });
 
             modelBuilder.Entity("CMS.Domain.Entities.Member", b =>
                 {
                     b.HasOne("CMS.Domain.Entities.Plan", "ActivePlan")
                         .WithMany()
-                        .HasForeignKey("ActivePlanPlanId");
+                        .HasForeignKey("ActivePlanId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.OwnsOne("CMS.Domain.ValueObjects.Address", "Address", b1 =>
                         {

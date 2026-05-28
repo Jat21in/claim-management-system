@@ -25,3 +25,29 @@ dist/
 Thumbs.db
 
 *.Backup.tmp
+
+# ===== .NET Backend =====
+bin/
+obj/
+*.user
+*.suo
+*.db
+
+# ===== Uploads (VERY IMPORTANT) =====
+src/backend/CMS.API/Uploads/
+
+# ===== Secrets =====
+appsettings.Development.json
+appsettings.Local.json
+
+# ===== Node / Angular =====
+node_modules/
+dist/
+.angular/
+
+# ===== Logs =====
+*.log
+
+# ===== OS =====
+.DS_Store
+Thumbs.db

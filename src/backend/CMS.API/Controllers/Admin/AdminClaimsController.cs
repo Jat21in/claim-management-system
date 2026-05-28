@@ -1,16 +1,15 @@
 ﻿using CMS.Application.Interfaces.Repositories;
-using CMS.Domain.Entities;
-using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using CMS.API.Attributes;
 using CMS.Domain.Enums;
+using CMS.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
-namespace CMS.API.Controllers.Admin;
+namespace CMS.API.Controllers;
 
-[AuthorizeAdmin]
+[Authorize(Roles = "Admin,ClaimsProcessor")]
 [ApiController]
 [Route("api/admin/claims")]
-public class AdminClaimsController : ControllerBase
+public sealed class AdminClaimsController : ControllerBase
 {
     private readonly IClaimRepository _claimRepository;
     private readonly IMemberRepository _memberRepository;
@@ -26,80 +25,51 @@ public class AdminClaimsController : ControllerBase
     [HttpGet("pending")]
     public async Task<IActionResult> GetPendingClaims()
     {
-        var allClaims = await _claimRepository.GetAllAsync(HttpContext.RequestAborted);
-        var pending = allClaims.Where(c => c.Status == ClaimStatus.Submitted);
+        var claims = await _claimRepository.GetAllAsync(HttpContext.RequestAborted);
 
-        var result = new List<object>();
-
-        foreach (var claim in pending)
-        {
-            string memberName = "Unknown";
-
-            // Try to get member name from navigation property
-            if (claim.Member != null)
+        var pendingClaims = claims
+            .Where(c => c.Status == ClaimStatus.PendingAI
+                     || c.Status == ClaimStatus.Submitted) // ✅ FIX
+            .Select(c => new
             {
-                memberName = claim.Member.FullName;
-            }
-            else
-            {
-                // Fallback: fetch member directly from repository
-                var member = await _memberRepository.GetByIdAsync(claim.MemberId, HttpContext.RequestAborted);
-                memberName = member?.FullName ?? "Unknown";
-            }
+                claimId = c.ClaimId,
+                memberName = c.Member != null ? c.Member.FullName : "Unknown",
+                claimDate = c.ClaimDate,
+                claimAmount = c.ClaimAmount,
+                description = c.Description,
+                status = c.Status.ToString(),
+                aiConfidenceScore = c.AiConfidenceScore
+            })
+            .OrderByDescending(c => c.claimDate) // ✅ better UX
+            .ToList();
 
-            result.Add(new
-            {
-                claimId = claim.ClaimId,
-                amount = claim.ClaimAmount.Amount,
-                claimDate = claim.ClaimDate,
-                status = claim.Status.ToString(),
-                description = claim.Description ?? "No description",
-                memberName = memberName,
-                memberId = claim.MemberId
-            });
-        }
-
-        return Ok(result);
+        return Ok(pendingClaims);
     }
 
-
     [HttpPost("{claimId}/approve")]
-    public async Task<IActionResult> ApproveClaim(Guid claimId, [FromBody] ApprovalRequest request)
+    public async Task<IActionResult> ApproveClaim(Guid claimId)
     {
-        var claim = await _claimRepository.GetByIdAsync(claimId, CancellationToken.None);
-        if (claim == null) return NotFound();
+        var claim = await _claimRepository.GetByIdAsync(claimId, HttpContext.RequestAborted);
+        if (claim == null)
+            return NotFound(new { error = "Claim not found" });
 
-        var adminId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        claim.ManualApprove();
+        await _claimRepository.UpdateAsync(claim, HttpContext.RequestAborted);
 
-        claim.Approve(adminId, request.Comments);
-
-        await _claimRepository.UpdateAsync(claim, CancellationToken.None);
-
-        return Ok(new { message = "Claim approved" });
+        return Ok(new { message = "Claim approved successfully" });
     }
 
     [HttpPost("{claimId}/reject")]
-    public async Task<IActionResult> RejectClaim(Guid claimId, [FromBody] RejectionRequest request)
+    public async Task<IActionResult> RejectClaim(Guid claimId)
     {
-        var claim = await _claimRepository.GetByIdAsync(claimId, CancellationToken.None);
-        if (claim == null) return NotFound();
+        var claim = await _claimRepository.GetByIdAsync(claimId, HttpContext.RequestAborted);
+        if (claim == null)
+            return NotFound(new { error = "Claim not found" });
 
-        var adminId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        claim.ManualReject();
+        await _claimRepository.UpdateAsync(claim, HttpContext.RequestAborted);
 
-        claim.Reject(adminId, request.Reason);
-
-        await _claimRepository.UpdateAsync(claim, CancellationToken.None);
-
-        return Ok(new { message = "Claim rejected" });
+        return Ok(new { message = "Claim rejected successfully" });
     }
 }
 
-public class ApprovalRequest
-{
-    public string Comments { get; set; } = "";
-}
-
-public class RejectionRequest
-{
-    public string Reason { get; set; } = "";
-}

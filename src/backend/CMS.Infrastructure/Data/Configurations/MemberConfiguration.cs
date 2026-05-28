@@ -58,8 +58,9 @@ public sealed class MemberConfiguration : IEntityTypeConfiguration<Member>
         });
 
         builder.HasMany(m => m.Claims)
-            .WithOne()
-            .HasForeignKey(c => c.MemberId);
+            .WithOne(c => c.Member)   // ✅ CRITICAL FIX
+            .HasForeignKey(c => c.MemberId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(m => m.ActivePlan)
             .WithMany()

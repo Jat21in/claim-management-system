@@ -45,7 +45,10 @@ public sealed class ClaimRepository : IClaimRepository
 
     public async Task UpdateAsync(Claim claim, CancellationToken ct)
     {
-        _db.Claims.Update(claim);
+        // ✅ Attach and mark as modified
+        _db.Claims.Attach(claim);
+        _db.Entry(claim).State = EntityState.Modified;
         await _db.SaveChangesAsync(ct);
     }
+
 }

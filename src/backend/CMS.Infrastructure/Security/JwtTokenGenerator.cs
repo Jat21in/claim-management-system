@@ -29,20 +29,15 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
 
         var expiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
-        //var claims = new[]
-        //{
-        //    new JwtClaim(JwtRegisteredClaimNames.Sub, member.MemberId.ToString()),
-        //    new JwtClaim(JwtRegisteredClaimNames.Email, member.Email),
-        //    new JwtClaim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-
-        //    // ✅ ADD THIS (CRITICAL FIX)
-        //    new JwtClaim(System.Security.Claims.ClaimTypes.Role, member.Role)
-        //};
         var claims = new[]
         {
             new JwtClaim(JwtRegisteredClaimNames.Sub, member.MemberId.ToString()),
+
+            // ✅🔥 CRITICAL FIX
+            new JwtClaim(ClaimTypes.NameIdentifier, member.MemberId.ToString()),
+
             new JwtClaim(JwtRegisteredClaimNames.Email, member.Email),
-            new JwtClaim(ClaimTypes.Role, member.Role),          // 👈 ADD THIS
+            new JwtClaim(ClaimTypes.Role, member.Role),
             new JwtClaim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

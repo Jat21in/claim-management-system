@@ -33,8 +33,7 @@ public sealed class Member : IAuditable
     // Aggregate Relations
     public Plan? ActivePlan { get; private set; }
 
-    private readonly List<Claim> _claims = new();
-    public IReadOnlyCollection<Claim> Claims => _claims.AsReadOnly();
+    public ICollection<Claim> Claims { get; set; } = new List<Claim>();
 
 
     // Auditing
@@ -78,28 +77,23 @@ public sealed class Member : IAuditable
     }
 
     public Claim SubmitClaim(
-        Money claimAmount,
-        DateTime claimDate,
-        string description)
+    Money claimAmount,
+    DateTime claimDate,
+    string description)
     {
         if (ActivePlan is null)
             throw new InvalidOperationException("Member does not have an active plan.");
-
-        if (!ActivePlan.IsWithinValidity(claimDate))
-            throw new InvalidOperationException("Claim date is outside plan validity.");
-
-        if (claimAmount.Amount > ActivePlan.InsuredAmount)
-            throw new InvalidOperationException("Claim amount exceeds insured amount.");
 
         var claim = Claim.Create(
             memberId: MemberId,
             planId: ActivePlan.PlanId,
             claimDate: DateOnly.FromDateTime(claimDate),
             claimAmount: claimAmount,
-            description: description   // ✅ FIX
+            description: description
         );
 
-        _claims.Add(claim);
+        Claims.Add(claim); // ✅ USE THIS NOW
+
         UpdatedAt = DateTime.UtcNow;
 
         return claim;
