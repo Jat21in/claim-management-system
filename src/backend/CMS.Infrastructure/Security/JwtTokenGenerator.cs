@@ -3,8 +3,9 @@ using CMS.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using JwtClaim = System.Security.Claims.Claim;
+using System.Security.Claims;
 using System.Text;
+using JwtClaim = System.Security.Claims.Claim;
 
 namespace CMS.Infrastructure.Security;
 
@@ -28,10 +29,20 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
 
         var expiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
+        //var claims = new[]
+        //{
+        //    new JwtClaim(JwtRegisteredClaimNames.Sub, member.MemberId.ToString()),
+        //    new JwtClaim(JwtRegisteredClaimNames.Email, member.Email),
+        //    new JwtClaim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+
+        //    // ✅ ADD THIS (CRITICAL FIX)
+        //    new JwtClaim(System.Security.Claims.ClaimTypes.Role, member.Role)
+        //};
         var claims = new[]
         {
             new JwtClaim(JwtRegisteredClaimNames.Sub, member.MemberId.ToString()),
             new JwtClaim(JwtRegisteredClaimNames.Email, member.Email),
+            new JwtClaim(ClaimTypes.Role, member.Role),          // 👈 ADD THIS
             new JwtClaim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

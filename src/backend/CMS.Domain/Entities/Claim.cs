@@ -13,6 +13,27 @@ public sealed class Claim : IAuditable
     // Associations (by identity only)
     public Guid MemberId { get; private set; }
     public Guid PlanId { get; private set; }
+    public Guid? ProcessedBy { get; private set; }
+    public DateTime? ProcessedAt { get; private set; }
+    public string? AdminComments { get; private set; }
+    public Member? Member { get; private set; }
+    public string? Description { get; private set; }
+
+    public void Approve(Guid adminId, string comments)
+    {
+        Status = ClaimStatus.Approved;
+        ProcessedBy = adminId;
+        ProcessedAt = DateTime.UtcNow;
+        AdminComments = comments;
+    }
+
+    public void Reject(Guid adminId, string reason)
+    {
+        Status = ClaimStatus.Rejected;
+        ProcessedBy = adminId;
+        ProcessedAt = DateTime.UtcNow;
+        AdminComments = reason;
+    }
 
     // Core Attributes
     public DateOnly ClaimDate { get; private set; }
@@ -36,7 +57,8 @@ public sealed class Claim : IAuditable
     Guid memberId,
     Guid planId,
     DateOnly claimDate,
-    Money claimAmount)
+    Money claimAmount,
+    string? description)   // ✅ add this
     {
         ValidateCreation(claimDate, claimAmount);
 
@@ -48,6 +70,7 @@ public sealed class Claim : IAuditable
             ClaimDate = claimDate,
             ClaimAmount = claimAmount,
             Status = ClaimStatus.Submitted,
+            Description = description,   // ✅ set it
             CreatedAt = DateTime.UtcNow
         };
     }

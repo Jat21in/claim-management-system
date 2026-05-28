@@ -25,5 +25,14 @@ public sealed class ClaimConfiguration : IEntityTypeConfiguration<Claim>
 
         builder.Property(c => c.ClaimDate)
             .IsRequired();
+
+        builder.Property(c => c.Description)
+            .HasMaxLength(500);
+
+        // ✅ FIXED: Use HasOne with navigation property
+        builder.HasOne(c => c.Member)
+            .WithMany(m => m.Claims)
+            .HasForeignKey(c => c.MemberId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

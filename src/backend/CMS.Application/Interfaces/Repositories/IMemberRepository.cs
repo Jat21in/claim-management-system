@@ -19,5 +19,9 @@ public interface IMemberRepository
     Task<Member?> GetByIdWithActivePlanAsync(
     Guid memberId,
     CancellationToken cancellationToken);
+
+    Task<IEnumerable<Member>> GetAllAsync(CancellationToken ct);
+
+    //Task<List<Member>> GetAllAsync(CancellationToken cancellationToken = default);
 }
 

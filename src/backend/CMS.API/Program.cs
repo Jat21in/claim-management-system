@@ -27,8 +27,10 @@ builder.Services
             ValidAudience = jwt["Audience"],
 
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwt["SecretKey"]!)
-            )
+        Encoding.UTF8.GetBytes(jwt["SecretKey"]!)
+    ),
+
+            RoleClaimType = System.Security.Claims.ClaimTypes.Role   // ✅🔥 ADD THIS LINE
         };
     });
 
