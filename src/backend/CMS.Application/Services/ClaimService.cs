@@ -71,17 +71,22 @@ public sealed class ClaimService : IClaimService
         // Now save the file with ClaimId
         if (request.MedicalReport != null && request.MedicalReport.Length > 0)
         {
-            var fileInfo = await _fileStorageService.SaveFileAsync(
-                request.MedicalReport,
-                claim.ClaimId,
-                ct);
+            await using var stream = request.MedicalReport.OpenReadStream();
 
-            // Update claim with file info
+            var fileUrl = await _fileStorageService.UploadClaimDocumentAsync(
+                claim.ClaimId,
+                stream,
+                request.MedicalReport.FileName,
+                ct
+            );
+
+            // Store minimal metadata (since interface only returns URL)
             claim.UpdateMedicalReport(
-                fileInfo.fileName,
-                fileInfo.filePath,
-                fileInfo.fileSize,
-                fileInfo.contentType);
+                request.MedicalReport.FileName,
+                fileUrl,
+                request.MedicalReport.Length,
+                request.MedicalReport.ContentType
+            );
 
             await _claimRepository.UpdateAsync(claim, ct);
         }

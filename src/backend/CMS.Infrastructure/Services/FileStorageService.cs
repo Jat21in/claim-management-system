@@ -1,59 +1,75 @@
 ﻿using CMS.Application.Interfaces.Services;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using CMS.Domain.Enums;
 
-namespace CMS.Application.Services;
+namespace CMS.Infrastructure.Services;
 
 public sealed class FileStorageService : IFileStorageService
 {
-    private readonly IWebHostEnvironment _environment;
+    private readonly string _uploadPath;
     private readonly string _uploadFolder;
 
-    public FileStorageService(IWebHostEnvironment environment)
+    public FileStorageService()
     {
-        _environment = environment;
-        _uploadFolder = Path.Combine(_environment.ContentRootPath, "Uploads", "MedicalReports");
-
-        // Create directory if it doesn't exist
-        if (!Directory.Exists(_uploadFolder))
-        {
-            Directory.CreateDirectory(_uploadFolder);
-        }
+        _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
+        if (!Directory.Exists(_uploadPath))
+            Directory.CreateDirectory(_uploadPath);
     }
 
-    public async Task<(string fileName, string filePath, long fileSize, string contentType)> SaveFileAsync(
-        IFormFile file,
-        Guid claimId,
-        CancellationToken cancellationToken)
+    public async Task<string> UploadKycDocumentAsync(Guid memberId, DocumentType documentType, Stream fileStream, string fileName, CancellationToken cancellationToken)
     {
-        // Generate unique filename
-        var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
-        var extension = Path.GetExtension(file.FileName);
-        var uniqueFileName = $"{claimId}_{DateTime.Now:yyyyMMddHHmmss}_{originalFileName}{extension}";
-        var filePath = Path.Combine(_uploadFolder, uniqueFileName);
+        var memberFolder = Path.Combine(_uploadPath, "KycDocuments", memberId.ToString());
+        if (!Directory.Exists(memberFolder))
+            Directory.CreateDirectory(memberFolder);
 
-        // Save file
-        using (var stream = new FileStream(filePath, FileMode.Create))
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+        var safeFileName = $"{timestamp}_{documentType}_{fileName}";
+        var filePath = Path.Combine(memberFolder, safeFileName);
+
+        using (var fileStreamOutput = new FileStream(filePath, FileMode.Create, FileAccess.Write))
         {
-            await file.CopyToAsync(stream, cancellationToken);
+            await fileStream.CopyToAsync(fileStreamOutput, cancellationToken);
         }
 
-        return (
-            fileName: originalFileName + extension,
-            filePath: uniqueFileName, // Store relative path
-            fileSize: file.Length,
-            contentType: file.ContentType
-        );
+        // Return relative URL for web access
+        return $"/uploads/KycDocuments/{memberId}/{safeFileName}";
     }
 
-    public void DeleteFile(string filePath)
+    public async Task<string> UploadClaimDocumentAsync(Guid claimId, Stream fileStream, string fileName, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(filePath)) return;
+        var claimFolder = Path.Combine(_uploadPath, "ClaimDocuments", claimId.ToString());
+        if (!Directory.Exists(claimFolder))
+            Directory.CreateDirectory(claimFolder);
 
-        var fullPath = Path.Combine(_uploadFolder, filePath);
-        if (File.Exists(fullPath))
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+        var safeFileName = $"{timestamp}_{fileName}";
+        var filePath = Path.Combine(claimFolder, safeFileName);
+
+        using (var fileStreamOutput = new FileStream(filePath, FileMode.Create, FileAccess.Write))
         {
-            File.Delete(fullPath);
+            await fileStream.CopyToAsync(fileStreamOutput, cancellationToken);
+        }
+
+        return $"/uploads/ClaimDocuments/{claimId}/{safeFileName}";
+    }
+
+    public Task<bool> DeleteFileAsync(string fileUrl, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var relativePath = fileUrl.TrimStart('/');
+            var fullPath = Path.Combine(_uploadPath, relativePath);
+
+            if (File.Exists(fullPath))
+            {
+                File.Delete(fullPath);
+                return Task.FromResult(true);
+            }
+
+            return Task.FromResult(false);
+        }
+        catch
+        {
+            return Task.FromResult(false);
         }
     }
 

@@ -16,6 +16,7 @@ public sealed class PlanRepository : IPlanRepository
 
     public async Task<Plan?> GetByIdAsync(Guid planId, CancellationToken cancellationToken)
     {
+        // ✅ Remove AsNoTracking so EF tracks the entity
         return await _dbContext.Plans
             .FirstOrDefaultAsync(p => p.PlanId == planId, cancellationToken);
     }
@@ -30,7 +31,7 @@ public sealed class PlanRepository : IPlanRepository
     {
         return await _dbContext.Plans
             .Where(p => p.IsActive)
-            .AsNoTracking()
+            
             .ToListAsync(cancellationToken);
     }
 }

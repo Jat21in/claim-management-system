@@ -13,6 +13,12 @@ public static class DependencyInjection
         services.AddScoped<IPlanService, PlanService>();
         services.AddScoped<IAuthService, AuthService>();
 
+        // NEW SERVICES FOR PHASE 1
+        services.AddScoped<IPolicyService, PolicyService>();
+        services.AddScoped<IKycService, KycService>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IPaymentService, PaymentService>();
+
         return services;
     }
 }

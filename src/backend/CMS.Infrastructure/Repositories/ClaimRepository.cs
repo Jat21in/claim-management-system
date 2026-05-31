@@ -22,33 +22,57 @@ public sealed class ClaimRepository : IClaimRepository
 
     public async Task<List<Claim>> GetByMemberIdAsync(Guid memberId, CancellationToken ct)
     {
-        return await _db.Claims
-            .Include(c => c.Member)
-            .Where(c => c.MemberId == memberId)
-            .ToListAsync(ct);
+        try
+        {
+            // 🔥 SIMPLIFIED - No includes, no tracking
+            return await _db.Claims
+                .AsNoTracking()
+                .Where(c => c.MemberId == memberId)
+                .OrderByDescending(c => c.ClaimDate)
+                .Take(50) // Limit results
+                .ToListAsync(); // 🔥 REMOVED ct parameter
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in GetByMemberIdAsync: {ex.Message}");
+            return new List<Claim>();
+        }
     }
 
     public async Task<Claim?> GetByIdAsync(Guid claimId, CancellationToken ct)
     {
-        return await _db.Claims
-            .Include(c => c.Member)
-            .FirstOrDefaultAsync(c => c.ClaimId == claimId, ct);
+        try
+        {
+            return await _db.Claims
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.ClaimId == claimId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in GetByIdAsync: {ex.Message}");
+            return null;
+        }
     }
 
     public async Task<IEnumerable<Claim>> GetAllAsync(CancellationToken ct)
     {
-        return await _db.Claims
-            .Include(c => c.Member)
-            //.AsNoTracking()
-            .ToListAsync(ct);
+        try
+        {
+            return await _db.Claims
+                .AsNoTracking()
+                .Take(100)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in GetAllAsync: {ex.Message}");
+            return new List<Claim>();
+        }
     }
 
     public async Task UpdateAsync(Claim claim, CancellationToken ct)
     {
-        // ✅ Attach and mark as modified
-        _db.Claims.Attach(claim);
-        _db.Entry(claim).State = EntityState.Modified;
+        _db.Claims.Update(claim);
         await _db.SaveChangesAsync(ct);
     }
-
 }

@@ -7,6 +7,7 @@ using CMS.Infrastructure.Data;
 using CMS.Infrastructure.Data.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System.Net;
 using System.Text;
@@ -78,6 +79,24 @@ builder.Services.Configure<FormOptions>(options =>
 
 var app = builder.Build();
 
+//// Add this line after app = builder.Build() but before app.UseHttpsRedirection()
+//app.UseStaticFiles(); // Serves files from wwwroot
+
+//// Add this to serve uploaded files
+//app.UseStaticFiles(new StaticFileOptions
+//{
+//    FileProvider = new PhysicalFileProvider(
+//        Path.Combine(Directory.GetCurrentDirectory(), "Uploads")),
+//    RequestPath = "/uploads"
+//});
+
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "Uploads")),
+    RequestPath = "/uploads"
+});
 
 //  DATABASE SEEDING 
 using (var scope = app.Services.CreateScope())
