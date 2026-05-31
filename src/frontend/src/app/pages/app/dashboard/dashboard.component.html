@@ -64,7 +64,7 @@
                         </div>
                         <div class="coverage-stats">
                             <span>₹{{ totalClaimedAmount | number }} used</span>
-                            <span>₹{{ remainingCoverage | number }} remaining</span>
+                            <span>₹{{ getRemainingCoverage() | number }} remaining</span>
                         </div>
                     </div>
                 </div>
@@ -263,6 +263,62 @@
             </div>
         </div>
     </div>
+
+
+    <!-- NEW: Enhanced Policy Details (only shows if we have enhanced data) -->
+    <section class="enhanced-section" *ngIf="showEnhancedFeatures && enhancedData" @fadeInUp>
+        <h2 class="section-title">Enhanced Policy Details</h2>
+
+        <div class="enhanced-grid">
+            <!-- Policy Number Card -->
+            <div class="enhanced-card">
+                <div class="enhanced-icon">📄</div>
+                <div class="enhanced-content">
+                    <div class="enhanced-label">Policy Number</div>
+                    <div class="enhanced-value">{{ getPolicyNumber() }}</div>
+                </div>
+            </div>
+
+            <!-- Remaining Coverage Card -->
+            <div class="enhanced-card">
+                <div class="enhanced-icon">💰</div>
+                <div class="enhanced-content">
+                    <div class="enhanced-label">Remaining Coverage</div>
+                    <div class="enhanced-value">{{ formatCurrency(getRemainingCoverage()) }}</div>
+                </div>
+            </div>
+
+            <!-- Next Premium Card -->
+            <div class="enhanced-card">
+                <div class="enhanced-icon">📅</div>
+                <div class="enhanced-content">
+                    <div class="enhanced-label">Next Premium Due</div>
+                    <div class="enhanced-value">{{ getNextPremiumDate() }}</div>
+                    <div class="enhanced-sub">{{ enhancedData.policySummary?.nextPremiumAmount | currency:'INR' }}</div>
+                </div>
+            </div>
+
+            <!-- Dependents Card -->
+            <div class="enhanced-card" routerLink="/app/policy/dependents" style="cursor: pointer;">
+                <div class="enhanced-icon">👨‍👩‍👧</div>
+                <div class="enhanced-content">
+                    <div class="enhanced-label">Dependents Covered</div>
+                    <div class="enhanced-value">{{ getDependentsCount() }}</div>
+                    <div class="enhanced-sub">Click to manage</div>
+                </div>
+            </div>
+
+            <!-- Nominees Card -->
+            <div class="enhanced-card" routerLink="/app/policy/nominees" style="cursor: pointer;">
+                <div class="enhanced-icon">⚖️</div>
+                <div class="enhanced-content">
+                    <div class="enhanced-label">Nominees</div>
+                    <div class="enhanced-value">{{ getNomineesCount() }}</div>
+                    <div class="enhanced-sub">Click to manage</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Quick Actions -->
     <div class="quick-actions">

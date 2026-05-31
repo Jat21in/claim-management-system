@@ -1,12 +1,33 @@
-// /src/frontend/src/app/pages/auth/register/register.component.ts
-
 import { Component, inject, OnInit } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NgIf } from '@angular/common';
+import { NgIf, NgFor } from '@angular/common';
 import { finalize } from 'rxjs';
 
 import { AuthService } from '../../../auth/auth.service';
+
+// Custom validator: password match
+function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
+  const password = control.get('password')?.value;
+  const confirm = control.get('confirmPassword')?.value;
+  return password === confirm ? null : { mismatch: true };
+}
+
+// Custom validator: age >= 18
+function ageValidator(control: AbstractControl): ValidationErrors | null {
+  if (!control.value) return null;
+  const birthDate = new Date(control.value);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age >= 18 ? null : { age: true };
+}
+
+// Password strength pattern
+const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 @Component({
   selector: 'app-register',
@@ -20,68 +41,116 @@ export class RegisterComponent implements OnInit {
   private auth = inject(AuthService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private parentRoute = inject(ActivatedRoute);  // ✅ Get parent route
+  private parentRoute = inject(ActivatedRoute);
 
   loading = false;
   error: string | null = null;
   success: string | null = null;
 
   maxDob = new Date().toISOString().split('T')[0];
-
   selectedPlanId: string | undefined = undefined;
+
+  // Password toggles
+  showPassword = false;
+  showConfirmPassword = false;
+
+  // CAPTCHA
+  captchaQuestion = '';   // Will hold the random string to display
+  captchaAnswer = '';     // Store the same string for comparison (case-insensitive)
+
+  // Terms modal
+  showTermsModal = false;
 
   form = this.fb.group({
     fullName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', Validators.required],
-    dateOfBirth: ['', Validators.required],
-  });
+    password: ['', [
+      Validators.required,
+      Validators.minLength(8),
+      Validators.pattern(passwordPattern)
+    ]],
+    confirmPassword: ['', Validators.required],
+    dateOfBirth: ['', [Validators.required, ageValidator]],
+    captcha: ['', Validators.required],
+    acceptTerms: [false, Validators.requiredTrue]
+  }, { validators: passwordMatchValidator });
 
   ngOnInit(): void {
-    // ✅ Try multiple ways to get query params
-    console.log('🔍 RegisterComponent - Full URL:', window.location.href);
-    console.log('🔍 RegisterComponent - URL params:', new URLSearchParams(window.location.search));
-
-    // Method 1: Check root route
-    const rootParams = this.route.root.firstChild?.snapshot.queryParams;
-    console.log('🔍 Root query params:', rootParams);
-
-    // Method 2: Check current route snapshot
-    const snapshotParams = this.route.snapshot.queryParamMap;
-    console.log('🔍 Current snapshot params:', snapshotParams);
-
-    // Method 3: Direct URL parsing (most reliable)
-    const urlParams = new URLSearchParams(window.location.search);
-    const planIdFromUrl = urlParams.get('planId');
-    console.log('🔍 planId from URL parsing:', planIdFromUrl);
-
-    if (planIdFromUrl) {
-      this.selectedPlanId = planIdFromUrl;
-      console.log('✅ Plan ID found via URL parsing:', this.selectedPlanId);
+    // Redirect if already logged in
+    if (this.auth.isAuthenticated()) {
+      this.router.navigate(['/app/dashboard']);
+      return;
     }
 
-    // Method 4: Subscribe to query params
-    this.route.queryParams.subscribe(params => {
-      console.log('📋 RegisterComponent queryParams subscription:', params);
-      if (params['planId'] && !this.selectedPlanId) {
-        this.selectedPlanId = params['planId'];
-        console.log('✅ Plan ID from subscription:', this.selectedPlanId);
-      }
-    });
+    this.generateCaptcha();
 
-    // Method 5: Check parent route (AuthShell)
-    this.parentRoute.parent?.queryParams.subscribe(params => {
-      console.log('📋 Parent route params:', params);
+    // Plan ID from URL handling
+    const urlParams = new URLSearchParams(window.location.search);
+    const planIdFromUrl = urlParams.get('planId');
+    if (planIdFromUrl) {
+      this.selectedPlanId = planIdFromUrl;
+    }
+    this.route.queryParams.subscribe(params => {
       if (params['planId'] && !this.selectedPlanId) {
         this.selectedPlanId = params['planId'];
-        console.log('✅ Plan ID from parent:', this.selectedPlanId);
       }
     });
+    this.parentRoute.parent?.queryParams.subscribe(params => {
+      if (params['planId'] && !this.selectedPlanId) {
+        this.selectedPlanId = params['planId'];
+      }
+    });
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleConfirmPasswordVisibility(): void {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
+  // Helper to generate random alphanumeric string (length 6)
+  private generateRandomCode(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+  generateCaptcha(): void {
+    this.captchaAnswer = this.generateRandomCode();
+    this.captchaQuestion = this.captchaAnswer; // Display the same string
+    // Reset the captcha form field
+    this.form.get('captcha')?.setValue('');
+    this.form.get('captcha')?.setErrors(null);
+  }
+
+  refreshCaptcha(): void {
+    this.generateCaptcha();
+  }
+
+
+  openTermsModal(): void {
+    this.showTermsModal = true;
+  }
+
+  closeTermsModal(): void {
+    this.showTermsModal = false;
   }
 
   submit(): void {
     if (this.form.invalid || this.loading) {
       this.form.markAllAsTouched();
+      return;
+    }
+
+    // Validate CAPTCHA
+    const userCaptcha = this.form.value.captcha?.trim() || '';
+    if (userCaptcha === '' || userCaptcha.toUpperCase() !== this.captchaAnswer) {
+      this.form.get('captcha')?.setErrors({ captcha: true });
+      this.form.get('captcha')?.markAsTouched();
       return;
     }
 
@@ -94,12 +163,7 @@ export class RegisterComponent implements OnInit {
 
     if (this.selectedPlanId && this.selectedPlanId.trim() !== '') {
       payload.selectedPlanId = this.selectedPlanId;
-      console.log('✅ Including selectedPlanId in payload:', this.selectedPlanId);
-    } else {
-      console.warn('⚠️ No selectedPlanId, registering without plan');
     }
-
-    console.log('📤 Final request body:', payload);
 
     this.loading = true;
     this.error = null;
@@ -109,7 +173,6 @@ export class RegisterComponent implements OnInit {
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: () => {
-          console.log('✅ Registration API call successful');
           this.success = 'Registration successful! Redirecting to login...';
           setTimeout(() => {
             this.router.navigate(['/auth/login'], {
@@ -121,7 +184,6 @@ export class RegisterComponent implements OnInit {
           }, 2000);
         },
         error: err => {
-          console.error('❌ Registration failed:', err);
           this.error = err?.error?.message ?? 'Registration failed';
         },
       });

@@ -23,6 +23,11 @@ import { ProfileComponent } from './pages/app/profile/profile.component';
 // guards
 import { authGuard } from './guards/auth.guard';
 import { SubmitClaimComponent } from './pages/app/claims/submit-claim/submit-claim.component';
+import { kycGuard } from './guards/kyc.guard';
+import { KycUploadComponent  } from './pages/app/kyc/kyc-upload.component';
+import { KycStatusComponent } from './pages/app/kyc/kyc-status.component';
+import { NomineesComponent } from './pages/app/policy/nominees.component';
+import { DependentsComponent } from './pages/app/policy/dependents.component';
 
 export const routes: Routes = [
   /**
@@ -60,11 +65,16 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: DashboardComponent },
+      { path: 'kyc/upload', component: KycUploadComponent },
+      { path: 'kyc/pending', component: KycStatusComponent },
+      { path: 'kyc/rejected', component: KycStatusComponent },
+      { path: 'dashboard', component: DashboardComponent, canActivate: [kycGuard] },
       { path: 'claims', component: ClaimsComponent },
       { path: 'claims/new', component: SubmitClaimComponent }, // ✅ ADD THIS
       { path: 'profile', component: ProfileComponent },
       { path: 'change-plan', component: ChangePlanComponent },
+      { path: 'policy/dependents', component: DependentsComponent },
+      { path: 'policy/nominees', component: NomineesComponent },
     ],
   },
   {

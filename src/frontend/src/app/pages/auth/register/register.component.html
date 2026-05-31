@@ -2,27 +2,99 @@
 
     <!-- Full Name -->
     <input formControlName="fullName" placeholder="Full name" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg" />
+    <div *ngIf="form.get('fullName')?.touched && form.get('fullName')?.invalid" class="text-red-400 text-xs">
+        Full name is required
+    </div>
 
     <!-- Email -->
     <input formControlName="email" type="email" placeholder="Email" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg" />
+    <div *ngIf="form.get('email')?.touched && form.get('email')?.invalid" class="text-red-400 text-xs">
+        Valid email is required
+    </div>
 
-    <!-- Password -->
-    <input formControlName="password" type="password" placeholder="Password" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg" />
+    <!-- Password with toggle -->
+    <div class="relative">
+        <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="Password" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg pr-10" />
+        <button type="button" (click)="togglePasswordVisibility()" class="absolute right-3 top-2 text-gray-400 hover:text-white">
+      <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+      </svg>
+      <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639a10.455 10.455 0 0 1-3.335 4.187M6.228 6.228 3 3m3.228 3.228 3.65 3.65m-3.65-3.65 5.65 5.65m-5.65-5.65L3 3m18 18-3.65-3.65m0 0-3.65-3.65m3.65 3.65L21 21" />
+      </svg>
+    </button>
+    </div>
+    <div *ngIf="form.get('password')?.touched && form.get('password')?.invalid" class="text-red-400 text-xs">
+        <span *ngIf="form.get('password')?.errors?.['required']">Password is required</span>
+        <span *ngIf="form.get('password')?.errors?.['minlength']">Minimum 8 characters</span>
+        <span *ngIf="form.get('password')?.errors?.['pattern']">Must contain uppercase, lowercase, number and special character</span>
+    </div>
+
+    <!-- Confirm Password with toggle -->
+    <div class="relative">
+        <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" placeholder="Confirm password" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg pr-10" />
+        <button type="button" (click)="toggleConfirmPasswordVisibility()" class="absolute right-3 top-2 text-gray-400 hover:text-white">
+      <svg *ngIf="!showConfirmPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+      </svg>
+      <svg *ngIf="showConfirmPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639a10.455 10.455 0 0 1-3.335 4.187M6.228 6.228 3 3m3.228 3.228 3.65 3.65m-3.65-3.65 5.65 5.65m-5.65-5.65L3 3m18 18-3.65-3.65m0 0-3.65-3.65m3.65 3.65L21 21" />
+      </svg>
+    </button>
+    </div>
+    <div *ngIf="form.get('confirmPassword')?.touched && form.get('confirmPassword')?.invalid" class="text-red-400 text-xs">
+        <span *ngIf="form.get('confirmPassword')?.errors?.['required']">Please confirm your password</span>
+        <span *ngIf="form.get('confirmPassword')?.errors?.['mismatch']">Passwords do not match</span>
+    </div>
 
     <!-- Date of Birth -->
     <input formControlName="dateOfBirth" type="date" [max]="maxDob" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white" />
+    <div *ngIf="form.get('dateOfBirth')?.touched && form.get('dateOfBirth')?.invalid" class="text-red-400 text-xs">
+        <span *ngIf="form.get('dateOfBirth')?.errors?.['required']">Date of birth is required</span>
+        <span *ngIf="form.get('dateOfBirth')?.errors?.['age']">You must be at least 18 years old</span>
+    </div>
 
-    <p *ngIf="form.controls.dateOfBirth.touched && form.controls.dateOfBirth.invalid" class="text-red-400 text-xs">
-        Please select a valid date of birth
-    </p>
+    <!-- CAPTCHA -->
+    <div class="bg-white/5 border border-white/10 rounded-lg p-3">
+        <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-400">Enter the code:</span>
+                <span class="font-mono text-lg tracking-wider bg-black/30 px-3 py-1 rounded border border-white/10">{{ captchaQuestion }}</span>
+            </div>
+            <button type="button" (click)="refreshCaptcha()" class="text-accent hover:text-accent/80 transition" title="Refresh CAPTCHA">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+      </svg>
+    </button>
+        </div>
+        <input formControlName="captcha" type="text" placeholder="Enter code above" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg" />
+        <div *ngIf="form.get('captcha')?.touched && form.get('captcha')?.invalid" class="text-red-400 text-xs mt-1">
+            <span *ngIf="form.get('captcha')?.errors?.['required']">Please enter the CAPTCHA code</span>
+            <span *ngIf="form.get('captcha')?.errors?.['captcha']">Incorrect code</span>
+        </div>
+    </div>
 
-    <!-- ✅ Selected Plan Info - Improved -->
+
+    <!-- Terms and Conditions -->
+    <div class="flex items-start gap-2">
+        <input type="checkbox" formControlName="acceptTerms" id="acceptTerms" class="mt-1 w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-accent" />
+        <label for="acceptTerms" class="text-sm text-gray-300">
+      I accept the <button type="button" (click)="openTermsModal()" class="text-accent hover:underline">Terms and Conditions</button>
+    </label>
+    </div>
+    <div *ngIf="form.get('acceptTerms')?.touched && form.get('acceptTerms')?.invalid" class="text-red-400 text-xs">
+        You must accept the Terms and Conditions
+    </div>
+
+    <!-- Selected Plan Info -->
     <div *ngIf="selectedPlanId" class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 text-sm">
         <span class="text-purple-400">✨ Plan selected:</span>
         <span class="text-white">This plan will be activated upon registration</span>
     </div>
 
-    <!-- Success Message with countdown -->
+    <!-- Success Message -->
     <div *ngIf="success" class="bg-green-500/20 text-green-400 px-4 py-3 rounded-lg text-sm border border-green-500/30">
         {{ success }}
         <div class="text-xs text-green-400/70 mt-1">Redirecting to login...</div>
@@ -34,8 +106,28 @@
     </div>
 
     <!-- Submit -->
-    <button type="submit" [disabled]="loading" class="w-full py-2 bg-accent text-black font-semibold rounded-lg disabled:opacity-60">
-        {{ loading ? 'Creating account...' : 'Create account' }}
-    </button>
+    <button type="submit" [disabled]="loading || form.invalid" class="w-full py-2 bg-accent text-black font-semibold rounded-lg disabled:opacity-60">
+    {{ loading ? 'Creating account...' : 'Create account' }}
+  </button>
 
 </form>
+
+<!-- Terms Modal (hidden by default) -->
+<div *ngIf="showTermsModal" class="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm" (click)="closeTermsModal()">
+    <div class="bg-gray-900 rounded-xl max-w-lg w-full mx-4 p-6 border border-white/10 shadow-2xl" (click)="$event.stopPropagation()">
+        <h2 class="text-xl font-bold mb-4">Terms and Conditions</h2>
+        <div class="text-sm text-gray-300 space-y-3 max-h-96 overflow-y-auto">
+            <p><strong>1. Acceptance of Terms</strong><br>By registering, you agree to be bound by these Terms and Conditions.</p>
+            <p><strong>2. Eligibility</strong><br>You must be at least 18 years old and provide accurate information.</p>
+            <p><strong>3. Account Security</strong><br>You are responsible for maintaining the confidentiality of your password.</p>
+            <p><strong>4. Claim Processing</strong><br>Claims are subject to verification and may be rejected if fraudulent.</p>
+            <p><strong>5. Privacy</strong><br>Your data will be handled according to our Privacy Policy.</p>
+            <p><strong>6. Limitation of Liability</strong><br>We are not liable for any indirect damages arising from use of the platform.</p>
+            <p><strong>7. Changes to Terms</strong><br>We may update these terms; continued use implies acceptance.</p>
+            <p><strong>8. Contact</strong><br>For questions, contact support@claimcore.com.</p>
+        </div>
+        <div class="mt-6 flex justify-end">
+            <button type="button" (click)="closeTermsModal()" class="px-4 py-2 bg-accent text-black rounded-lg hover:bg-accent/80">Close</button>
+        </div>
+    </div>
+</div>

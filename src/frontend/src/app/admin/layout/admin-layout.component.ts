@@ -15,6 +15,7 @@ import { AuthService } from '../../auth/auth.service';
           <a routerLink="dashboard" routerLinkActive="active" class="block px-3 py-2 rounded hover:bg-gray-700">📊 Dashboard</a>
           <a routerLink="claims" routerLinkActive="active" class="block px-3 py-2 rounded hover:bg-gray-700">📋 Pending Claims</a>
           <a routerLink="members" routerLinkActive="active" class="block px-3 py-2 rounded hover:bg-gray-700">👥 Members</a>
+          <a routerLink="kyc" routerLinkActive="active" class="block px-3 py-2 rounded hover:bg-gray-700">📄 KYC Requests</a>
           <button (click)="logout()" class="block w-full text-left px-3 py-2 rounded hover:bg-gray-700 mt-10">🚪 Logout</button>
         </nav>
       </aside>

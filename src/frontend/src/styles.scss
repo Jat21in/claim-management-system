@@ -1,6 +1,10 @@
+@use './_variables' as vars;
 * {
-  font-family: 'Inter', sans-serif;
+    font-family: 'Inter', sans-serif;
 }
+
+
+/* red-500 */
 
 @tailwind base;
 @tailwind components;

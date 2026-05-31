@@ -3,6 +3,7 @@ import { AdminLayoutComponent } from './layout/admin-layout.component';
 import { AdminDashboardComponent } from './dashboard/admin-dashboard.component';
 import { AdminClaimsComponent } from './claims/admin-claims.component';
 import { AdminMembersComponent } from './members/admin-members.component';
+import { AdminKycComponent } from './kyc/admin-kyc.component'; // ✅ ADD THIS
 import { adminGuard } from './gaurds/admin.guard';
 
 export const ADMIN_ROUTES: Routes = [
@@ -15,6 +16,7 @@ export const ADMIN_ROUTES: Routes = [
       { path: 'dashboard', component: AdminDashboardComponent },
       { path: 'claims', component: AdminClaimsComponent },
       { path: 'members', component: AdminMembersComponent },
+      { path: 'kyc', component: AdminKycComponent }, // ✅ ADD THIS
     ]
   }
 ];

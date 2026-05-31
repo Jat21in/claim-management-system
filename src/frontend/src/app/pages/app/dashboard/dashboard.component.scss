@@ -1,3 +1,41 @@
+// ============================================================================
+// COLOR TOKENS (Define variables if not already present)
+// ============================================================================
+$bg-primary: #0b0f1a;
+$bg-secondary: #0f172a;
+$bg-card: rgba(15, 23, 42, 0.4);
+$bg-surface: rgba(30, 41, 59, 0.5);
+$border-color: rgba(255, 255, 255, 0.08);
+$border-color-light: rgba(255, 255, 255, 0.12);
+$color-primary: #4f9cff;
+$color-secondary: #7c5cff;
+$color-accent: #a855f7;
+$color-success: #10b981;
+$color-warning: #f59e0b;
+$color-danger: #ef4444;
+$text-primary: #ffffff;
+$text-secondary: #a1a5b4;
+$text-tertiary: #7a8499;
+// ============================================================================
+// REUSABLE MIXINS
+// ============================================================================
+@mixin glass-effect($opacity: 0.7) {
+    background: rgba(11, 15, 26, $opacity);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid $border-color;
+}
+
+@mixin smooth-transition($duration: 0.3s) {
+    transition: all $duration cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .dashboard-container {
     padding: 24px;
     max-width: 1400px;
@@ -5,6 +43,19 @@
     min-height: 100vh;
 }
 
+// Glass effect mixin for frosted glass appearance
+@mixin glass-effect() {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@mixin smooth-transition() {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Color variables
+$border-color: rgba(200, 200, 200, 0.3);
 // Hero Section
 .hero-section {
     display: flex;
@@ -762,4 +813,71 @@
             flex-wrap: wrap;
         }
     }
+}
+
+// ============================================================================
+// ENHANCED SECTION STYLES (Add at the bottom of your existing SCSS)
+// ============================================================================
+.enhanced-section {
+    margin-top: 24px;
+}
+
+.enhanced-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    @media (max-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.enhanced-card {
+    @include glass-effect();
+    padding: 20px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    @include smooth-transition();
+    border: 1px solid $border-color;
+    &:hover {
+        border-color: $color-primary;
+        transform: translateY(-2px);
+        background: rgba(79, 156, 255, 0.05);
+    }
+}
+
+.enhanced-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.enhanced-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.enhanced-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: $text-secondary;
+    font-weight: 600;
+}
+
+.enhanced-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: $color-primary;
+}
+
+.enhanced-sub {
+    font-size: 11px;
+    color: $text-tertiary;
+    margin-top: 2px;
 }

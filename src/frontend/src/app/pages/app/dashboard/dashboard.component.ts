@@ -1,377 +1,546 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, inject, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
-import { finalize, Subscription } from 'rxjs';
-import Chart from 'chart.js/auto';
+import { Router } from '@angular/router';
+import { trigger, transition, style, animate, keyframes } from '@angular/animations';
+import { MemberService, MemberDashboardResponse, PolicySummary } from '../../../services/member.service';
 import { ClaimService } from '../../../services/claim.service';
-import { MemberService, MemberDashboardResponse } from '../../../services/member.service';
-import { Claim } from '../../../claims/models/claim.model';
+import { Subject, interval, takeUntil, forkJoin } from 'rxjs';
+import { of } from 'rxjs';
+
+interface DashboardStats {
+  claimsSubmitted: number;
+  claimsApproved: number;
+  totalCoverage: number;
+  daysUntilRenewal: number;
+  approvalRate: number;
+}
+
+interface RecentClaim {
+  id: string;
+  date: string;
+  claimDate: string;
+  amount: number;
+  status: string;
+  description: string;
+  aiConfidenceScore?: number;
+}
+
+interface AIInsight {
+  message: string;
+  title?: string;
+  type: 'success' | 'warning' | 'info';
+  action?: string;
+  actionLabel?: string;
+}
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss']
+  styleUrls: ['./dashboard.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('fadeInUp', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(30px)' }),
+        animate('600ms 100ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
+      ])
+    ]),
+    trigger('slideInLeft', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateX(-50px)' }),
+        animate('600ms 200ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 1, transform: 'translateX(0)' }))
+      ])
+    ]),
+    trigger('scaleIn', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'scale(0.9)' }),
+        animate('500ms 300ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 1, transform: 'scale(1)' }))
+      ])
+    ])
+  ]
 })
-export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('claimsChart') claimsChartCanvas!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('statusChart') statusChartCanvas!: ElementRef<HTMLCanvasElement>;
-
-  private claimService = inject(ClaimService);
+export class DashboardComponent implements OnInit, OnDestroy {
   private memberService = inject(MemberService);
+  private claimService = inject(ClaimService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
-  private refreshSubscription!: Subscription;
+  private destroy$ = new Subject<void>();
 
-  // Member Data
-  memberName = 'Member';
+  // User Data
+  memberName = 'User';
+  healthScore = 85;
+
+  // Plan Data
   activePlan: any = null;
   daysRemaining = 0;
   coverageUtilization = 0;
   totalClaimedAmount = 0;
-  remainingCoverage = 0;
 
   // Claims Data
-  claims: Claim[] = [];
   totalClaims = 0;
   approvedClaims = 0;
   pendingClaims = 0;
   rejectedClaims = 0;
+  approvalRate = 0;
   approvedPercent = 0;
   pendingPercent = 0;
   rejectedPercent = 0;
-  approvalRate = 0;
-  avgProcessingTime = 3.2;
-  pendingTrend = 0;
+  avgProcessingTime = '3.2 days';
 
-  // Health Score
-  healthScore = 85;
+  // Trends
+  pendingTrend = -2;
 
-  // Chart Data
+  // Chart & AI
   chartType: 'claims' | 'amount' = 'claims';
-  chartData: number[] = [];
-  chartLabels: string[] = [];
+  aiPrediction: string | null = null;
+  aiInsights: AIInsight[] = [];
+  recentClaims: RecentClaim[] = [];
 
-  // AI Insights
-  aiPrediction = '';
-  aiInsights: any[] = [];
+  // Enhanced Policy Data (NEW)
+  enhancedPolicy: PolicySummary | null = null;
+  dependentsList: any[] = [];
+  nomineesList: any[] = [];
+  showEnhancedFeatures = false;
+  enhancedData: any = null;
 
-  recentClaims: Claim[] = [];
-
-  private claimsChart: InstanceType<typeof Chart> | null = null;
-  private statusChart: InstanceType<typeof Chart> | null = null;
+  // Time & Greeting
+  currentTime = '';
+  currentDate = '';
+  timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night' = 'morning';
+  greetingIndex = 0;
+  greetings = [
+    "Ready to manage your claims?",
+    "Your policies are secure with us.",
+    "Track your coverage in real-time.",
+    "Any new claims to submit?",
+    "Your health is our priority."
+  ];
+  currentGreeting = this.greetings[0];
+  typedGreeting = '';
+  private typingIndex = 0;
+  private typingSpeed = 30;
 
   ngOnInit(): void {
-    this.loadMemberData();
-    this.loadClaims();
-    this.refreshSubscription = this.claimService.refreshClaims$.subscribe(() => this.loadClaims());
-  }
-
-  ngAfterViewInit(): void {
-    setTimeout(() => this.renderCharts(), 200);
+    this.initializeTime();
+    this.startTimeUpdates();
+    this.loadDashboardData();
+    this.typeGreeting(this.currentGreeting);
   }
 
   ngOnDestroy(): void {
-    if (this.refreshSubscription) this.refreshSubscription.unsubscribe();
-    if (this.claimsChart) this.claimsChart.destroy();
-    if (this.statusChart) this.statusChart.destroy();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  private loadMemberData(): void {
-    this.memberService.getDashboard().subscribe({
-      next: (res: MemberDashboardResponse) => {
-        this.memberName = res.fullName.split(' ')[0];
-        if (res.activePlan) {
-          this.activePlan = res.activePlan;
-          this.calculateCoverageMetrics();
+  private typeGreeting(text: string): void {
+    this.typedGreeting = '';
+    this.typingIndex = 0;
+
+    const typingInterval = interval(this.typingSpeed)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.typingIndex < text.length) {
+          this.typedGreeting += text[this.typingIndex];
+          this.typingIndex++;
+          this.cdr.markForCheck();
+        } else {
+          typingInterval.unsubscribe();
         }
-        this.cdr.markForCheck();
-      },
-      error: () => console.error('Failed to load member data')
-    });
+      });
   }
 
-  private loadClaims(): void {
-    this.claimService.getMyClaims().subscribe({
-      next: (claims: Claim[]) => {
-        this.claims = claims;
-        this.calculateStats();
-        this.calculateRecentClaims();
-        this.calculateChartData();
+  private initializeTime(): void {
+    this.updateTime();
+  }
+
+  private startTimeUpdates(): void {
+    interval(1000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.updateTime();
+        this.cdr.markForCheck();
+      });
+
+    interval(5000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.greetingIndex = (this.greetingIndex + 1) % this.greetings.length;
+        this.currentGreeting = this.greetings[this.greetingIndex];
+        this.typeGreeting(this.currentGreeting);
+      });
+  }
+
+  private updateTime(): void {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    this.currentTime = `${hours}:${minutes}:${seconds}`;
+
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    };
+    this.currentDate = now.toLocaleDateString('en-US', options);
+
+    const hour = now.getHours();
+    if (hour >= 5 && hour < 12) this.timeOfDay = 'morning';
+    else if (hour >= 12 && hour < 17) this.timeOfDay = 'afternoon';
+    else if (hour >= 17 && hour < 21) this.timeOfDay = 'evening';
+    else this.timeOfDay = 'night';
+  }
+
+  getSunMoonIcon(): string {
+    switch (this.timeOfDay) {
+      case 'morning': return '🌅';
+      case 'afternoon': return '☀️';
+      case 'evening': return '🌆';
+      case 'night': return '🌙';
+      default: return '⏰';
+    }
+  }
+
+  getTimeBasedGreeting(): string {
+    switch (this.timeOfDay) {
+      case 'morning': return 'Good Morning';
+      case 'afternoon': return 'Good Afternoon';
+      case 'evening': return 'Good Evening';
+      case 'night': return 'Good Night';
+      default: return 'Hello';
+    }
+  }
+
+  private loadDashboardData(): void {
+  console.log('🚀 Dashboard Load Started');
+
+  const member$ = this.memberService.getDashboard();
+  const claims$ = this.claimService.getMyClaims();
+  const policySummary$ = this.memberService.getEnhancedDashboard
+    ? this.memberService.getEnhancedDashboard()
+    : of(this.getFallbackPolicyData());
+  const dependents$ = this.getDependentsData();
+  const nominees$ = this.getNomineesData();
+
+  console.log('📡 Observables created:', {
+    member$,
+    claims$,
+    policySummary$,
+    dependents$,
+    nominees$
+  });
+
+  console.log('🧪 Type checks:', {
+    member: typeof member$,
+    claims: typeof claims$,
+    policy: typeof policySummary$,
+  });
+
+  forkJoin({
+    member: member$,
+    claims: claims$,
+    policySummary: policySummary$,
+    dependents: dependents$,
+    nominees: nominees$
+  }).subscribe({
+    next: (result) => {
+      console.log('✅ forkJoin SUCCESS:', result);
+
+      try {
+        console.log('👤 Member response:', result.member);
+        console.log('📄 Claims response:', result.claims);
+        console.log('📊 Policy summary response:', result.policySummary);
+        console.log('👨‍👩‍👧 Dependents response:', result.dependents);
+        console.log('🧾 Nominees response:', result.nominees);
+
+        // ✅ Assign safely
+        this.memberName = result.member?.fullName;
+        this.activePlan = result.member?.activePlan;
+
+        console.log('✅ Assigned member + plan:', {
+          memberName: this.memberName,
+          activePlan: this.activePlan
+        });
+
+        // ✅ Process claims
+        const claims = result.claims as any[];
+        console.log('📊 Processing claims:', claims);
+
+        this.totalClaims = claims?.length || 0;
+        this.approvedClaims = claims.filter(c => c.status === 'Approved').length;
+        this.pendingClaims = claims.filter(c => c.status === 'Submitted' || c.status === 'Pending').length;
+        this.rejectedClaims = claims.filter(c => c.status === 'Rejected').length;
+
+        console.log('📊 Claims stats:', {
+          total: this.totalClaims,
+          approved: this.approvedClaims,
+          pending: this.pendingClaims,
+          rejected: this.rejectedClaims
+        });
+
+        // ✅ Coverage
+        if (this.activePlan) {
+          this.totalClaimedAmount = claims.reduce((sum, c) =>
+            c.status === 'Approved' ? sum + c.amount : sum, 0);
+
+          this.coverageUtilization = Math.min(100, Math.round(
+            (this.totalClaimedAmount / this.activePlan.insuredAmount) * 100
+          ));
+
+          console.log('💰 Coverage:', {
+            claimed: this.totalClaimedAmount,
+            utilization: this.coverageUtilization
+          });
+        }
+
+        console.log('🎯 Before AI insights');
         this.generateAIInsights();
-        this.renderCharts();
-        this.cdr.markForCheck();
-      },
-      error: () => console.error('Failed to load claims')
-    });
-  }
+        console.log('🎯 After AI insights');
 
-  private calculateStats(): void {
-    this.totalClaims = this.claims.length;
-    this.approvedClaims = this.claims.filter(c =>
-      c.status === 'Approved' || c.status === 'APPROVED'
-    ).length;
-    this.pendingClaims = this.claims.filter(c =>
-      c.status === 'Submitted' || c.status === 'PendingAI' || c.status === 'Pending'
-    ).length;
-    this.rejectedClaims = this.claims.filter(c =>
-      c.status === 'Rejected' || c.status === 'REJECTED'
-    ).length;
-
-    this.totalClaimedAmount = this.claims.reduce((sum, c) => sum + (c.amount || 0), 0);
-    this.approvedPercent = this.totalClaims ? Math.round((this.approvedClaims / this.totalClaims) * 100) : 0;
-    this.pendingPercent = this.totalClaims ? Math.round((this.pendingClaims / this.totalClaims) * 100) : 0;
-    this.rejectedPercent = this.totalClaims ? Math.round((this.rejectedClaims / this.totalClaims) * 100) : 0;
-
-    const totalProcessed = this.approvedClaims + this.rejectedClaims;
-    this.approvalRate = totalProcessed ? Math.round((this.approvedClaims / totalProcessed) * 100) : 0;
-
-    this.calculateCoverageMetrics();
-    this.calculateHealthScore();
-  }
-
-  private calculateCoverageMetrics(): void {
-    if (this.activePlan) {
-      this.remainingCoverage = this.activePlan.insuredAmount - this.totalClaimedAmount;
-      this.coverageUtilization = Math.round((this.totalClaimedAmount / this.activePlan.insuredAmount) * 100);
-
-      // Calculate days remaining
-      if (this.activePlan.endDate) {
-        const endDate = new Date(this.activePlan.endDate);
-        const today = new Date();
-        this.daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
-      } else {
-        this.daysRemaining = 365;
+      } catch (err) {
+        console.error('💥 ERROR inside success block:', err);
       }
+
+      console.log('🔄 Triggering change detection');
+      this.cdr.markForCheck();
+    },
+
+    error: (err) => {
+      console.error('❌ forkJoin ERROR:', err);
+      console.error('🔥 Full error object:', JSON.stringify(err));
+
+      this.generateFallbackData();
+      this.cdr.markForCheck();
+    },
+
+    complete: () => {
+      console.log('✅ forkJoin COMPLETED');
     }
+  });
+}
+
+  private getFallbackPolicyData(): any {
+    // Return empty data structure
+    return { policySummary: null, dependents: [], nominees: [] };
   }
 
-  private calculateHealthScore(): void {
-    let score = 80; // Base score
+  private getDependentsData() {
+  return of([]);
+}
 
-    // Add points for good claim ratio
-    if (this.approvalRate > 80) score += 10;
-    else if (this.approvalRate > 60) score += 5;
-
-    // Deduct for high utilization
-    if (this.coverageUtilization > 80) score -= 10;
-    else if (this.coverageUtilization > 60) score -= 5;
-
-    // Add points for profile completion
-    if (this.memberName && this.memberName.length > 0) score += 5;
-
-    this.healthScore = Math.min(100, Math.max(0, score));
-  }
-
-  private calculateChartData(): void {
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      return d.toISOString().split('T')[0];
-    }).reverse();
-
-    this.chartLabels = last7Days.map(d => {
-      const date = new Date(d);
-      return date.toLocaleDateString('default', { weekday: 'short' });
-    });
-
-    if (this.chartType === 'claims') {
-      this.chartData = last7Days.map(day =>
-        this.claims.filter(c => c.claimDate.split('T')[0] === day).length
-      );
-    } else {
-      this.chartData = last7Days.map(day =>
-        this.claims.filter(c => c.claimDate.split('T')[0] === day)
-          .reduce((sum, c) => sum + (c.amount || 0), 0)
-      );
-    }
-  }
-
-  private calculateRecentClaims(): void {
-    this.recentClaims = [...this.claims]
-      .sort((a, b) => new Date(b.claimDate).getTime() - new Date(a.claimDate).getTime())
-      .slice(0, 5);
-  }
+private getNomineesData() {
+  return of([]);
+}
 
   private generateAIInsights(): void {
-    // Generate prediction
-    if (this.chartData.length > 0) {
-      const avgClaims = this.chartData.reduce((a, b) => a + b, 0) / this.chartData.length;
-      const trend = this.chartData[this.chartData.length - 1] - this.chartData[0];
-      this.aiPrediction = trend > 0
-        ? `📈 Claims are trending upward. Expected ~${Math.round(avgClaims + 1)} claims next week.`
-        : `📉 Claim volume stable. Your approval rate is ${this.approvalRate}%.`;
-    }
-
-    // Generate insights
     this.aiInsights = [];
 
+    // Premium due insight
+    if (this.enhancedPolicy?.nextPremiumDueDate) {
+      const dueDate = new Date(this.enhancedPolicy.nextPremiumDueDate);
+      const daysUntilDue = Math.ceil((dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysUntilDue <= 7) {
+        this.aiInsights.push({
+          title: '⏰ Premium Due Soon',
+          message: `Your premium of ₹${this.enhancedPolicy.nextPremiumAmount} is due in ${daysUntilDue} days. Pay now to avoid policy lapse.`,
+          type: 'warning',
+          action: 'Pay Premium',
+          actionLabel: 'Pay Premium'
+        });
+      }
+    }
+    // In loadDashboardData, after setting enhancedPolicy
+    if (this.enhancedPolicy || this.activePlan) {
+        this.showEnhancedFeatures = true;
+        this.enhancedData = {
+            policySummary: this.enhancedPolicy || {
+                hasActivePolicy: true,
+                policyNumber: this.activePlan?.id,
+                planName: this.activePlan?.name,
+                sumInsured: this.activePlan?.insuredAmount,
+                nextPremiumAmount: 125
+            },
+            dependents: this.dependentsList,
+            nominees: this.nomineesList
+        };
+    }
+    // Coverage utilization insight
     if (this.coverageUtilization > 70) {
       this.aiInsights.push({
-        type: 'warning',
-        title: 'Coverage Alert',
-        message: `You've used ${this.coverageUtilization}% of your coverage. Consider upgrading your plan.`,
-        action: '/app/change-plan',
-        actionLabel: 'View Plans →'
-      });
-    }
-
-    if (this.pendingClaims > 0) {
-      this.aiInsights.push({
+        title: '📊 Coverage Alert',
+        message: `You've utilized ${this.coverageUtilization}% of your coverage. Consider upgrading your plan.`,
         type: 'info',
-        title: 'Pending Claims',
-        message: `You have ${this.pendingClaims} claim(s) under review. Average processing time is ${this.avgProcessingTime} days.`,
-        action: '/app/claims',
-        actionLabel: 'Track Status →'
+        action: 'Upgrade Plan',
+        actionLabel: 'Upgrade Plan'
       });
     }
 
-    if (this.approvalRate > 80) {
+    // Claims approval insight
+    if (this.approvalRate < 60 && this.totalClaims > 0) {
       this.aiInsights.push({
-        type: 'success',
-        title: 'Excellent Approval Rate!',
-        message: `Your claims have a ${this.approvalRate}% approval rate - well above average!`,
-        action: null,
-        actionLabel: ''
+        title: '✓ Improve Approval Rate',
+        message: `Your claim approval rate is ${this.approvalRate}%. Review claim requirements for better success.`,
+        type: 'warning',
+        action: 'View Guidelines',
+        actionLabel: 'View Guidelines'
       });
     }
 
+    // Add default insight if none
     if (this.aiInsights.length === 0) {
       this.aiInsights.push({
-        type: 'info',
-        title: 'Welcome to ClaimCore',
-        message: 'Start by submitting your first claim to get personalized insights.',
-        action: '/app/claims/new',
-        actionLabel: 'Submit Claim →'
+        title: '✅ All Set!',
+        message: `You're all set! Your policy is active with ₹${this.activePlan?.insuredAmount?.toLocaleString() || '0'} coverage.`,
+        type: 'success'
       });
+    }
+
+    // Set AI prediction
+    if (this.totalClaims > 0) {
+      this.aiPrediction = `Based on your history, your next claim is likely to be processed within ${this.avgProcessingTime}`;
+    } else {
+      this.aiPrediction = 'Start your first claim to see AI-powered predictions';
     }
   }
 
-  private renderCharts(): void {
-    if (!this.claimsChartCanvas || !this.statusChartCanvas) return;
-    if (this.claimsChart) this.claimsChart.destroy();
-    if (this.statusChart) this.statusChart.destroy();
+  private generateFallbackData(): void {
+    this.memberName = 'John Doe';
+    this.healthScore = 85;
+    this.totalClaims = 12;
+    this.approvedClaims = 10;
+    this.pendingClaims = 1;
+    this.rejectedClaims = 1;
+    this.approvalRate = 83;
+    this.approvedPercent = 83;
+    this.pendingPercent = 8;
+    this.rejectedPercent = 8;
+    this.avgProcessingTime = '3.2 days';
+    this.pendingTrend = -2;
 
-    // Claims Chart
-    this.claimsChart = new Chart(this.claimsChartCanvas.nativeElement, {
-      type: 'line',
-      data: {
-        labels: this.chartLabels,
-        datasets: [{
-          label: this.chartType === 'claims' ? 'Number of Claims' : 'Claim Amount (₹)',
-          data: this.chartData,
-          borderColor: '#22D3EE',
-          backgroundColor: 'rgba(34, 211, 238, 0.1)',
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: '#22D3EE',
-          pointBorderColor: '#0B1220',
-          pointBorderWidth: 2,
-          pointRadius: 5,
-          pointHoverRadius: 7
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: { labels: { color: '#9ca3af' } },
-          tooltip: {
-            callbacks: {
-              label: (context: any) => {
-                const value = context.parsed.y;
-                return this.chartType === 'claims'
-                  ? `${value} claim(s)`
-                  : `₹${value.toLocaleString()}`;
-              }
-            }
-          }
-        },
-        scales: {
-          y: {
-            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-            ticks: { color: '#9ca3af' }
-          },
-          x: {
-            grid: { display: false },
-            ticks: { color: '#9ca3af' }
-          }
-        }
-      }
-    });
+    this.activePlan = {
+      id: '1',
+      name: 'Essential Care Plan',
+      insuredAmount: 300000,
+      startDate: new Date().toISOString(),
+      endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+    };
 
-    // Status Donut Chart
-    this.statusChart = new Chart(this.statusChartCanvas.nativeElement, {
-      type: 'doughnut',
-      data: {
-        labels: ['Approved', 'Pending', 'Rejected'],
-        datasets: [{
-          data: [this.approvedClaims, this.pendingClaims, this.rejectedClaims],
-          backgroundColor: ['#4ade80', '#fbbf24', '#f87171'],
-          borderWidth: 0,
-          borderRadius: 8
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: { legend: { display: false } }
-      }
-    });
+    this.daysRemaining = 245;
+    this.coverageUtilization = 15;
+    this.totalClaimedAmount = 45000;
+
+    this.generateAIInsights();
+  }
+
+  getPlanValidity(): string {
+    if (!this.activePlan) return 'No active plan';
+    const start = new Date(this.activePlan.startDate);
+    const end = new Date(this.activePlan.endDate);
+    return `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+  }
+
+  getClaimTrend(): string {
+    if (this.pendingTrend > 0) return `+${this.pendingTrend} this week`;
+    if (this.pendingTrend < 0) return `${this.pendingTrend} this week`;
+    return 'No change';
+  }
+
+  navigateTo(path: string): void {
+    this.router.navigate([path]);
   }
 
   switchChartType(type: 'claims' | 'amount'): void {
     this.chartType = type;
-    this.calculateChartData();
-    this.renderCharts();
     this.cdr.markForCheck();
   }
 
-  navigateTo(route: string): void {
-    this.router.navigate([route]);
-  }
-
   handleInsightAction(action: string): void {
-    if (action) this.router.navigate([action]);
-  }
-
-  getPlanValidity(): string {
-    if (this.activePlan?.endDate) {
-      return new Date(this.activePlan.endDate).toLocaleDateString('default', {
-        month: 'long',
-        year: 'numeric'
-      });
+    if (action === 'Pay Premium') {
+      this.router.navigate(['/app/payments']);
+    } else if (action === 'Upgrade Plan') {
+      this.router.navigate(['/plans']);
+    } else if (action === 'View Guidelines') {
+      this.router.navigate(['/app/claims/guidelines']);
     }
-    const date = new Date();
-    date.setMonth(date.getMonth() + 12);
-    return date.toLocaleDateString('default', { month: 'long', year: 'numeric' });
-  }
-
-  getClaimTrend(): string {
-    if (this.totalClaims === 0) return 'No claims yet';
-    const trend = this.pendingClaims > 0 ? 'Active claims pending' : `${this.approvalRate}% success rate`;
-    return trend;
   }
 
   downloadReport(): void {
-    // Generate CSV report
-    const headers = ['Claim ID', 'Date', 'Amount', 'Status', 'Description'];
-    const rows = this.claims.map(c => [
-      c.claimId,
-      new Date(c.claimDate).toLocaleDateString(),
-      c.amount,
-      c.status,
-      c.description || ''
-    ]);
+    // Generate and download a simple report
+    const reportData = {
+      memberName: this.memberName,
+      date: new Date().toISOString(),
+      policy: this.activePlan,
+      claims: {
+        total: this.totalClaims,
+        approved: this.approvedClaims,
+        pending: this.pendingClaims,
+        rejected: this.rejectedClaims,
+        approvalRate: this.approvalRate
+      },
+      coverageUtilization: this.coverageUtilization
+    };
 
-    const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `claims_report_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `dashboard-report-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  getRemainingCoverage(): number {
+    if (!this.activePlan) return 0;
+    return this.activePlan.insuredAmount - this.totalClaimedAmount;
+  }
+
+  getPolicyNumber(): string {
+    if (this.enhancedPolicy?.policyNumber) {
+      return this.enhancedPolicy.policyNumber;
+    }
+    if (this.activePlan?.id) {
+      return this.activePlan.id;
+    }
+    return 'N/A';
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  }
+
+  getNextPremiumDate(): string {
+    if (this.enhancedPolicy?.nextPremiumDueDate) {
+      const date = new Date(this.enhancedPolicy.nextPremiumDueDate);
+      return date.toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+    return 'N/A';
+  }
+
+  getDependentsCount(): number {
+    return this.dependentsList.length;
+  }
+
+  getNomineesCount(): number {
+    return this.nomineesList.length;
   }
 }
