@@ -1,0 +1,266 @@
+<div class="kyc-container">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a routerLink="/">Home</a>
+        <span class="separator">/</span>
+        <span class="current">KYC Verification</span>
+    </div>
+
+    <div class="kyc-layout">
+        <!-- Main Content -->
+        <div class="kyc-main">
+            <!-- Header -->
+            <div class="kyc-header">
+                <div class="header-badge">STEP 2 OF 3</div>
+                <h1>Identity Verification</h1>
+                <p class="header-subtitle">Complete your KYC to activate your insurance coverage</p>
+            </div>
+
+            <!-- Progress Tracker -->
+            <div class="progress-tracker">
+                <div class="progress-step completed">
+                    <div class="step-marker">✓</div>
+                    <div class="step-info">
+                        <div class="step-label">Account Setup</div>
+                        <div class="step-status">Completed</div>
+                    </div>
+                </div>
+                <div class="progress-line active"></div>
+                <div class="progress-step active">
+                    <div class="step-marker">2</div>
+                    <div class="step-info">
+                        <div class="step-label">KYC Verification</div>
+                        <div class="step-status">In Progress</div>
+                    </div>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step">
+                    <div class="step-marker">3</div>
+                    <div class="step-info">
+                        <div class="step-label">Activation</div>
+                        <div class="step-status">Pending</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- DOCUMENT SELECTION CARD -->
+            <!-- ============================================ -->
+            <div class="form-card">
+                <div class="card-title">
+                    <h2>Select Document Type</h2>
+                    <p>Choose one of the following government-issued IDs for verification</p>
+                </div>
+
+                <div class="document-grid">
+                    <!-- AADHAAR CARD -->
+                    <div class="document-option" [class.selected]="selectedDocId === 0" (click)="selectDocument(0)">
+                        <div class="doc-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                <circle cx="12" cy="10" r="3"></circle>
+                                <path d="M7 21v-2a5 5 0 0 1 10 0v2"></path>
+                            </svg>
+                        </div>
+                        <div class="doc-info">
+                            <div class="doc-name">Aadhaar Card</div>
+                            <div class="doc-desc">Government-issued identity proof</div>
+                        </div>
+                        <div class="doc-radio">
+                            <div class="radio-circle" [class.selected]="selectedDocId === 0"></div>
+                        </div>
+                    </div>
+
+                    <!-- PAN CARD -->
+                    <div class="document-option" [class.selected]="selectedDocId === 1" (click)="selectDocument(1)">
+                        <div class="doc-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                                <path d="M8 12h8M12 8v8"></path>
+                            </svg>
+                        </div>
+                        <div class="doc-info">
+                            <div class="doc-name">PAN Card</div>
+                            <div class="doc-desc">Permanent Account Number</div>
+                        </div>
+                        <div class="doc-radio">
+                            <div class="radio-circle" [class.selected]="selectedDocId === 1"></div>
+                        </div>
+                    </div>
+
+                    <!-- PASSPORT -->
+                    <div class="document-option" [class.selected]="selectedDocId === 2" (click)="selectDocument(2)">
+                        <div class="doc-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M17 8l-2 2M7 8l2 2M17 16l-2-2M7 16l2-2"></path>
+                            </svg>
+                        </div>
+                        <div class="doc-info">
+                            <div class="doc-name">Passport</div>
+                            <div class="doc-desc">International travel document</div>
+                        </div>
+                        <div class="doc-radio">
+                            <div class="radio-circle" [class.selected]="selectedDocId === 2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- DOCUMENT DETAILS FORM (shown after selection) -->
+            <!-- ============================================ -->
+            <div class="form-card" *ngIf="selectedDocument">
+                <div class="card-title">
+                    <h2>Document Details</h2>
+                    <p>Enter the information exactly as it appears on your document</p>
+                </div>
+
+                <form [formGroup]="kycForm" (ngSubmit)="onSubmit()">
+                    <!-- Document Number Field -->
+                    <div class="form-group">
+                        <label>{{ selectedDocument.name }} Number</label>
+                        <div class="input-wrapper">
+                            <input type="text" formControlName="documentNumber" [placeholder]="'Enter your ' + selectedDocument.name + ' number'" class="form-control" [class.error]="kycForm.get('documentNumber')?.invalid && kycForm.get('documentNumber')?.touched">
+                            <div class="input-hint">{{ selectedDocument.example }}</div>
+                        </div>
+                        <div class="error-message" *ngIf="kycForm.get('documentNumber')?.invalid && kycForm.get('documentNumber')?.touched">
+                            ⚠️ Please enter a valid {{ selectedDocument.name }} number
+                        </div>
+                    </div>
+
+                    <!-- File Upload Area -->
+                    <div class="form-group">
+                        <label>Upload Document</label>
+                        <div class="file-upload-area" [class.drag-over]="isDragging" [class.has-file]="uploadedFile" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+                            <input type="file" #fileInput (change)="onFileSelected($event)" accept=".pdf,.jpg,.jpeg,.png" hidden>
+                            <ng-container *ngIf="!uploadedFile">
+                                <div class="upload-icon">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                                </div>
+                                <div class="upload-text">Drag & drop your document here, or <span class="browse-link" (click)="fileInput.click()">browse</span></div>
+                                <div class="upload-hint">Supports PDF, JPG, PNG (Max 5MB)</div>
+                            </ng-container>
+                            <ng-container *ngIf="uploadedFile">
+                                <div class="file-preview">
+                                    <div class="file-icon">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                                    </div>
+                                    <div class="file-info">
+                                        <div class="file-name">{{ uploadedFile.name }}</div>
+                                        <div class="file-size">{{ formatFileSize(uploadedFile.size) }}</div>
+                                    </div>
+                                    <button type="button" class="remove-file" (click)="removeFile(); $event.stopPropagation()">✕</button>
+                                </div>
+                            </ng-container>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Verification Section -->
+                    <div class="mobile-verification-section">
+                        <div class="section-divider"></div>
+                        <div class="section-title-small">
+                            <h3>Mobile Verification</h3>
+                            <p>Verify your mobile number for secure communication</p>
+                        </div>
+
+                        <!-- Phone Number Input -->
+                        <div class="form-group">
+                            <label>Mobile Number</label>
+                            <div class="input-with-button">
+                                <div class="country-code">+91</div>
+                                <input type="tel" (input)="onPhoneNumberInput($event)" [disabled]="isOtpSent" class="form-control mobile-input" placeholder="Enter 10-digit number" maxlength="10">
+                                <button type="button" class="btn-send-otp" (click)="sendOtp()" [disabled]="isOtpSent || !isPhoneNumberValid || isOtpLoading">Send OTP</button>
+                            </div>
+                            <!-- <div class="input-hint" *ngIf="!isOtpSent">Enter 10-digit mobile number (e.g., 9729507672)</div> -->
+                        </div>
+
+                        <!-- OTP Input -->
+                        <div class="form-group" *ngIf="isOtpSent">
+                            <label>Verification Code</label>
+                            <div class="input-with-button">
+                                <!-- ✅ Use ngModel with standalone option -->
+                                <input type="text" [(ngModel)]="otpCode" name="otpCode" [ngModelOptions]="{standalone: true}" maxlength="6" [disabled]="isOtpVerified" class="form-control" placeholder="Enter 6-digit OTP">
+                                <button type="button" class="btn-verify-otp" (click)="verifyOtp()" [disabled]="isOtpVerified || otpCode.length !== 6 || isOtpLoading">
+                                    {{ isOtpLoading ? 'Verifying...' : 'Verify' }}
+                                </button>
+                            </div>
+                            <div class="timer-text" *ngIf="otpTimer > 0 && !isOtpVerified">
+                                Code expires in: {{ formatTime(otpTimer) }}
+                            </div>
+                        </div>
+
+
+                        <!-- Verified Badge -->
+                        <div *ngIf="isOtpVerified" class="verified-badge">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg> Mobile number verified successfully
+                        </div>
+                    </div>
+
+                    <!-- Global Error Message -->
+                    <div class="error-message" *ngIf="error">
+                        <span class="error-icon">⚠️</span> {{ error }}
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" routerLink="/app/dashboard">Cancel</button>
+                        <button type="submit" class="btn-primary" [disabled]="!kycForm.valid || !uploadedFile || !isOtpVerified || isSubmitting">
+            <span *ngIf="!isSubmitting">Submit for Verification</span>
+            <span *ngIf="isSubmitting" class="loading-spinner"></span>
+        </button>
+                    </div>
+                </form>
+
+            </div>
+
+            <!-- Compliance Notice -->
+            <div class="compliance-notice">
+                <div class="notice-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 16v-4M12 8h.01"></path>
+                    </svg>
+                </div>
+                <div class="notice-content">
+                    <strong>Regulatory Compliance</strong>
+                    <p>Your information is collected and verified in compliance with IRDAI regulations and the Information Technology Act, 2000. Documents are secured with 256-bit encryption.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SIDEBAR -->
+        <!-- ============================================ -->
+        <div class="kyc-sidebar">
+            <div class="info-card">
+                <h3>Why verify your identity?</h3>
+                <ul class="info-list">
+                    <li>🛡️ Prevent insurance fraud</li>
+                    <li>⚡ Enable faster claim settlements</li>
+                    <li>📋 Meet regulatory requirements</li>
+                    <li>⭐ Access exclusive benefits</li>
+                </ul>
+            </div>
+
+            <div class="help-card">
+                <h4>Need assistance?</h4>
+                <p>Our support team is available 24/7</p>
+                <div class="contact-options">
+                    <div class="contact-item">📞 1800-XXX-XXXX</div>
+                    <div class="contact-item">✉️ support@claimcore.com</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -4,6 +4,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { AuthService } from '../../auth/auth.service';
 import { MemberService } from '../../services/member.service';
 import { ClaimService } from '../../services/claim.service';
+import { KycService } from '../../services/kyc.service'; // ✅ Add this
 import { Subscription } from 'rxjs';
 import { FooterComponent } from '../../pages/public/landing/components/footer/footer.component';
 
@@ -26,9 +27,15 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private memberService = inject(MemberService);
   private claimService = inject(ClaimService);
+  private kycService = inject(KycService); // ✅ Add this
   private router = inject(Router);
   private renderer = inject(Renderer2);
   private elementRef = inject(ElementRef);
+  private boundEscapeHandler = this.handleEscapeKey.bind(this);
+
+  // ✅ KYC STATE
+  isKycVerified = false;
+  isLoadingKyc = true;
 
   // UI State
   isScrolled = false;
@@ -47,9 +54,6 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   notifications: Notification[] = [];
   notificationCount = 0;
 
-  // Admin check
-  isAdmin = false;
-
   // Subscriptions
   private refreshSubscription!: Subscription;
   private clickListener: (() => void) | null = null;
@@ -57,20 +61,40 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadUserData();
     this.loadNotifications();
+    this.checkKycStatus(); // ✅ Add this
 
-    // Listen for claim refreshes to update notifications
     this.refreshSubscription = this.claimService.refreshClaims$.subscribe(() => {
       this.loadNotifications();
     });
 
-    // Close dropdowns on escape key
-    document.addEventListener('keydown', this.handleEscapeKey.bind(this));
+    document.addEventListener('keydown', this.boundEscapeHandler);
   }
 
   ngOnDestroy(): void {
     if (this.refreshSubscription) this.refreshSubscription.unsubscribe();
     if (this.clickListener) this.clickListener();
-    document.removeEventListener('keydown', this.handleEscapeKey.bind(this));
+    document.removeEventListener('keydown', this.boundEscapeHandler);
+  }
+
+  // ✅ ✅ ✅ KYC LOGIC
+  private checkKycStatus() {
+    this.kycService.getStatus().subscribe({
+      next: (status) => {
+        this.isKycVerified = status.status === 1;
+        this.isLoadingKyc = false;
+        console.log('KYC Status:', this.isKycVerified);
+      },
+      error: () => {
+        this.isKycVerified = false;
+        this.isLoadingKyc = false;
+      }
+    });
+  }
+
+  // ✅ ADMIN GETTER
+  get isAdmin(): boolean {
+    const role = this.auth.getUserRole();
+    return role === 'Admin' || role === 'ClaimsProcessor';
   }
 
   private loadUserData(): void {
@@ -86,21 +110,17 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
                         decoded?.role ||
                         'Member';
 
-        // Generate initials
         const nameParts = this.userName.split(' ');
         if (nameParts.length >= 2) {
           this.userInitials = (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
         } else {
           this.userInitials = this.userName.substring(0, 2).toUpperCase();
         }
-
-        this.isAdmin = this.userRole === 'Admin' || this.userRole === 'ClaimsProcessor';
       } catch (e) {
         console.error('Error decoding token', e);
       }
     }
 
-    // Also try to get from member service
     this.memberService.getDashboard().subscribe({
       next: (res) => {
         if (res.fullName) {
@@ -119,12 +139,10 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   }
 
   private loadNotifications(): void {
-    // Generate notifications based on claim status
     this.claimService.getMyClaims().subscribe({
       next: (claims) => {
         const newNotifications: Notification[] = [];
 
-        // Check for pending claims
         const pendingClaims = claims.filter(c =>
           c.status === 'Submitted' || c.status === 'PendingAI' || c.status === 'Pending'
         );
@@ -139,7 +157,6 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
           });
         }
 
-        // Check for recently approved claims (last 7 days)
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -197,11 +214,12 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
     this.mobileMenuOpen = false;
 
     if (this.dropdownOpen) {
-      // Add click outside listener
       setTimeout(() => {
         this.clickListener = this.renderer.listen('document', 'click', (event: MouseEvent) => {
-          const dropdown = this.elementRef.nativeElement.querySelector('.user-dropdown');
-          if (dropdown && !dropdown.contains(event.target)) {
+          const dropdown = this.elementRef.nativeElement.querySelector('.dropdown-menu');
+          const avatar = this.elementRef.nativeElement.querySelector('.user-dropdown');
+
+          if (dropdown && avatar && !dropdown.contains(event.target) && !avatar.contains(event.target)) {
             this.dropdownOpen = false;
             if (this.clickListener) this.clickListener();
             this.clickListener = null;
@@ -225,13 +243,6 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   toggleNotifications(): void {
     this.notificationsOpen = !this.notificationsOpen;
     this.dropdownOpen = false;
-
-    if (this.notificationsOpen && this.notificationCount > 0) {
-      // Mark as read when opened
-      setTimeout(() => {
-        this.markAllRead();
-      }, 2000);
-    }
   }
 
   handleEscapeKey(event: KeyboardEvent): void {
@@ -243,7 +254,6 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   }
 
   scrollToSection(sectionId: string): void {
-    // In the authenticated app shell, the logo navigates home to the dashboard.
     this.router.navigate(['/app/dashboard']).then(() => {
       if (sectionId === 'home') {
         window.scrollTo({ top: 0, behavior: 'smooth' });

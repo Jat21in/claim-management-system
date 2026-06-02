@@ -20,7 +20,7 @@ export class LoginComponent implements OnInit {
 
   loading = false;
   error: string | null = null;
-  successMessage: string | null = null;  // ✅ Add success message
+  successMessage: string | null = null;
 
   redirectUrl = '/app/dashboard';
 
@@ -33,17 +33,15 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     this.redirectUrl = this.route.snapshot.queryParams['redirect'] || '/app/dashboard';
 
-    // ✅ Show success message if coming from registration
+    // Show success message if coming from registration
     if (this.route.snapshot.queryParams['registered'] === 'true') {
       this.successMessage = 'Account created successfully! Please login with your credentials.';
 
-      // ✅ Auto-fill email if provided
       const email = this.route.snapshot.queryParams['email'];
       if (email) {
         this.form.patchValue({ email });
       }
 
-      // Auto-clear success message after 5 seconds
       setTimeout(() => {
         this.successMessage = null;
       }, 5000);
@@ -70,11 +68,23 @@ export class LoginComponent implements OnInit {
       .subscribe({
         next: () => {
           this.loading = false;
-          this.router.navigateByUrl(this.redirectUrl);
+
+          // ✅ ROLE-BASED REDIRECT
+          const role = this.auth.getUserRole();
+          console.log('🔐 User role after login:', role);
+
+          if (role === 'Admin' || role === 'ClaimsProcessor') {
+            console.log('👑 Redirecting to Admin Panel');
+            this.router.navigateByUrl('/admin/dashboard');
+          } else {
+            console.log('👤 Redirecting to User Dashboard');
+            this.router.navigateByUrl(this.redirectUrl);
+          }
         },
-        error: () => {
+        error: (err) => {
           this.loading = false;
-          this.error = 'Invalid credentials';
+          this.error = err.error?.error || 'Invalid credentials';
+          console.error('Login error:', err);
         },
       });
   }

@@ -1,0 +1,341 @@
+.kyc-status-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    min-height: 100vh;
+}
+
+
+/* Breadcrumb */
+
+.breadcrumb {
+    margin-bottom: 32px;
+    font-size: 14px;
+    a {
+        color: #9ca3af;
+        text-decoration: none;
+        transition: color 0.2s;
+        &:hover {
+            color: #22D3EE;
+        }
+    }
+    .separator {
+        margin: 0 8px;
+        color: #4b5563;
+    }
+    .current {
+        color: #22D3EE;
+    }
+}
+
+
+/* Status Card */
+
+.status-card {
+    background: #1a1a2e;
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    border: 1px solid #2a2a3e;
+    &.pending {
+        border-top: 4px solid #f59e0b;
+    }
+    &.verified {
+        border-top: 4px solid #10b981;
+    }
+    &.rejected {
+        border-top: 4px solid #ef4444;
+    }
+    .status-icon {
+        margin-bottom: 24px;
+        svg {
+            stroke-width: 1.5;
+        }
+        &.verified svg {
+            stroke: #10b981;
+        }
+        &.rejected svg {
+            stroke: #ef4444;
+        }
+    }
+    h2 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+    p {
+        color: #9ca3af;
+        margin-bottom: 32px;
+    }
+}
+
+
+/* Timeline */
+
+.timeline {
+    text-align: left;
+    margin: 32px 0;
+    padding-left: 20px;
+    border-left: 2px solid #2a2a3e;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 24px;
+    &:last-child {
+        padding-bottom: 0;
+    }
+    .timeline-marker {
+        position: absolute;
+        left: -26px;
+        top: 0;
+        width: 10px;
+        height: 10px;
+        background: #2a2a3e;
+        border-radius: 50%;
+    }
+    &.completed .timeline-marker {
+        background: #10b981;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+    }
+    &.active .timeline-marker {
+        background: #22D3EE;
+        box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.3);
+    }
+    .timeline-content {
+        .timeline-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .timeline-date {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+    }
+}
+
+
+/* Documents Table */
+
+.documents-section {
+    margin: 32px 0;
+    text-align: left;
+    h3 {
+        font-size: 16px;
+        margin-bottom: 16px;
+    }
+}
+
+.documents-table {
+    background: #0f0f1a;
+    border-radius: 12px;
+    overflow: hidden;
+    .table-header {
+        display: grid;
+        grid-template-columns: 2fr 2fr 1fr 1fr;
+        padding: 12px 16px;
+        background: #1a1a2e;
+        font-size: 12px;
+        font-weight: 600;
+        color: #9ca3af;
+        border-bottom: 1px solid #2a2a3e;
+    }
+    .table-row {
+        display: grid;
+        grid-template-columns: 2fr 2fr 1fr 1fr;
+        padding: 12px 16px;
+        font-size: 13px;
+        border-bottom: 1px solid #2a2a3e;
+        &:last-child {
+            border-bottom: none;
+        }
+        a {
+            color: #22D3EE;
+            text-decoration: none;
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-right: 8px;
+    &.pending {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+    }
+    &.rejected {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+    }
+}
+
+
+/* Info Box */
+
+.info-box {
+    background: rgba(34, 211, 238, 0.05);
+    padding: 16px;
+    border-radius: 12px;
+    margin-top: 24px;
+    text-align: left;
+    strong {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+    p {
+        font-size: 12px;
+        margin: 0;
+        color: #9ca3af;
+    }
+}
+
+
+/* Verified Info */
+
+.verified-info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 24px 0;
+    .info-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        background: #0f0f1a;
+        border-radius: 12px;
+        text-align: left;
+        .info-icon {
+            font-size: 24px;
+        }
+        .info-text {
+            strong {
+                display: block;
+                font-size: 11px;
+                color: #9ca3af;
+                margin-bottom: 2px;
+            }
+            span {
+                font-size: 13px;
+                font-weight: 500;
+            }
+        }
+    }
+}
+
+
+/* Action Buttons */
+
+.action-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 24px;
+    .btn-primary {
+        padding: 12px 28px;
+        background: linear-gradient(135deg, #22D3EE, #06b6d4);
+        border: none;
+        border-radius: 10px;
+        color: #0B1220;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(34, 211, 238, 0.3);
+        }
+    }
+    .btn-secondary {
+        padding: 12px 28px;
+        background: transparent;
+        border: 1px solid #2a2a3e;
+        border-radius: 10px;
+        color: #e5e7eb;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        &:hover {
+            border-color: #22D3EE;
+            color: #22D3EE;
+        }
+    }
+}
+
+
+/* Rejection Reason */
+
+.rejection-reason {
+    background: rgba(239, 68, 68, 0.1);
+    padding: 16px;
+    border-radius: 12px;
+    margin: 24px 0;
+    text-align: left;
+    border-left: 3px solid #ef4444;
+    strong {
+        display: block;
+        font-size: 12px;
+        color: #fca5a5;
+        margin-bottom: 8px;
+    }
+    p {
+        margin: 0;
+        font-size: 13px;
+        color: #e5e7eb;
+    }
+}
+
+
+/* Guidelines */
+
+.guidelines {
+    text-align: left;
+    margin: 24px 0;
+    h4 {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+    ul {
+        list-style: none;
+        padding: 0;
+        li {
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 12px;
+            color: #9ca3af;
+            &:before {
+                content: "•";
+                position: absolute;
+                left: 0;
+                color: #22D3EE;
+            }
+        }
+    }
+}
+
+@media (max-width: 640px) {
+    .status-card {
+        padding: 24px;
+    }
+    .documents-table {
+        overflow-x: auto;
+    }
+    .table-header,
+    .table-row {
+        min-width: 500px;
+    }
+    .verified-info {
+        grid-template-columns: 1fr;
+    }
+    .action-buttons {
+        flex-direction: column;
+    }
+}

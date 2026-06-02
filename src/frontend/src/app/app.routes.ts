@@ -9,7 +9,6 @@ import { AuthShellComponent } from './layout/auth-shell/auth-shell.component';
 import { LandingComponent } from './pages/public/landing/landing.component';
 import { PlansComponent } from './pages/public/plans/plans.component';
 import { PlanDetailComponent } from './pages/public/plan-details/plan-details.component';
-import { ChangePlanComponent } from './pages/app/change-plan/change-plan.component';
 
 // auth pages
 import { LoginComponent } from './pages/auth/login/login.component';
@@ -19,15 +18,18 @@ import { RegisterComponent } from './pages/auth/register/register.component';
 import { DashboardComponent } from './pages/app/dashboard/dashboard.component';
 import { ClaimsComponent } from './pages/app/claims/claims.component';
 import { ProfileComponent } from './pages/app/profile/profile.component';
+import { ChangePlanComponent } from './pages/app/change-plan/change-plan.component';
+import { SubmitClaimComponent } from './pages/app/claims/submit-claim/submit-claim.component';
+import { DependentsComponent } from './pages/app/policy/dependents.component';
+import { NomineesComponent } from './pages/app/policy/nominees.component';
+
+// KYC pages
+import { KycUploadComponent } from './pages/app/kyc/kyc-upload.component';
+import { KycStatusComponent } from './pages/app/kyc/kyc-status.component';
 
 // guards
 import { authGuard } from './guards/auth.guard';
-import { SubmitClaimComponent } from './pages/app/claims/submit-claim/submit-claim.component';
 import { kycGuard } from './guards/kyc.guard';
-import { KycUploadComponent  } from './pages/app/kyc/kyc-upload.component';
-import { KycStatusComponent } from './pages/app/kyc/kyc-status.component';
-import { NomineesComponent } from './pages/app/policy/nominees.component';
-import { DependentsComponent } from './pages/app/policy/dependents.component';
 
 export const routes: Routes = [
   /**
@@ -57,30 +59,47 @@ export const routes: Routes = [
   },
 
   /**
-   * 🧠 App (authenticated)
+   * 🧠 App (authenticated + KYC verified)
+   * All routes here require both authentication AND KYC verification
    */
   {
     path: 'app',
     component: AppLayoutComponent,
-    canActivate: [authGuard],
+    canActivate: [authGuard, kycGuard], // ✅ BOTH guards required
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'kyc/upload', component: KycUploadComponent },
-      { path: 'kyc/pending', component: KycStatusComponent },
-      { path: 'kyc/rejected', component: KycStatusComponent },
-      { path: 'dashboard', component: DashboardComponent, canActivate: [kycGuard] },
+      { path: 'dashboard', component: DashboardComponent },
       { path: 'claims', component: ClaimsComponent },
-      { path: 'claims/new', component: SubmitClaimComponent }, // ✅ ADD THIS
+      { path: 'claims/new', component: SubmitClaimComponent },
       { path: 'profile', component: ProfileComponent },
       { path: 'change-plan', component: ChangePlanComponent },
       { path: 'policy/dependents', component: DependentsComponent },
       { path: 'policy/nominees', component: NomineesComponent },
     ],
   },
+
+  /**
+   * 📄 KYC Routes (authenticated but NOT necessarily verified)
+   * These are accessible even before KYC verification
+   */
   {
-  path: 'admin',
-  loadChildren: () => import('./admin/admin.routes').then(m => m.ADMIN_ROUTES)
-},
+    path: 'app/kyc',
+    component: AppLayoutComponent,
+    canActivate: [authGuard], // ✅ Only auth required, NOT KYC
+    children: [
+      { path: 'upload', component: KycUploadComponent },
+      { path: 'pending', component: KycStatusComponent },
+      { path: 'rejected', component: KycStatusComponent },
+    ],
+  },
+
+  /**
+   * 👑 Admin Panel
+   */
+  {
+    path: 'admin',
+    loadChildren: () => import('./admin/admin.routes').then(m => m.ADMIN_ROUTES)
+  },
 
   /**
    * ❌ Fallback
