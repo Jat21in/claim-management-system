@@ -27,6 +27,10 @@ public sealed class MemberConfiguration : IEntityTypeConfiguration<Member>
             .IsRequired()
             .HasMaxLength(500);
 
+        builder.Property(m => m.PhoneNumber)
+            .HasMaxLength(20)
+            .IsRequired(false);
+
 
         //  Address owned type mapping (CRUCIAL)
         builder.OwnsOne(m => m.Address, address =>

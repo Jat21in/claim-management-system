@@ -12,29 +12,50 @@ public sealed class KycService : IKycService
     private readonly IMemberRepository _memberRepository;
     private readonly IFileStorageService _fileStorageService;
     private readonly IEmailService _emailService;
+    private readonly IDocumentVerificationService _documentVerificationService;
 
     public KycService(
         IKycRepository kycRepository,
         IMemberRepository memberRepository,
         IFileStorageService fileStorageService,
-        IEmailService emailService)
+        IEmailService emailService,
+        IDocumentVerificationService documentVerificationService)
     {
         _kycRepository = kycRepository;
         _memberRepository = memberRepository;
         _fileStorageService = fileStorageService;
         _emailService = emailService;
+        _documentVerificationService = documentVerificationService;
     }
 
     public async Task SubmitKycDocumentsAsync(
-        Guid memberId,
-        SubmitKycRequest request,
-        Stream fileStream,
-        string fileName,
-        CancellationToken cancellationToken)
+    Guid memberId,
+    SubmitKycRequest request,
+    Stream fileStream,
+    string fileName,
+    CancellationToken cancellationToken)
     {
         var member = await _memberRepository.GetByIdAsync(memberId, cancellationToken);
         if (member == null)
             throw new InvalidOperationException("Member not found");
+
+        // ✅ Verify OTP first
+        
+        // ✅ Save phone number to member profile
+        if (member.PhoneNumber != request.PhoneNumber)
+        {
+            // Update phone number
+            var phoneProperty = member.GetType().GetProperty("PhoneNumber");
+            phoneProperty?.SetValue(member, request.PhoneNumber);
+            await _memberRepository.UpdateAsync(member, cancellationToken);
+        }
+
+        // Check if member was rejected - reset status for re-upload
+        if (member.Status == MemberStatus.Rejected)
+        {
+            member.SubmitKyc();
+            await _memberRepository.UpdateAsync(member, cancellationToken);
+        }
 
         // Upload file
         var fileUrl = await _fileStorageService.UploadKycDocumentAsync(
@@ -44,25 +65,55 @@ public sealed class KycService : IKycService
             fileName,
             cancellationToken);
 
-        var document = new KycDocument(
-            memberId: memberId,
-            documentType: request.DocumentType,
-            documentNumber: request.DocumentNumber,
-            fileUrl: fileUrl,
-            fileName: fileName,
-            fileSize: fileStream.Length,
-            contentType: GetContentType(fileName)
-        );
+        // Check if document already exists for this type
+        var existingDocs = await _kycRepository.GetByMemberIdAsync(memberId, cancellationToken);
+        var existingDoc = existingDocs.FirstOrDefault(d => d.DocumentType == request.DocumentType);
 
-        await _kycRepository.AddAsync(document, cancellationToken);
+        KycDocument document;
 
-        // Update member status if first submission
-        if (member.Status == MemberStatus.Pending && !await _kycRepository.HasMemberSubmittedKycAsync(memberId, cancellationToken))
+        if (existingDoc != null)
+        {
+            await _fileStorageService.DeleteFileAsync(existingDoc.FileUrl, cancellationToken);
+
+            existingDoc.GetType().GetProperty("DocumentNumber")?.SetValue(existingDoc, request.DocumentNumber);
+            existingDoc.GetType().GetProperty("FileUrl")?.SetValue(existingDoc, fileUrl);
+            existingDoc.GetType().GetProperty("FileName")?.SetValue(existingDoc, fileName);
+            existingDoc.GetType().GetProperty("FileSize")?.SetValue(existingDoc, fileStream.Length);
+            existingDoc.GetType().GetProperty("IsVerified")?.SetValue(existingDoc, false);
+            existingDoc.GetType().GetProperty("RejectionReason")?.SetValue(existingDoc, null);
+            existingDoc.GetType().GetProperty("VerifiedByAdminId")?.SetValue(existingDoc, null);
+            existingDoc.GetType().GetProperty("VerifiedAt")?.SetValue(existingDoc, null);
+
+            await _kycRepository.UpdateAsync(existingDoc, cancellationToken);
+        }
+        else
+        {
+            document = new KycDocument(
+                memberId: memberId,
+                documentType: request.DocumentType,
+                documentNumber: request.DocumentNumber,
+                fileUrl: fileUrl,
+                fileName: fileName,
+                fileSize: fileStream.Length,
+                contentType: GetContentType(fileName)
+            );
+            await _kycRepository.AddAsync(document, cancellationToken);
+        }
+
+        // Update member status
+        if (member.Status == MemberStatus.Pending || member.Status == MemberStatus.Rejected)
         {
             member.SubmitKyc();
             await _memberRepository.UpdateAsync(member, cancellationToken);
         }
+
+        // Send email notification to admin
+        await _emailService.SendKycSubmittedEmailToAdminAsync(
+            member.FullName,
+            member.Email,
+            cancellationToken);
     }
+
 
     public async Task<KycStatusResponse> GetKycStatusAsync(Guid memberId, CancellationToken cancellationToken)
     {

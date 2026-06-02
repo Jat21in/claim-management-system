@@ -23,6 +23,7 @@ public sealed class Member : IAuditable
     public DateTime DateOfBirth { get; private set; }
     public Address Address { get; private set; } = null!;
     public string? ContactNumber { get; private set; }
+    public string? PhoneNumber { get; private set; }
     public string Role { get; private set; } = "Member";
 
     // Authentication

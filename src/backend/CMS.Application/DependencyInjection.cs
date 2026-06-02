@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<IKycService, KycService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<IDocumentVerificationService, DocumentVerificationService>();
 
         return services;
     }
