@@ -24,17 +24,30 @@ public class AdminDashboardController : ControllerBase
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {
-        var allMembers = await _memberRepository.GetAllAsync(CancellationToken.None);
-        var allClaims = await _claimRepository.GetAllAsync(CancellationToken.None);
-
-        var stats = new
+        try
         {
-            TotalMembers = allMembers.Count(),
-            PendingClaims = allClaims.Count(c => c.Status == ClaimStatus.Submitted),
-            ApprovedClaims = allClaims.Count(c => c.Status == ClaimStatus.Approved),
-            RejectedClaims = allClaims.Count(c => c.Status == ClaimStatus.Rejected)
-        };
+            var allMembers = await _memberRepository.GetAllAsync(HttpContext.RequestAborted);
+            var allClaims = await _claimRepository.GetAllAsync(HttpContext.RequestAborted);
 
-        return Ok(stats);
+            var stats = new
+            {
+                totalMembers = allMembers.Count(),
+                // ✅ Include all pending-related statuses
+                pendingClaims = allClaims.Count(c => c.Status == ClaimStatus.Pending
+                                                  || c.Status == ClaimStatus.Submitted
+                                                  || c.Status == ClaimStatus.PendingAI),
+                approvedClaims = allClaims.Count(c => c.Status == ClaimStatus.Approved),
+                rejectedClaims = allClaims.Count(c => c.Status == ClaimStatus.Rejected),
+                totalClaims = allClaims.Count(),
+                totalClaimAmount = allClaims.Sum(c => c.ClaimAmount.Amount)
+            };
+
+            return Ok(stats);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in GetStats: {ex.Message}");
+            return StatusCode(500, new { error = ex.Message });
+        }
     }
 }

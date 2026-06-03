@@ -58,10 +58,12 @@ public sealed class ClaimRepository : IClaimRepository
     {
         try
         {
+            // ✅ FIX: Remove the .Take(100) limit and include Member
             return await _db.Claims
+                .Include(c => c.Member)
                 .AsNoTracking()
-                .Take(100)
-                .ToListAsync();
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync(ct);
         }
         catch (Exception ex)
         {
@@ -69,7 +71,6 @@ public sealed class ClaimRepository : IClaimRepository
             return new List<Claim>();
         }
     }
-
     public async Task UpdateAsync(Claim claim, CancellationToken ct)
     {
         _db.Claims.Update(claim);

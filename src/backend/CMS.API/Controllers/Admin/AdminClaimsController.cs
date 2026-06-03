@@ -75,27 +75,36 @@ public sealed class AdminClaimsController : ControllerBase
     [HttpGet("all")]
     public async Task<IActionResult> GetAllClaims()
     {
-        var allClaims = await _claimRepository.GetAllAsync(HttpContext.RequestAborted);
-
-        var result = allClaims.Select(c => new
+        try
         {
-            claimId = c.ClaimId,
-            memberName = c.Member?.FullName ?? "Unknown",
-            memberId = c.MemberId,
-            claimDate = c.ClaimDate,
-            amount = c.ClaimAmount.Amount,
-            description = c.Description,
-            status = c.Status.ToString(),
-            aiConfidenceScore = c.AiConfidenceScore,
-            aiDecision = c.AiDecision,
-            aiReasoning = c.AiReasoning,
-            medicalReportFileName = c.MedicalReportFileName,
-            createdAt = c.CreatedAt,
-            updatedAt = c.UpdatedAt
-        });
+            var allClaims = await _claimRepository.GetAllAsync(HttpContext.RequestAborted);
 
-        return Ok(result);
+            Console.WriteLine($"Retrieved {allClaims.Count()} claims from database");
+
+            var result = allClaims.Select(c => new
+            {
+                claimId = c.ClaimId,
+                memberName = c.Member?.FullName ?? "Unknown",
+                memberId = c.MemberId,
+                claimDate = c.ClaimDate,
+                amount = c.ClaimAmount.Amount,
+                description = c.Description,
+                status = c.Status.ToString(),
+                aiConfidenceScore = c.AiConfidenceScore,
+                aiDecision = c.AiDecision,
+                aiReasoning = c.AiReasoning,
+                medicalReportFileName = c.MedicalReportFileName,
+                createdAt = c.CreatedAt,
+                updatedAt = c.UpdatedAt
+            });
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in GetAllClaims: {ex.Message}");
+            return StatusCode(500, new { error = ex.Message });
+        }
     }
-
 }
 
