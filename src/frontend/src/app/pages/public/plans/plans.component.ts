@@ -1,83 +1,127 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
+import { NgFor, NgIf } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PlanService, PublicPlan } from '../../../services/plan.service';
-import { FooterComponent } from '../landing/components/footer/footer.component';
-
-interface FAQ {
-  question: string;
-  answer: string;
-  open: boolean;
-}
 
 @Component({
   selector: 'app-plans',
   standalone: true,
-  imports: [CommonModule, RouterLink, FooterComponent],
+  imports: [NgIf, NgFor, RouterLink],
   templateUrl: './plans.component.html',
   styleUrls: ['./plans.component.scss']
 })
-export class PlansComponent implements OnInit {
-  plans: PublicPlan[] = [];
-  loading = true;
-  error: string | null = null;
-  viewMode: 'grid' | 'compare' = 'grid';
+export class PlansComponent implements OnInit, AfterViewInit {
 
-  faqs: FAQ[] = [
-    {
-      question: 'How do I choose the right plan?',
-      answer: 'Consider your healthcare needs, budget, and family size. Our Essential plan is great for individuals, Premium for comprehensive coverage, and Family plan for complete family protection.',
-      open: false
-    },
-    {
-      question: 'Can I upgrade my plan later?',
-      answer: 'Yes! You can upgrade your plan at any time. The new coverage will be activated immediately, and you\'ll only pay the difference in premium.',
-      open: false
-    },
-    {
-      question: 'What is the claim process?',
-      answer: 'Simply submit your medical reports online, our AI system will process them, and you\'ll receive a decision within 2-3 business days.',
-      open: false
-    },
-    {
-      question: 'Are there any waiting periods?',
-      answer: 'Most benefits start immediately. Some specific treatments may have a 30-day waiting period. Check the plan details for specifics.',
-      open: false
-    }
-  ];
+  plans: PublicPlan[] = [];   // ✅ dynamic plans
 
-  constructor(private planService: PlanService) {}
+  billing: 'monthly' | 'yearly' = 'monthly';
 
-  ngOnInit(): void {
-    this.loadPlans();
-  }
+  glowColor = 'rgba(99,102,241,0.4)';
 
-  loadPlans(): void {
-    this.loading = true;
-    this.error = null;
+  glowX = 0;
+  glowY = 0;
+  glowTargetX = 0;
+  glowTargetY = 0;
 
-    this.planService.getPublicPlans().subscribe({
-      next: (plans) => {
-        this.plans = plans;
-        this.loading = false;
-      },
-      error: () => {
-        this.error = 'Failed to load plans. Please try again.';
-        this.loading = false;
-      }
+  priceChanging = false;
+
+
+  animatedPrices = {
+    elite: 99,
+    basic: 29,
+    advanced: 59
+  };
+
+  targetPrices = {
+    elite: 99,
+    basic: 29,
+    advanced: 59
+  };
+  constructor(private planService: PlanService) { }
+
+  ngOnInit() {
+
+    // ✅ fetch plans (like teammate)
+    this.planService.getPublicPlans().subscribe(res => {
+      this.plans = res;
+      console.log('Plans:', res);
     });
+
+    this.animate();
   }
 
-  selectPlan(plan: PublicPlan): void {
-    // Navigate to register with selected plan
-    window.location.href = `/auth/register?planId=${plan.planId}`;
+  // ✅ billing logic stays same
+  toggleBilling(event: any) {
+
+    this.priceChanging = true;
+    this.billing = event.target.checked ? 'yearly' : 'monthly';
+
+
+if (this.billing === 'monthly') {
+    this.targetPrices = {
+      elite: 99,
+      basic: 29,
+      advanced: 59
+    };
+  } else {
+    this.targetPrices = {
+      elite: 999,
+      basic: 299,
+      advanced: 599
+    };
   }
 
-  toggleFaq(index: number): void {
-    this.faqs[index].open = !this.faqs[index].open;
+  // ✅ apply instantly (no delay like before)
+  this.animatedPrices = { ...this.targetPrices };
+
+  // ✅ reset animation flag after short delay
+  setTimeout(() => {
+    this.priceChanging = false;
+  }, 400);
+
   }
 
-  scrollToPlans(): void {
-    document.querySelector('.plans-grid')?.scrollIntoView({ behavior: 'smooth' });
+  setGlowColor(type: string) {
+    if (type === 'gold') this.glowColor = 'rgba(255,215,0,0.6)';
+    else if (type === 'silver') this.glowColor = 'rgba(192,192,192,0.6)';
+    else this.glowColor = 'rgba(59,130,246,0.6)';
+  }
+
+  resetGlowColor() {
+    this.glowColor = 'rgba(99,102,241,0.4)';
+  }
+
+  onMouseMove(event: MouseEvent) {
+    this.glowTargetX = event.clientX;
+    this.glowTargetY = event.clientY;
+  }
+
+  resetGlow() {
+    this.glowTargetX = window.innerWidth / 2;
+    this.glowTargetY = window.innerHeight / 2;
+  }
+
+  animate() {
+    this.glowX += (this.glowTargetX - this.glowX) * 0.12;
+    this.glowY += (this.glowTargetY - this.glowY) * 0.12;
+
+    requestAnimationFrame(() => this.animate());
+  }
+
+  ngAfterViewInit() {
+    const rows = document.querySelectorAll<HTMLElement>('.row');
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('show');
+        }
+      });
+    }, { threshold: 0.2 });
+
+    rows.forEach((row, index) => {
+      observer.observe(row);
+      row.style.transitionDelay = `${index * 80}ms`;
+    });
   }
 }

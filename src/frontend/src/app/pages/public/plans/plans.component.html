@@ -1,205 +1,317 @@
-<div class="plans-page">
-    <!-- Hero Section -->
-    <div class="plans-hero">
-        <div class="hero-content">
-            <div class="hero-badge">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-        </svg> Insurance Plans
-            </div>
-            <h1 class="hero-title">
-                Choose the Perfect<br />
-                <span class="gradient-text">Protection Plan</span>
-            </h1>
-            <p class="hero-subtitle">
-                Compare our comprehensive insurance plans designed to protect what matters most. Flexible coverage options tailored to your needs.
-            </p>
+<div class="pricing-wrapper" (mousemove)="onMouseMove($event)" (mouseleave)="resetGlow()">
+
+    <!-- ✅ CURSOR GLOW -->
+    <div class="cursor-glow" [style.transform]="'translate(' + glowX + 'px,' + glowY + 'px) translate(-50%, -50%)'" [style.background]="'radial-gradient(circle,' + glowColor + ' 0%, rgba(99,102,241,0.25) 25%, transparent 70%)'">
+    </div>
+
+    <!-- ✅ HERO (UNCHANGED ✅) -->
+    <div class="heading-section">
+        <h1 class="heading">
+            <span class="letter left" style="--i:0">P</span>
+            <span class="letter right" style="--i:1">o</span>
+            <span class="letter left" style="--i:2">w</span>
+            <span class="letter right" style="--i:3">e</span>
+            <span class="letter left" style="--i:4">r</span>
+
+            <span>&nbsp;</span>
+
+            <span class="letter left" style="--i:5">Y</span>
+            <span class="letter right" style="--i:6">o</span>
+            <span class="letter left" style="--i:7">u</span>
+            <span class="letter right" style="--i:8">r</span>
+
+            <span>&nbsp;</span>
+
+            <span class="letter left" style="--i:9">H</span>
+            <span class="letter right" style="--i:10">e</span>
+            <span class="letter left" style="--i:11">a</span>
+            <span class="letter right" style="--i:12">l</span>
+            <span class="letter left" style="--i:13">t</span>
+            <span class="letter right" style="--i:14">h</span>
+            <span class="letter left" style="--i:15">c</span>
+            <span class="letter right" style="--i:16">a</span>
+            <span class="letter left" style="--i:17">r</span>
+            <span class="letter right" style="--i:18">e</span>
+
+            <br />
+
+            <span class="letter highlight" style="--i:19">W</span>
+            <span class="letter highlight" style="--i:20">i</span>
+            <span class="letter highlight" style="--i:21">t</span>
+            <span class="letter highlight" style="--i:22">h</span>
+            <span class="letter highlight" style="--i:23">o</span>
+            <span class="letter highlight" style="--i:24">u</span>
+            <span class="letter highlight" style="--i:25">t</span>
+
+            <span>&nbsp;</span>
+            <span class="letter highlight" style="--i:26">C</span>
+            <span class="letter highlight" style="--i:27">o</span>
+            <span class="letter highlight" style="--i:28">m</span>
+            <span class="letter highlight" style="--i:29">p</span>
+            <span class="letter highlight" style="--i:30">l</span>
+            <span class="letter highlight" style="--i:31">e</span>
+            <span class="letter highlight" style="--i:32">x</span>
+            <span class="letter highlight" style="--i:33">i</span>
+            <span class="letter highlight" style="--i:34">t</span>
+            <span class="letter highlight" style="--i:35">y</span>
+        </h1>
+
+        <p class="subheading">
+            Transparent plans, seamless claims, and complete control — built for modern healthcare experiences.
+        </p>
+    </div>
+
+    <!-- ✅ BILLING SWITCH -->
+    <div class="billing-switch">
+        <span [class.active]="billing === 'monthly'">Monthly</span>
+
+        <label class="switch">
+      <input type="checkbox"
+             [checked]="billing === 'yearly'"
+             (change)="toggleBilling($event)" />
+      <span class="slider"></span>
+    </label>
+
+        <div class="yearly-wrapper">
+            <span class="discount-badge" *ngIf="billing === 'yearly'" [class.animate]="priceChanging">
+        15% off
+      </span>
         </div>
-        <div class="hero-stats">
-            <div class="stat">
-                <span class="stat-value">3+</span>
-                <span class="stat-label">Plans Available</span>
-            </div>
-            <div class="stat">
-                <span class="stat-value">50K+</span>
-                <span class="stat-label">Happy Members</span>
-            </div>
-            <div class="stat">
-                <span class="stat-value">99%</span>
-                <span class="stat-label">Claim Approval</span>
-            </div>
-        </div>
+
+        <span [class.active]="billing === 'yearly'">Yearly</span>
     </div>
 
-    <!-- Plan Comparison Toggle -->
-    <div class="comparison-toggle">
-        <button class="toggle-btn" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="3" width="7" height="7"/>
-        <rect x="14" y="3" width="7" height="7"/>
-        <rect x="3" y="14" width="7" height="7"/>
-        <rect x="14" y="14" width="7" height="7"/>
-      </svg>
-      Grid View
-    </button>
-        <button class="toggle-btn" [class.active]="viewMode === 'compare'" (click)="viewMode = 'compare'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="12" y1="19" x2="12" y2="5"/>
-        <polyline points="5 12 12 5 19 12"/>
-        <line x1="4" y1="22" x2="20" y2="22"/>
-      </svg>
-      Compare Plans
-    </button>
-    </div>
+    <!-- ✅ ✅ PLANS (UPDATED WITH API + SAME DESIGN) -->
+    <div class="pricing-grid" *ngIf="plans.length >= 3">
 
-    <!-- Loading State -->
-    <div *ngIf="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading available plans...</p>
-    </div>
+        <!-- ✅ ELITE -->
+        <div class="pricing-card" (mouseenter)="setGlowColor('gold')" (mouseleave)="resetGlowColor()">
 
-    <!-- Error State -->
-    <div *ngIf="error" class="error-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="10"/>
-      <line x1="12" y1="8" x2="12" y2="12"/>
-      <line x1="12" y1="16" x2="12.01" y2="16"/>
-    </svg>
-        <p>{{ error }}</p>
-        <button (click)="loadPlans()" class="retry-btn">Try Again</button>
-    </div>
+            <h2 class="plan-name">{{ plans[0].name }}</h2>
 
-    <!-- Grid View -->
-    <div class="plans-grid" *ngIf="!loading && !error && viewMode === 'grid'">
-        <div class="plan-card" *ngFor="let plan of plans" [class.featured]="plan.isFeatured">
-            <div class="plan-badge" *ngIf="plan.isFeatured">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-        </svg> Most Popular
+            <div class="price">
+                <span class="currency">$</span>
+                <span class="amount">
+          {{ billing === 'monthly'
+              ? plans[0].insuredAmount / 1000
+              : (plans[0].insuredAmount / 1000) * 10 }}
+        </span>
+                <span class="billing">
+          / {{ billing === 'monthly' ? 'month' : 'year' }}
+        </span>
             </div>
-            <div class="plan-header">
-                <div class="plan-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
+
+            <div class="sub-price">
+                <span class="highlight-amount">+20</span> / person per month
+            </div>
+
+            <div class="divider"></div>
+
+            <ul class="features">
+                <li *ngFor="let feature of plans[0].features">
+                    <span class="tick"></span> {{ feature }}
+                </li>
+            </ul>
+
+            <!-- ✅ ROUTE -->
+            <a class="cta-btn" [routerLink]="['/plans', plans[0].planId]">
+                <div class="cta-inner">
+                    <span class="text-default">Schedule a demo</span>
+                    <span class="text-hover">Get started</span>
                 </div>
-                <h3 class="plan-name">{{ plan.name }}</h3>
-                <div class="plan-price">
-                    <span class="price-amount">₹{{ plan.insuredAmount | number }}</span>
-                    <span class="price-period">/ coverage</span>
-                </div>
-                <p class="plan-description">{{ plan.description }}</p>
-            </div>
-            <div class="plan-features">
-                <div class="feature-item" *ngFor="let feature of plan.features.slice(0, 4)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-                    <span>{{ feature }}</span>
-                </div>
-                <div class="feature-more" *ngIf="plan.features.length > 4">
-                    +{{ plan.features.length - 4 }} more features
-                </div>
-            </div>
-            <div class="plan-footer">
-                <button class="btn-view" [routerLink]="['/plans', plan.planId]">
-          View Details
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
-          </svg>
-        </button>
-                <button class="btn-select" (click)="selectPlan(plan)">
-          Get Started
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
-          </svg>
-        </button>
-            </div>
+            </a>
         </div>
+
+        <!-- ✅ CENTER CARD -->
+        <div class="pricing-card popular-card" (mouseenter)="setGlowColor('silver')" (mouseleave)="resetGlowColor()">
+
+            <div class="best-value-badge">Best Value</div>
+
+            <h2 class="plan-name">{{ plans[1].name }}</h2>
+
+            <div class="price">
+                <span class="currency">$</span>
+                <span class="amount">
+          {{ billing === 'monthly'
+              ? plans[1].insuredAmount / 1000
+              : (plans[1].insuredAmount / 1000) * 10 }}
+        </span>
+                <span class="billing">
+          / {{ billing === 'monthly' ? 'month' : 'year' }}
+        </span>
+            </div>
+
+            <div class="sub-price">
+                <span class="highlight-amount">+20</span> / person per month
+            </div>
+
+            <div class="divider"></div>
+
+            <ul class="features">
+                <li *ngFor="let feature of plans[1].features">
+                    <span class="tick"></span> {{ feature }}
+                </li>
+            </ul>
+
+            <!-- ✅ ROUTE -->
+            <a class="cta-btn" [routerLink]="['/plans', plans[1].planId]">
+                <div class="cta-inner">
+                    <span class="text-default">Schedule a demo</span>
+                    <span class="text-hover">Get started</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- ✅ ADVANCED -->
+        <div class="pricing-card" (mouseenter)="setGlowColor('blue')" (mouseleave)="resetGlowColor()">
+
+            <h2 class="plan-name">{{ plans[2].name }}</h2>
+
+            <div class="price">
+                <span class="currency">$</span>
+                <span class="amount">
+          {{ billing === 'monthly'
+              ? plans[2].insuredAmount / 1000
+              : (plans[2].insuredAmount / 1000) * 10 }}
+        </span>
+                <span class="billing">
+          / {{ billing === 'monthly' ? 'month' : 'year' }}
+        </span>
+            </div>
+
+            <div class="sub-price">
+                <span class="highlight-amount">+20</span> / person per month
+            </div>
+
+            <div class="divider"></div>
+
+            <ul class="features">
+                <li *ngFor="let feature of plans[2].features">
+                    <span class="tick"></span> {{ feature }}
+                </li>
+            </ul>
+
+            <!-- ✅ ROUTE -->
+            <a class="cta-btn" [routerLink]="['/plans', plans[2].planId]">
+                <div class="cta-inner">
+                    <span class="text-default">Schedule a demo</span>
+                    <span class="text-hover">Get started</span>
+                </div>
+            </a>
+        </div>
+
     </div>
 
-    <!-- Compare View -->
-    <div class="compare-view" *ngIf="!loading && !error && viewMode === 'compare'">
-        <div class="compare-table-wrapper">
-            <table class="compare-table">
-                <thead>
-                    <tr>
-                        <th>Features</th>
-                        <th *ngFor="let plan of plans">
-                            <div class="compare-plan-header">
-                                <h4>{{ plan.name }}</h4>
-                                <div class="compare-price">₹{{ plan.insuredAmount | number }}</div>
-                                <button class="compare-select-btn" (click)="selectPlan(plan)">Select Plan</button>
-                            </div>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="feature-label">Description</td>
-                        <td *ngFor="let plan of plans" class="feature-value">{{ plan.description }}</td>
-                    </tr>
-                    <tr>
-                        <td class="feature-label">Coverage Amount</td>
-                        <td *ngFor="let plan of plans" class="feature-value highlight">₹{{ plan.insuredAmount | number }}</td>
-                    </tr>
-                    <tr>
-                        <td class="feature-label">Duration</td>
-                        <td *ngFor="let plan of plans" class="feature-value">{{ plan.durationInMonths }} months</td>
-                    </tr>
-                    <tr>
-                        <td class="feature-label">Key Features</td>
-                        <td *ngFor="let plan of plans" class="feature-value">
-                            <ul class="compare-features">
-                                <li *ngFor="let feature of plan.features.slice(0, 3)">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg> {{ feature }}
-                                </li>
-                            </ul>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- FAQ Section -->
-    <div class="faq-section">
-        <div class="section-header">
-            <h2>Frequently Asked Questions</h2>
-            <p>Everything you need to know about our plans</p>
-        </div>
-        <div class="faq-grid">
-            <div class="faq-item" *ngFor="let faq of faqs; let i = index" (click)="toggleFaq(i)">
-                <div class="faq-question">
-                    <span>{{ faq.question }}</span>
-                    <svg [class.rotated]="faq.open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-                </div>
-                <div class="faq-answer" [class.open]="faq.open">
-                    <p>{{ faq.answer }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- CTA Section -->
-    <div class="cta-section">
-        <div class="cta-content">
-            <h2>Ready to Get Protected?</h2>
-            <p>Choose the perfect plan for your needs and get started today</p>
-            <button class="cta-button" (click)="scrollToPlans()">
-        Explore Plans
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M5 12h14M12 5l7 7-7 7"/>
-        </svg>
-      </button>
-        </div>
-    </div>
 </div>
+<div class="comparison-section">
 
-<div class="footer">
-    <app-footer></app-footer>
-</div>
+    <h3 class="comparison-title">Overview</h3>
+
+    <div class="comparison-table">
+
+        <!-- HEADER -->
+        <div class="row header">
+            <div></div>
+            <div>Elite</div>
+            <div>Essential</div>
+            <div>Advanced</div>
+        </div>
+
+        <!-- ROW -->
+
+        <div class="row">
+            <div class="feature">
+                Basic Features
+                <span class="info-icon">?
+          <span class="tooltip">Includes core functionalities required to get started</span>
+                </span>
+            </div>
+            <div><span class="tick"></span></div>
+            <div><span class="tick"></span></div>
+            <div><span class="tick"></span></div>
+        </div>
+
+        <div class="row">
+            <div class="feature">
+                Users
+                <span class="info-icon">?
+          <span class="tooltip">Maximum number of users allowed in the plan</span>
+                </span>
+            </div>
+            <div>10</div>
+            <div>20</div>
+            <div>Unlimited</div>
+        </div>
+
+        <div class="row">
+            <div class="feature">
+                Storage
+                <span class="info-icon">?
+          <span class="tooltip">Total cloud storage capacity for your data</span>
+                </span>
+            </div>
+            <div>20GB</div>
+            <div>40GB</div>
+            <div>Unlimited</div>
+        </div>
+
+        <div class="row">
+            <div class="feature">
+                Support
+                <span class="info-icon">?
+          <span class="tooltip">Access to customer support assistance</span>
+                </span>
+            </div>
+            <div><span class="tick"></span></div>
+            <div><span class="tick"></span></div>
+            <div><span class="tick"></span></div>
+        </div>
+
+        <div class="row">
+            <div class="feature">
+                API Access
+                <span class="info-icon">?
+          <span class="tooltip">Allows integration with external apps and services</span>
+                </span>
+            </div>
+            <div>Limited</div>
+            <div>Standard</div>
+            <div>Full</div>
+        </div>
+
+        <div class="row">
+            <div class="feature">
+                Analytics Dashboard
+                <span class="info-icon">?
+          <span class="tooltip">Access insights, reports, and analytics tools</span>
+                </span>
+            </div>
+            <div><span class="tick"></span></div>
+            <div><span class="tick"></span></div>
+            <div><span class="tick"></span></div>
+        </div>
+
+        <div class="row">
+            <div class="feature">
+                Custom Branding
+                <span class="info-icon">?
+          <span class="tooltip">Customize logo, colors, and visual identity</span>
+                </span>
+            </div>
+            <div><span class="cross"></span></div>
+            <div><span class="tick"></span></div>
+            <div><span class="tick"></span></div>
+        </div>
+
+        <div class="row">
+            <div class="feature">
+                Priority Support
+                <span class="info-icon">?
+          <span class="tooltip">Faster response times and dedicated assistance</span>
+                </span>
+            </div>
+            <div><span class="cross"></span></div>
+            <div><span class="cross"></span></div>
+            <div><span class="tick"></span></div>
+        </div>
+    </div>

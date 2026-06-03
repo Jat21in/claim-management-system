@@ -62,6 +62,7 @@ export class AdminClaimsComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
 
   loading = true;
+  error: string | null = null;
   allClaims: Claim[] = [];
   filteredClaims: Claim[] = [];
   selectedClaim: Claim | null = null;
@@ -189,42 +190,66 @@ export class AdminClaimsComponent implements OnInit, OnDestroy {
 
   loadClaims() {
     this.loading = true;
+    this.error = null;
 
-    // Get all claims (not just pending)
+    console.log('Fetching claims from:', `${environment.apiBaseUrl}/admin/claims/all`);
+
     this.http.get(`${environment.apiBaseUrl}/admin/claims/all`).subscribe({
-      next: (res: any) => {
-        let claims = res;
-        if (res && res.data) claims = res.data;
-        if (res && res.$values) claims = res.$values;
+        next: (res: any) => {
+            console.log('Raw API response:', res);
 
-        this.allClaims = (Array.isArray(claims) ? claims : []).map((c: any) => ({
-          claimId: c.claimId || c.ClaimId,
-          memberName: c.memberName || c.MemberName || c.member?.fullName || 'Unknown',
-          memberId: c.memberId || c.MemberId,
-          claimDate: c.claimDate || c.ClaimDate,
-          amount: c.amount || c.Amount || c.claimAmount?.amount || 0,
-          description: c.description || c.Description || 'No description',
-          status: c.status || c.Status || 'Submitted',
-          aiConfidenceScore: c.aiConfidenceScore || c.AiConfidenceScore,
-          aiDecision: c.aiDecision || c.AiDecision,
-          aiReasoning: c.aiReasoning || c.AiReasoning,
-          medicalReportFileName: c.medicalReportFileName,
-          processedAt: c.processedAt,
-          processedBy: c.processedBy
-        }));
+            // Handle different response structures
+            let claimsArray = res;
+            if (res && res.data) claimsArray = res.data;
+            if (res && res.$values) claimsArray = res.$values;
 
-        this.calculateStats();
-        this.applyFilters();
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Failed to load claims:', err);
-        this.loading = false;
-        this.cdr.detectChanges();
-      }
+            // If response is an object with items property
+            if (res && res.items && Array.isArray(res.items)) {
+                claimsArray = res.items;
+            }
+
+            if (!claimsArray || !Array.isArray(claimsArray)) {
+                console.warn('API response is not an array:', claimsArray);
+                this.error = 'Unexpected API response format';
+                this.loading = false;
+                this.cdr.detectChanges();
+                return;
+            }
+
+            console.log(`Received ${claimsArray.length} claims from API`);
+
+            this.allClaims = claimsArray.map((c: any) => ({
+                claimId: c.claimId || c.ClaimId,
+                memberName: c.memberName || c.MemberName || c.member?.fullName || 'Unknown',
+                memberId: c.memberId || c.MemberId,
+                claimDate: c.claimDate || c.ClaimDate,
+                amount: (c.amount || c.Amount || c.claimAmount?.amount || 0),
+                description: c.description || c.Description || 'No description',
+                status: c.status || c.Status || 'Submitted',
+                aiConfidenceScore: c.aiConfidenceScore || c.AiConfidenceScore,
+                aiDecision: c.aiDecision || c.AiDecision,
+                aiReasoning: c.aiReasoning || c.AiReasoning,
+                medicalReportFileName: c.medicalReportFileName,
+                processedAt: c.processedAt,
+                processedBy: c.processedBy
+            }));
+
+            console.log(`Mapped ${this.allClaims.length} claims:`, this.allClaims);
+
+            this.calculateStats();
+            this.applyFilters();
+            this.loading = false;
+            this.cdr.detectChanges();
+        },
+        error: (err) => {
+            console.error('Failed to load claims:', err);
+            this.error = `Failed to load claims: ${err.message || err.statusText || 'Unknown error'}`;
+            this.loading = false;
+            this.cdr.detectChanges();
+        }
     });
-  }
+}
+
 
   calculateStats() {
     this.stats = {
