@@ -1,0 +1,276 @@
+<div class="members-container" @fadeIn>
+    <!-- Header Section -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Member Directory</h1>
+            <p class="page-subtitle">Manage and monitor all registered members</p>
+        </div>
+        <button class="btn-export" (click)="exportToCSV()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Export CSV
+    </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+                <div class="stat-value">{{ stats.total }}</div>
+                <div class="stat-label">Total Members</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+                <div class="stat-value">{{ stats.verified }}</div>
+                <div class="stat-label">KYC Verified</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-info">
+                <div class="stat-value">{{ stats.pendingKyc }}</div>
+                <div class="stat-label">KYC Pending</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-info">
+                <div class="stat-value">{{ stats.totalClaims }}</div>
+                <div class="stat-label">Total Claims</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="filters-section">
+        <div class="filters-bar">
+            <div class="search-box">
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+                <input type="text" [(ngModel)]="searchTerm" (input)="applyFilters()" placeholder="Search by name, email, ID, or phone..." class="search-input">
+            </div>
+
+            <select [(ngModel)]="roleFilter" (change)="applyFilters()" class="filter-select">
+        <option value="all">All Roles</option>
+        <option value="Admin">Admin</option>
+        <option value="ClaimsProcessor">Claims Processor</option>
+        <option value="Member">Member</option>
+      </select>
+
+            <select [(ngModel)]="kycFilter" (change)="applyFilters()" class="filter-select">
+        <option value="all">All KYC Status</option>
+        <option value="Verified">Verified</option>
+        <option value="Pending">Pending</option>
+        <option value="Rejected">Rejected</option>
+      </select>
+
+            <select [(ngModel)]="sortBy" (change)="applyFilters()" class="filter-select">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="name">Name A-Z</option>
+        <option value="claims">Most Claims</option>
+      </select>
+
+            <button class="btn-clear" (click)="clearFilters()" *ngIf="searchTerm || roleFilter !== 'all' || kycFilter !== 'all'">
+        Clear Filters
+      </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading members...</p>
+    </div>
+
+    <!-- Members Table -->
+    <div *ngIf="!loading && filteredAndSortedMembers.length > 0" class="table-container" @staggerList>
+        <table class="members-table">
+            <thead>
+                <tr>
+                    <th>Member</th>
+                    <th>Contact</th>
+                    <th>Role</th>
+                    <th>KYC Status</th>
+                    <th>Active Plan</th>
+                    <th>Claims</th>
+                    <th>Joined</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let member of paginatedMembers" class="member-row">
+                    <td class="member-cell">
+                        <div class="member-info">
+                            <div class="member-avatar">{{ getInitials(member.fullName) }}</div>
+                            <div>
+                                <div class="member-name">{{ member.fullName }}</div>
+                                <div class="member-email">{{ member.email }}</div>
+                                <div class="member-id">ID: {{ member.memberId | slice:0:8 }}...</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="contact-cell">
+                        <div class="contact-info">
+                            <span>{{ member.contactNumber || '—' }}</span>
+                            <span class="dob" *ngIf="member.dateOfBirth">DOB: {{ member.dateOfBirth | date:'MMM d, yyyy' }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="role-badge" [class]="getRoleBadgeClass(member.role)">
+              {{ member.role }}
+            </span>
+                    </td>
+                    <td>
+                        <span class="kyc-badge" [class]="getKycBadgeClass(member.kycStatus)">
+              {{ member.kycStatus }}
+            </span>
+                    </td>
+                    <td>
+                        <div *ngIf="member.activePlan; else noPlan" class="plan-info">
+                            <span class="plan-name">{{ member.activePlan.name }}</span>
+                            <span class="plan-amount">{{ formatCurrency(member.activePlan.insuredAmount) }}</span>
+                        </div>
+                        <ng-template #noPlan>
+                            <span class="no-plan">—</span>
+                        </ng-template>
+                    </td>
+                    <td class="claims-cell">
+                        <span class="claims-count">{{ member.claimsCount }}</span>
+                    </td>
+                    <td class="date-cell">
+                        {{ member.createdAt | date:'MMM d, yyyy' }}
+                    </td>
+                    <td>
+                        <button class="view-btn" (click)="viewMemberDetails(member)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              View
+            </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && filteredAndSortedMembers.length === 0" class="empty-state">
+        <div class="empty-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+        </div>
+        <h3>No members found</h3>
+        <p>Try adjusting your filters or search criteria</p>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1">
+        <div class="pagination-info">
+            Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, filteredAndSortedMembers.length) }} of {{ filteredAndSortedMembers.length }} members
+        </div>
+        <div class="pagination-controls">
+            <button (click)="previousPage()" [disabled]="currentPage === 1" class="page-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Previous
+      </button>
+            <span class="page-numbers">
+        <button *ngFor="let page of getPageNumbers()" 
+                (click)="currentPage = page" 
+                class="page-number" 
+                [class.active]="page === currentPage">
+          {{ page }}
+        </button>
+      </span>
+            <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="page-btn">
+        Next
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+        </div>
+    </div>
+
+    <!-- Member Detail Modal -->
+    <div class="modal-overlay" *ngIf="showMemberModal" (click)="closeModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <div class="modal-avatar">{{ getInitials(selectedMember?.fullName || '') }}</div>
+                    <div>
+                        <h3>{{ selectedMember?.fullName }}</h3>
+                        <p>{{ selectedMember?.email }}</p>
+                    </div>
+                </div>
+                <button class="modal-close" (click)="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-section">
+                    <div class="detail-row">
+                        <span class="detail-label">Member ID</span>
+                        <span class="detail-value">{{ selectedMember?.memberId }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Phone Number</span>
+                        <span class="detail-value">{{ selectedMember?.contactNumber || 'Not provided' }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Date of Birth</span>
+                        <span class="detail-value">{{ selectedMember?.dateOfBirth | date:'mediumDate' }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Member Since</span>
+                        <span class="detail-value">{{ selectedMember?.createdAt | date:'medium' }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Role</span>
+                        <span class="detail-value">{{ selectedMember?.role }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">KYC Status</span>
+                        <span class="detail-value">
+              <span class="kyc-badge" [class]="getKycBadgeClass(selectedMember?.kycStatus || '')">
+                {{ selectedMember?.kycStatus }}
+              </span>
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Active Plan</span>
+                        <span class="detail-value">
+              <div *ngIf="selectedMember?.activePlan; else noPlanDetail">
+                <strong>{{ selectedMember?.activePlan?.name }}</strong>
+                <span>{{ formatCurrency(selectedMember?.activePlan?.insuredAmount || 0) }}</span>
+                    </div>
+                    <ng-template #noPlanDetail>No active plan</ng-template>
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Total Claims</span>
+                    <span class="detail-value">{{ selectedMember?.claimsCount }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" (click)="closeModal()">Close</button>
+            <button class="btn-primary" [routerLink]="['/admin/members', selectedMember?.memberId]">
+          View Full Profile
+        </button>
+        </div>
+    </div>
+</div>
+</div>

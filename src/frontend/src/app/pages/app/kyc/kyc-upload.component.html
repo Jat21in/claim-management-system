@@ -177,10 +177,10 @@
                             <label>Mobile Number</label>
                             <div class="input-with-button">
                                 <div class="country-code">+91</div>
-                                <input type="tel" (input)="onPhoneNumberInput($event)" [disabled]="isOtpSent" class="form-control mobile-input" placeholder="Enter 10-digit number" maxlength="10">
+                                <input type="tel" (input)="onPhoneNumberInput($event)" [disabled]="isOtpSent" class="mobile-input input-dark" placeholder="Enter 10-digit number" maxlength="10" />
                                 <button type="button" class="btn-send-otp" (click)="sendOtp()" [disabled]="isOtpSent || !isPhoneNumberValid || isOtpLoading">Send OTP</button>
                             </div>
-                            <!-- <div class="input-hint" *ngIf="!isOtpSent">Enter 10-digit mobile number (e.g., 9729507672)</div> -->
+
                         </div>
 
                         <!-- OTP Input -->
@@ -188,7 +188,7 @@
                             <label>Verification Code</label>
                             <div class="input-with-button">
                                 <!-- ✅ Use ngModel with standalone option -->
-                                <input type="text" [(ngModel)]="otpCode" name="otpCode" [ngModelOptions]="{standalone: true}" maxlength="6" [disabled]="isOtpVerified" class="form-control" placeholder="Enter 6-digit OTP">
+                                <input type="text" [(ngModel)]="otpCode" name="otpCode" [ngModelOptions]="{standalone: true}" maxlength="6" [disabled]="isOtpVerified" class="input-dark" placeholder="Enter 6-digit OTP" />
                                 <button type="button" class="btn-verify-otp" (click)="verifyOtp()" [disabled]="isOtpVerified || otpCode.length !== 6 || isOtpLoading">
                                     {{ isOtpLoading ? 'Verifying...' : 'Verify' }}
                                 </button>

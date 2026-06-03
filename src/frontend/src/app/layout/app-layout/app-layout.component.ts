@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, OnDestroy, inject, ElementRef, Renderer2 } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy, inject, ElementRef, Renderer2, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
@@ -21,7 +21,8 @@ interface Notification {
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, FooterComponent],
   templateUrl: './app-layout.component.html',
-  styleUrls: ['./app-layout.component.scss']
+  styleUrls: ['./app-layout.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppLayoutComponent implements OnInit, OnDestroy {
   private auth = inject(AuthService);
@@ -31,6 +32,7 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private renderer = inject(Renderer2);
   private elementRef = inject(ElementRef);
+  private cdr = inject(ChangeDetectorRef);
   private boundEscapeHandler = this.handleEscapeKey.bind(this);
 
   // ✅ KYC STATE
@@ -82,11 +84,13 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
       next: (status) => {
         this.isKycVerified = status.status === 1;
         this.isLoadingKyc = false;
+        this.cdr.markForCheck();
         console.log('KYC Status:', this.isKycVerified);
       },
       error: () => {
         this.isKycVerified = false;
         this.isLoadingKyc = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -133,8 +137,12 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
           }
         }
         if (res.email) this.userEmail = res.email;
+        this.cdr.markForCheck();
       },
-      error: () => console.error('Failed to load user data')
+      error: () => {
+        console.error('Failed to load user data');
+        this.cdr.markForCheck();
+      }
     });
   }
 
@@ -177,19 +185,25 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
 
         this.notifications = newNotifications;
         this.notificationCount = this.notifications.filter(n => !n.read).length;
+        this.cdr.markForCheck();
       },
-      error: () => console.error('Failed to load notifications')
+      error: () => {
+        console.error('Failed to load notifications');
+        this.cdr.markForCheck();
+      }
     });
   }
 
   markAllRead(): void {
     this.notifications.forEach(n => n.read = true);
     this.notificationCount = 0;
+    this.cdr.markForCheck();
   }
 
   @HostListener('window:scroll', [])
   onWindowScroll(): void {
     this.isScrolled = window.scrollY > 20;
+    this.cdr.markForCheck();
   }
 
   toggleMobileMenu(): void {
@@ -201,11 +215,13 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
     } else {
       this.renderer.removeClass(document.body, 'overflow-hidden');
     }
+    this.cdr.markForCheck();
   }
 
   closeMobileMenu(): void {
     this.mobileMenuOpen = false;
     this.renderer.removeClass(document.body, 'overflow-hidden');
+    this.cdr.markForCheck();
   }
 
   toggleDropdown(): void {
@@ -223,6 +239,7 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
             this.dropdownOpen = false;
             if (this.clickListener) this.clickListener();
             this.clickListener = null;
+            this.cdr.markForCheck();
           }
         });
       });
@@ -230,6 +247,7 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
       this.clickListener();
       this.clickListener = null;
     }
+    this.cdr.markForCheck();
   }
 
   closeDropdown(): void {
@@ -238,11 +256,13 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
       this.clickListener();
       this.clickListener = null;
     }
+    this.cdr.markForCheck();
   }
 
   toggleNotifications(): void {
     this.notificationsOpen = !this.notificationsOpen;
     this.dropdownOpen = false;
+    this.cdr.markForCheck();
   }
 
   handleEscapeKey(event: KeyboardEvent): void {
@@ -250,6 +270,7 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
       this.dropdownOpen = false;
       this.notificationsOpen = false;
       this.mobileMenuOpen = false;
+      this.cdr.markForCheck();
     }
   }
 

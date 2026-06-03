@@ -230,6 +230,29 @@
     }
 }
 
+.input-dark {
+    background: #0f0f1a;
+    border: 1px solid #2a2a3e;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-weight: 500;
+    color: #e5e7eb;
+    font-size: 14px;
+    transition: all 0.2s;
+    &:focus {
+        outline: none;
+        border-color: #22D3EE;
+        box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.15);
+    }
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    &::placeholder {
+        color: #6b7280;
+    }
+}
+
 .input-wrapper {
     position: relative;
     .form-control {
@@ -351,7 +374,10 @@
 .input-with-button {
     display: flex;
     gap: 12px;
-    align-items: center;
+    align-items: stretch; // 👉 important
+    input {
+        height: auto; // ensures same height as country code
+    }
 }
 
 .country-code {

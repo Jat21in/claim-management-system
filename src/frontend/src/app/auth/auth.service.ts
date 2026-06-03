@@ -130,6 +130,21 @@ export class AuthService {
     }
   }
 
+  /**
+   * Get the current user information from the decoded JWT token.
+   * Returns an object with user details (email, fullName, etc.) or null if not authenticated.
+   */
+  getUser(): { email?: string; fullName?: string; [key: string]: any } | null {
+    const decoded = this.getDecodedToken();
+    if (!decoded) return null;
+
+    return {
+      email: decoded.email || decoded.sub,
+      fullName: decoded.name || decoded.fullName || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'],
+      ...decoded
+    };
+  }
+
   // =====================
   // ✅ LOGOUT
   // =====================
