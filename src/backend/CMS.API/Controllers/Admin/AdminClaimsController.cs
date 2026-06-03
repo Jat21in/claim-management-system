@@ -71,5 +71,31 @@ public sealed class AdminClaimsController : ControllerBase
 
         return Ok(new { message = "Claim rejected successfully" });
     }
+    // AdminClaimsController.cs - Add this method
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAllClaims()
+    {
+        var allClaims = await _claimRepository.GetAllAsync(HttpContext.RequestAborted);
+
+        var result = allClaims.Select(c => new
+        {
+            claimId = c.ClaimId,
+            memberName = c.Member?.FullName ?? "Unknown",
+            memberId = c.MemberId,
+            claimDate = c.ClaimDate,
+            amount = c.ClaimAmount.Amount,
+            description = c.Description,
+            status = c.Status.ToString(),
+            aiConfidenceScore = c.AiConfidenceScore,
+            aiDecision = c.AiDecision,
+            aiReasoning = c.AiReasoning,
+            medicalReportFileName = c.MedicalReportFileName,
+            createdAt = c.CreatedAt,
+            updatedAt = c.UpdatedAt
+        });
+
+        return Ok(result);
+    }
+
 }
 
