@@ -1,215 +1,415 @@
-<div class="plan-details-page" *ngIf="plan$ | async as plan; else loading">
-    <!-- Hero Section -->
-    <div class="details-hero">
-        <div class="hero-background"></div>
-        <div class="hero-content">
-            <div class="plan-badge" [class.featured]="plan.isFeatured">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-        </svg> {{ plan.isFeatured ? 'Most Popular Plan' : 'Premium Plan' }}
-            </div>
-            <h1 class="plan-title">{{ plan.name }}</h1>
-            <div class="plan-price-large">
-                <span class="price">₹{{ plan.insuredAmount | number }}</span>
-                <span class="period">/ total coverage</span>
-            </div>
-            <p class="plan-description-large">{{ plan.description }}</p>
-            <div class="hero-actions">
-                <button class="btn-primary" (click)="navigateToRegister()">
-          Get Started Now
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
-          </svg>
-        </button>
-                <button class="btn-secondary" (click)="scrollToFeatures()">
-          View Features
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Features Section -->
-    <div class="features-section" id="features">
-        <div class="section-header">
-            <span class="section-badge">What's Included</span>
-            <h2>Plan Features & Benefits</h2>
-            <p>Everything you get with the {{ plan.name }}</p>
-        </div>
-        <div class="features-grid">
-            <div class="feature-card" *ngFor="let feature of plan.features">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-                </div>
-                <h3>{{ feature }}</h3>
-                <p>Comprehensive coverage included in this plan</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Plan Details Grid -->
-    <div class="details-grid">
-        <div class="detail-card">
-            <div class="detail-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 6v6l4 2"/>
-        </svg>
-            </div>
-            <h3>Coverage Duration</h3>
-            <p>{{ plan.durationInMonths }} months of comprehensive protection</p>
-            <span class="detail-value">{{ plan.durationInMonths }} Months</span>
-        </div>
-        <div class="detail-card">
-            <div class="detail-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M12 2a10 10 0 0 1 10 10c0 3.5-2 6.5-5 8l-2 2h-6l-2-2c-3-1.5-5-4.5-5-8a10 10 0 0 1 10-10z"/>
-          <path d="M12 8v4M12 16h.01"/>
-        </svg>
-            </div>
-            <h3>Claim Settlement</h3>
-            <p>Fast and hassle-free claim processing</p>
-            <span class="detail-value">24-48 Hours</span>
-        </div>
-        <div class="detail-card">
-            <div class="detail-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M20 12V8H4v12h16v-4M12 2v4M4 4l4 4M20 4l-4 4"/>
-        </svg>
-            </div>
-            <h3>Network Hospitals</h3>
-            <p>Access to premium healthcare providers</p>
-            <span class="detail-value">5000+ Hospitals</span>
-        </div>
-    </div>
-
-    <!-- Comparison Table -->
-    <div class="comparison-section">
-        <div class="section-header">
-            <h2>Compare With Other Plans</h2>
-            <p>See how {{ plan.name }} stacks up against alternatives</p>
-        </div>
-        <div class="comparison-table-wrapper">
-            <table class="comparison-table">
-                <thead>
-                    <tr>
-                        <th>Features</th>
-                        <th>{{ plan.name }}</th>
-                        <th>Standard Plan</th>
-                        <th>Basic Plan</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Coverage Amount</td>
-                        <td class="highlight">₹{{ plan.insuredAmount | number }}</td>
-                        <td>₹500,000</td>
-                        <td>₹300,000</td>
-                    </tr>
-                    <tr>
-                        <td>Duration</td>
-                        <td class="highlight">{{ plan.durationInMonths }} months</td>
-                        <td>12 months</td>
-                        <td>12 months</td>
-                    </tr>
-                    <tr>
-                        <td>Hospital Network</td>
-                        <td class="highlight">5000+ hospitals</td>
-                        <td>3000+ hospitals</td>
-                        <td>1500+ hospitals</td>
-                    </tr>
-                    <tr>
-                        <td>Cashless Claims</td>
-                        <td class="highlight">✓ Yes</td>
-                        <td>✓ Yes</td>
-                        <td>✓ Yes</td>
-                    </tr>
-                    <tr>
-                        <td>Pre-existing Coverage</td>
-                        <td class="highlight">✓ Covered</td>
-                        <td>After 2 years</td>
-                        <td>After 3 years</td>
-                    </tr>
-                    <tr>
-                        <td>Maternity Benefits</td>
-                        <td class="highlight">✓ Included</td>
-                        <td>Optional</td>
-                        <td>✗ Not included</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Testimonials -->
-    <div class="testimonials-section">
-        <div class="section-header">
-            <h2>What Our Members Say</h2>
-            <p>Trusted by thousands of happy customers</p>
-        </div>
-        <div class="testimonials-grid">
-            <div class="testimonial-card">
-                <div class="testimonial-quote">"</div>
-                <p>The claim process was seamless. Got my approval within 24 hours!"</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">R</div>
-                    <div>
-                        <div class="author-name">Rajesh Kumar</div>
-                        <div class="author-plan">Premium Plan Holder</div>
-                    </div>
-                </div>
-            </div>
-            <div class="testimonial-card">
-                <div class="testimonial-quote">"</div>
-                <p>Excellent coverage and support team. Highly recommended!</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">S</div>
-                    <div>
-                        <div class="author-name">Priya Sharma</div>
-                        <div class="author-plan">Family Plan Holder</div>
-                    </div>
-                </div>
-            </div>
-            <div class="testimonial-card">
-                <div class="testimonial-quote">"</div>
-                <p>Best decision I made for my family's health security.</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">A</div>
-                    <div>
-                        <div class="author-name">Amit Patel</div>
-                        <div class="author-plan">Essential Plan</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- CTA Section -->
-    <div class="cta-bottom">
-        <div class="cta-content">
-            <h3>Ready to secure your future?</h3>
-            <p>Join thousands of satisfied customers who trust us for their insurance needs</p>
-            <button class="cta-button" (click)="navigateToRegister()">
-        Get {{ plan.name }} Now
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M5 12h14M12 5l7 7-7 7"/>
-        </svg>
-      </button>
-        </div>
-    </div>
-</div>
-
-<ng-template #loading>
-    <div class="loading-container">
-        <div class="spinner"></div>
+<div class="plan-detail-page" @fadeIn>
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+        <div class="loading-spinner"></div>
         <p>Loading plan details...</p>
     </div>
-</ng-template>
 
-<div class="footer">
-    <app-footer></app-footer>
+    <!-- Error State -->
+    <div *ngIf="error && !isLoading" class="error-container">
+        <div class="error-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+        </div>
+        <h3>Unable to load plan</h3>
+        <p>{{ error }}</p>
+        <button class="retry-btn" routerLink="/plans">Back to Plans</button>
+    </div>
+
+    <!-- Main Content -->
+    <ng-container *ngIf="!isLoading && !error && currentPlan as plan">
+
+        <!-- Hero Section -->
+        <div class="hero-section" @slideUp>
+            <div class="hero-content">
+                <div class="hero-badge">HEALTH INSURANCE PLAN</div>
+                <h1 class="hero-title">{{ plan.name }}</h1>
+                <p class="hero-description">{{ plan.description }}</p>
+
+                <!-- Billing Toggle -->
+                <div class="billing-toggle">
+                    <button class="toggle-option" [class.active]="billingCycle === 'monthly'" (click)="billingCycle = 'monthly'">
+            Monthly
+          </button>
+                    <button class="toggle-option" [class.active]="billingCycle === 'yearly'" (click)="billingCycle = 'yearly'">
+            Yearly
+            <span class="savings-badge">Save {{ getSavingsPercentage() }}%</span>
+          </button>
+                </div>
+
+                <!-- Price Display -->
+                <div class="price-section">
+                    <div class="price-amount">{{ getFormattedPremium() }}</div>
+                    <div class="price-period">/ {{ billingCycle === 'monthly' ? 'month' : 'year' }}</div>
+                </div>
+
+                <!-- CTA Button -->
+                <button class="cta-button" (click)="navigateToRegister()" [@pulse]="'pulse'">
+          Get this plan
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+
+                <p class="insurance-note">Tax benefits under Section 80D apply</p>
+            </div>
+
+            <div class="hero-stats">
+                <div class="stat-card">
+                    <div class="stat-value">{{ plan.insuredAmount | currency:'INR':'symbol':'1.0-0' }}</div>
+                    <div class="stat-label">Sum Insured</div>
+                    <div class="stat-trend">+12% this year</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ plan.durationInMonths }} Months</div>
+                    <div class="stat-label">Policy Duration</div>
+                    <div class="stat-trend">Renewable</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ getPlanDetail()?.claimSettlementRatio }}%</div>
+                    <div class="stat-label">Claim Settlement</div>
+                    <div class="stat-trend positive">+5% vs industry</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workflow Progress Indicator -->
+        <div class="workflow-container" @slideUp>
+            <div class="workflow-steps">
+                <div *ngFor="let step of workflowSteps" class="workflow-step" [class.completed]="step.completed" [class.active]="step.active">
+                    <div class="step-marker">
+                        <span *ngIf="!step.completed">{{ step.step }}</span>
+                        <svg *ngIf="step.completed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+                    </div>
+                    <div class="step-info">
+                        <div class="step-title">{{ step.title }}</div>
+                        <div class="step-desc">{{ step.description }}</div>
+                    </div>
+                    <div class="step-line" *ngIf="step.step < workflowSteps.length"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="tabs-container" @slideUp>
+            <div class="tabs">
+                <button class="tab" [class.active]="activeTab === 'overview'" (click)="switchTab('overview')">
+          Overview
+        </button>
+                <button class="tab" [class.active]="activeTab === 'coverage'" (click)="switchTab('coverage')">
+          Coverage
+        </button>
+                <button class="tab" [class.active]="activeTab === 'analytics'" (click)="switchTab('analytics')">
+          Analytics
+        </button>
+                <button class="tab" [class.active]="activeTab === 'exclusions'" (click)="switchTab('exclusions')">
+          Exclusions
+        </button>
+                <button class="tab" [class.active]="activeTab === 'addons'" (click)="switchTab('addons')">
+          Add-ons
+        </button>
+            </div>
+        </div>
+
+        <!-- Tab: Overview -->
+        <div class="tab-content" *ngIf="activeTab === 'overview'" @staggerCards>
+
+            <!-- Key Benefits -->
+            <div class="benefits-section">
+                <h2>Key Benefits</h2>
+                <div class="benefits-grid">
+                    <div class="benefit-card" *ngFor="let feature of plan.features">
+                        <div class="benefit-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+                        </div>
+                        <div class="benefit-text">{{ feature }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coverage Summary Cards -->
+            <div class="coverage-summary-cards">
+                <div class="summary-card">
+                    <div class="summary-icon">🏥</div>
+                    <div class="summary-content">
+                        <div class="summary-value">{{ getPlanDetail()?.networkHospitals }}+</div>
+                        <div class="summary-label">Network Hospitals</div>
+                        <div class="summary-sub">Cashless treatment available</div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon">🔄</div>
+                    <div class="summary-content">
+                        <div class="summary-value">{{ getPlanDetail()?.noClaimBonus }}%</div>
+                        <div class="summary-label">No Claim Bonus</div>
+                        <div class="summary-sub">Accumulates yearly</div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon">⏱️</div>
+                    <div class="summary-content">
+                        <div class="summary-value">{{ getPlanDetail()?.preExistingWaiting }}</div>
+                        <div class="summary-label">Waiting Period</div>
+                        <div class="summary-sub">For pre-existing conditions</div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon">📞</div>
+                    <div class="summary-content">
+                        <div class="summary-value">24/7</div>
+                        <div class="summary-label">Customer Support</div>
+                        <div class="summary-sub">Dedicated assistance</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coverage Utilization -->
+            <div class="utilization-section">
+                <h3>Coverage Utilization</h3>
+                <div class="utilization-bar">
+                    <div class="utilization-fill" [style.width.%]="getCoveragePercentage()"></div>
+                </div>
+                <div class="utilization-stats">
+                    <span>Used: {{ getPlanDetail()?.coverageUtilization }}%</span>
+                    <span>Remaining: {{ 100 - (getPlanDetail()?.coverageUtilization || 0) }}%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Coverage Details -->
+        <div class="tab-content" *ngIf="activeTab === 'coverage'" @staggerCards>
+
+            <div class="coverage-grid">
+                <div class="coverage-card">
+                    <h3>Inpatient Hospitalization</h3>
+                    <p>Coverage for room rent, ICU charges, nursing expenses, and more during hospital stays.</p>
+                    <div class="coverage-limit">Room Rent: {{ getPlanDetail()?.roomRentLimit }}</div>
+                </div>
+
+                <div class="coverage-card">
+                    <h3>Pre & Post Hospitalization</h3>
+                    <p>Medical expenses incurred 30 days before and 60 days after hospitalization.</p>
+                </div>
+
+                <div class="coverage-card">
+                    <h3>Daycare Procedures</h3>
+                    <p>Coverage for over 500+ daycare procedures that don't require 24-hour hospitalization.</p>
+                </div>
+
+                <div class="coverage-card">
+                    <h3>Ambulance Cover</h3>
+                    <p>Up to {{ getPlanDetail()?.ambulanceCover | currency:'INR':'symbol':'1.0-0' }} for ambulance charges.</p>
+                </div>
+
+                <div class="coverage-card" *ngIf="getPlanDetail()?.dailyHospitalCash">
+                    <h3>Daily Hospital Cash</h3>
+                    <p>{{ getPlanDetail()?.dailyHospitalCash | currency:'INR':'symbol':'1.0-0' }} per day for each day of hospitalization.</p>
+                </div>
+
+                <div class="coverage-card" *ngIf="getPlanDetail()?.healthCheckup">
+                    <h3>Annual Health Checkup</h3>
+                    <p>Free annual health checkup for the policyholder.</p>
+                </div>
+
+                <div class="coverage-card" *ngIf="getPlanDetail()?.maternityCover">
+                    <h3>Maternity Coverage</h3>
+                    <p>Coverage for maternity expenses including delivery and newborn care.</p>
+                </div>
+
+                <div class="coverage-card" *ngIf="getPlanDetail()?.ayushCover">
+                    <h3>AYUSH Treatments</h3>
+                    <p>Coverage for Ayurveda, Yoga, Unani, Siddha, and Homeopathy treatments.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Analytics -->
+        <div class="tab-content" *ngIf="activeTab === 'analytics'" @staggerCards>
+
+            <!-- Analytics Dashboard -->
+            <div class="analytics-dashboard">
+                <div class="chart-row">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Claims Trend Analysis</h3>
+                            <p>Monthly claims volume and amount</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas #claimsChart></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Customer Satisfaction</h3>
+                            <p>Rating distribution</p>
+                        </div>
+                        <div class="chart-container donut">
+                            <canvas #satisfactionChart></canvas>
+                        </div>
+                        <div class="satisfaction-score">
+                            <div class="score-value">{{ getPlanDetail()?.customerSatisfaction }}</div>
+                            <div class="score-label">out of 5</div>
+                            <div class="score-stars">
+                                ★★★★☆
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metrics-row">
+                    <div class="metric-card">
+                        <div class="metric-icon">📈</div>
+                        <div class="metric-value">{{ getPlanDetail()?.renewalRate }}%</div>
+                        <div class="metric-label">Renewal Rate</div>
+                        <div class="metric-trend positive">↑ 8% vs last year</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">⚡</div>
+                        <div class="metric-value">2.5 days</div>
+                        <div class="metric-label">Avg Claim Processing</div>
+                        <div class="metric-trend positive">↓ 1.2 days faster</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">🏆</div>
+                        <div class="metric-value">98%</div>
+                        <div class="metric-label">Customer Retention</div>
+                        <div class="metric-trend positive">Industry best</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Exclusions -->
+        <div class="tab-content" *ngIf="activeTab === 'exclusions'" @staggerCards>
+
+            <div class="exclusions-grid">
+                <div class="exclusion-card">
+                    <div class="exclusion-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="18" y1="6" x2="6" y2="18"/>
+            </svg>
+                    </div>
+                    <div>
+                        <h3>Pre-existing Diseases</h3>
+                        <p>Coverage after {{ getPlanDetail()?.preExistingWaiting }} months waiting period.</p>
+                    </div>
+                </div>
+
+                <div class="exclusion-card">
+                    <div class="exclusion-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="18" y1="6" x2="6" y2="18"/>
+            </svg>
+                    </div>
+                    <div>
+                        <h3>Initial Waiting Period</h3>
+                        <p>30 days waiting period for all illnesses except accidents.</p>
+                    </div>
+                </div>
+
+                <div class="exclusion-card">
+                    <div class="exclusion-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="18" y1="6" x2="6" y2="18"/>
+            </svg>
+                    </div>
+                    <div>
+                        <h3>Cosmetic Treatments</h3>
+                        <p>Cosmetic, aesthetic, and plastic surgeries not covered.</p>
+                    </div>
+                </div>
+
+                <div class="exclusion-card">
+                    <div class="exclusion-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="18" y1="6" x2="6" y2="18"/>
+            </svg>
+                    </div>
+                    <div>
+                        <h3>Dental Treatment</h3>
+                        <p>Regular dental treatments and procedures not covered.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Add-ons -->
+        <div class="tab-content" *ngIf="activeTab === 'addons'" @staggerCards>
+
+            <div class="addons-grid">
+                <div class="addon-card">
+                    <div class="addon-header">
+                        <div class="addon-name">Critical Illness Cover</div>
+                        <div class="addon-price">+ ₹1,250/year</div>
+                    </div>
+                    <p>Lump sum payment on diagnosis of 15+ critical illnesses including cancer, heart attack, kidney failure.</p>
+                    <button class="addon-btn">Add to Plan</button>
+                </div>
+
+                <div class="addon-card">
+                    <div class="addon-header">
+                        <div class="addon-name">Personal Accident Cover</div>
+                        <div class="addon-price">+ ₹750/year</div>
+                    </div>
+                    <p>Coverage for accidental death, permanent disability, and temporary total disability.</p>
+                    <button class="addon-btn">Add to Plan</button>
+                </div>
+
+                <div class="addon-card">
+                    <div class="addon-header">
+                        <div class="addon-name">Room Rent Upgrade</div>
+                        <div class="addon-price">+ ₹1,500/year</div>
+                    </div>
+                    <p>Upgrade to superior room category with higher coverage limits.</p>
+                    <button class="addon-btn">Add to Plan</button>
+                </div>
+
+                <div class="addon-card">
+                    <div class="addon-header">
+                        <div class="addon-name">Consumables Cover</div>
+                        <div class="addon-price">+ ₹1,000/year</div>
+                    </div>
+                    <p>Coverage for consumables like PPE kits, gloves, masks, and other medical consumables.</p>
+                    <button class="addon-btn">Add to Plan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="faq-section" @slideUp>
+            <h2>Frequently Asked Questions</h2>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <div class="faq-question">What is the claim process?</div>
+                    <div class="faq-answer">Submit your medical reports online, our AI system processes them, and you'll receive a decision within 2-3 business days. Cashless claims available at network hospitals.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Can I include my family?</div>
+                    <div class="faq-answer">Yes, you can add your spouse, children, and dependent parents to the policy at additional premium.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Is there a free-look period?</div>
+                    <div class="faq-answer">Yes, you have 15 days free-look period to review the policy and cancel for a full refund if not satisfied.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">How do I renew my policy?</div>
+                    <div class="faq-answer">Your policy will auto-renew. You'll receive reminders 30 days before expiry via email and SMS.</div>
+                </div>
+            </div>
+        </div>
+
+    </ng-container>
 </div>
