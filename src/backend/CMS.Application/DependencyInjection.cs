@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<IDocumentVerificationService, DocumentVerificationService>();
+        services.AddScoped<IPremiumCalculatorService, PremiumCalculatorService>();
 
         return services;
     }

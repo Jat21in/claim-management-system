@@ -29,7 +29,12 @@ public static class PlanSeeder
                   "Email & Ticket-Based Support"
                 ]
                 """,
-                isFeatured: false
+                isFeatured: false,
+                basePremiumAnnual: 1500m,
+                dependentLoadingPercentage: 15m,
+                maxDependentsAllowed: 3,
+                maxNomineesAllowed: 2,
+                requiredKycDocuments: new[] { "Aadhaar", "PAN", "PassportPhoto" }
             ),
 
             new Plan(
@@ -49,7 +54,12 @@ public static class PlanSeeder
                   "Priority Claims & Customer Support"
                 ]
                 """,
-                isFeatured: true
+                isFeatured: true,
+                basePremiumAnnual: 3750m,
+                dependentLoadingPercentage: 20m,
+                maxDependentsAllowed: 4,
+                maxNomineesAllowed: 3,
+                requiredKycDocuments: new[] { "Aadhaar", "PAN", "PassportPhoto" }
             ),
 
             new Plan(
@@ -70,7 +80,12 @@ public static class PlanSeeder
                   "Fast-Track Claims Settlement"
                 ]
                 """,
-                isFeatured: true
+                isFeatured: true,
+                basePremiumAnnual: 5000m,
+                dependentLoadingPercentage: 25m,
+                maxDependentsAllowed: 6,
+                maxNomineesAllowed: 4,
+                requiredKycDocuments: new[] { "Aadhaar", "PAN", "PassportPhoto" }
             )
         };
 

@@ -5,7 +5,7 @@ public sealed class MemberDashboardResponse
     public string FullName { get; init; } = null!;
     public string Email { get; init; } = null!;
 
-    public ActivePlanDto ActivePlan { get; init; } = null!;
+    public ActivePlanDto? ActivePlan { get; init; }
 }
 
 public sealed class ActivePlanDto

@@ -11,4 +11,9 @@ public interface IPolicyService
     Task<List<DependentResponse>> GetDependentsAsync(Guid memberId, CancellationToken cancellationToken);
     Task<List<NomineeResponse>> GetNomineesAsync(Guid memberId, CancellationToken cancellationToken);
     Task<PolicySummaryResponse> GetPolicySummaryAsync(Guid memberId, CancellationToken cancellationToken);
+    Task<PolicySetupResponse> SetupPolicyWithPaymentAsync(
+    Guid memberId,
+    PolicySetupRequest request,
+    CancellationToken cancellationToken);
+
 }

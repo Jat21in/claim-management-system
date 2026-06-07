@@ -17,7 +17,16 @@ public sealed class Plan
 
     public DateTime StartDate { get; private set; }
     public DateTime EndDate { get; private set; }
-    private Plan() { }
+
+    public decimal BasePremiumAnnual { get; private set; }
+    public decimal DependentLoadingPercentage { get; private set; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public Dictionary<string, decimal> FrequencyDiscounts { get; private set; } = new();
+
+    public int MaxDependentsAllowed { get; private set; }
+    public int MaxNomineesAllowed { get; private set; }
+    public string[] RequiredKycDocuments { get; private set; } = null!;
 
     public Plan(
     string code,
@@ -26,7 +35,12 @@ public sealed class Plan
     decimal insuredAmount,
     int durationInMonths,
     string featuresJson,
-    bool isFeatured)
+    bool isFeatured,
+    decimal basePremiumAnnual,
+    decimal dependentLoadingPercentage,
+    int maxDependentsAllowed,
+    int maxNomineesAllowed,
+    string[] requiredKycDocuments)
     {
         Code = code;
         Name = name;
@@ -35,6 +49,11 @@ public sealed class Plan
         DurationInMonths = durationInMonths;
         FeaturesJson = featuresJson;
         IsFeatured = isFeatured;
+        BasePremiumAnnual = basePremiumAnnual;
+        DependentLoadingPercentage = dependentLoadingPercentage;
+        MaxDependentsAllowed = maxDependentsAllowed;
+        MaxNomineesAllowed = maxNomineesAllowed;
+        RequiredKycDocuments = requiredKycDocuments;
 
         StartDate = DateTime.UtcNow;
         EndDate = StartDate.AddMonths(durationInMonths);

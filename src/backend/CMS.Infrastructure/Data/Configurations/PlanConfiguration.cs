@@ -24,7 +24,6 @@ public sealed class PlanConfiguration : IEntityTypeConfiguration<Plan>
                .IsRequired()
                .HasMaxLength(1000);
 
-        // THIS LINE FIXES YOUR WARNING
         builder.Property(p => p.InsuredAmount)
                .HasPrecision(18, 2);
 
@@ -44,6 +43,23 @@ public sealed class PlanConfiguration : IEntityTypeConfiguration<Plan>
                .IsRequired();
 
         builder.Property(p => p.EndDate)
+               .IsRequired();
+
+        builder.Property(p => p.BasePremiumAnnual)
+               .HasPrecision(18, 2)
+               .IsRequired();
+
+        builder.Property(p => p.DependentLoadingPercentage)
+               .HasPrecision(5, 2)
+               .IsRequired();
+
+        builder.Property(p => p.MaxDependentsAllowed)
+               .IsRequired();
+
+        builder.Property(p => p.MaxNomineesAllowed)
+               .IsRequired();
+
+        builder.Property(p => p.RequiredKycDocuments)
                .IsRequired();
 
         builder.HasIndex(p => p.Code)

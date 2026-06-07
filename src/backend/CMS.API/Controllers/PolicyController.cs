@@ -87,4 +87,17 @@ public sealed class PolicyController : ControllerBase
 
         return Ok(nominees);
     }
+
+    [HttpPost("setup-with-payment")]
+    public async Task<IActionResult> SetupPolicyWithPayment([FromBody] PolicySetupRequest request)
+    {
+        var memberId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var result = await _policyService.SetupPolicyWithPaymentAsync(
+            memberId,
+            request,
+            HttpContext.RequestAborted);
+
+        return Ok(result);
+    }
 }

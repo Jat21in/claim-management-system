@@ -2,6 +2,7 @@
 using CMS.Application.Interfaces.Repositories;
 using CMS.Application.Interfaces.Services;
 using CMS.Domain.Entities;
+using CMS.Domain.Enums;
 
 namespace CMS.Application.Services;
 
@@ -11,17 +12,20 @@ public sealed class PolicyService : IPolicyService
     private readonly IPlanRepository _planRepository;
     private readonly IMemberRepository _memberRepository;
     private readonly IEmailService _emailService;
+    private readonly IPaymentRepository _paymentRepository;
 
     public PolicyService(
         IPolicyRepository policyRepository,
         IPlanRepository planRepository,
         IMemberRepository memberRepository,
-        IEmailService emailService)
+        IEmailService emailService,
+        IPaymentRepository paymentRepository)
     {
         _policyRepository = policyRepository;
         _planRepository = planRepository;
         _memberRepository = memberRepository;
         _emailService = emailService;
+        _paymentRepository = paymentRepository;
     }
 
     public async Task<PolicyResponse> CreatePolicyFromPlanAsync(Guid memberId, Guid planId, CancellationToken cancellationToken)
@@ -281,6 +285,102 @@ public sealed class PolicyService : IPolicyService
                 GuardianName = n.GuardianName,
                 IsPrimary = n.IsPrimary
             }).ToList()
+        };
+    }
+
+    public async Task<PolicySetupResponse> SetupPolicyWithPaymentAsync(
+    Guid memberId,
+    PolicySetupRequest request,
+    CancellationToken cancellationToken)
+    {
+        // 1. Validate member has KYC approved
+        var member = await _memberRepository.GetByIdAsync(memberId, cancellationToken);
+        if (member?.Status != MemberStatus.Verified)
+            throw new InvalidOperationException("KYC verification required before purchasing policy");
+
+        // 2. Fetch plan
+        var plan = await _planRepository.GetByIdAsync(request.PlanId, cancellationToken);
+        if (plan == null || !plan.IsActive)
+            throw new InvalidOperationException("Selected plan is not available");
+
+        // 3. Calculate premium
+        var premiumCalc = new PremiumCalculatorService();
+        var breakdown = premiumCalc.CalculatePremium(
+            plan,
+            request.Dependents.Count,
+            request.PremiumFrequency,
+            request.CouponCode);
+
+        // 4. Create policy
+        var policy = new Policy(
+            memberId: memberId,
+            planId: plan.PlanId,
+            policyNumber: GeneratePolicyNumber(),
+            monthlyPremium: breakdown.GrandTotal / 12,
+            annualPremium: breakdown.GrandTotal,
+            sumInsured: plan.InsuredAmount,
+            startDate: DateTime.UtcNow,
+            durationInMonths: plan.DurationInMonths);
+
+        await _policyRepository.AddAsync(policy, cancellationToken);
+
+        // 5. Add dependents
+        foreach (var dep in request.Dependents)
+        {
+            var dependent = new Dependent(
+                policy.PolicyId,
+                dep.FullName,
+                dep.Relationship,
+                dep.DateOfBirth);
+            await _policyRepository.AddDependentAsync(dependent, cancellationToken);
+        }
+
+        // 6. Add nominees
+        foreach (var nom in request.Nominees)
+        {
+            var nominee = new Nominee(
+                policy.PolicyId,
+                nom.FullName,
+                nom.Relationship,
+                nom.PercentageAllocation,
+                nom.GuardianName,
+                nom.IsPrimary);
+            await _policyRepository.AddNomineeAsync(nominee, cancellationToken);
+        }
+
+        // 7. Create payment record
+        var payment = new PremiumPayment(
+            policy.PolicyId,
+            breakdown.GrandTotal,
+            DateTime.UtcNow.AddDays(7), // 7 days to complete payment
+            "RAZORPAY");
+
+        await _paymentRepository.AddAsync(payment, cancellationToken);
+
+        // 8. Generate mock payment URL (replace with actual gateway integration)
+        var paymentUrl = $"https://mock-payment-gateway.com/pay/{payment.PaymentId}";
+
+        return new PolicySetupResponse
+        {
+            Policy = await GetPolicySummaryAsync(memberId, cancellationToken),
+            PremiumCalculation = new PremiumCalculationResponse
+            {
+                BasePremium = breakdown.BasePremium,
+                DependentLoading = breakdown.DependentLoading,
+                FrequencyDiscount = breakdown.FrequencyDiscount,
+                CouponDiscount = breakdown.CouponDiscount,
+                SubTotal = breakdown.SubTotal,
+                TaxAmount = breakdown.TaxAmount,
+                GrandTotal = breakdown.GrandTotal,
+                AvailableFrequencies = breakdown.AvailableFrequencies
+            },
+            Payment = new PaymentInitiationResponse
+            {
+                PaymentId = payment.PaymentId,
+                PaymentUrl = paymentUrl,
+                OrderId = $"ORDER_{DateTime.Now.Ticks}",
+                Amount = breakdown.GrandTotal
+            }
         };
     }
 }
