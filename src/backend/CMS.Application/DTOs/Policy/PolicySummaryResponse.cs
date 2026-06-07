@@ -11,4 +11,9 @@ public sealed class PolicySummaryResponse
     public decimal? NextPremiumAmount { get; init; }
     public int? DependentsCount { get; init; }
     public int? NomineesCount { get; init; }
+
+    // ✅ NEW FIELDS
+    public bool IsPremiumPaidForCurrentMonth { get; init; }
+    public DateTime? LastPaymentDate { get; init; }
+    public decimal? LastPaymentAmount { get; init; }
 }

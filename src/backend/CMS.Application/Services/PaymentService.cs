@@ -56,40 +56,38 @@ public sealed class PaymentService : IPaymentService
     {
         var payment = await _paymentRepository.GetByIdAsync(paymentId, cancellationToken);
         if (payment == null)
-            throw new InvalidOperationException("Payment not found");
+            return new PaymentResponse { Success = false, Message = "Payment not found" };
 
         var policy = await _policyRepository.GetByIdAsync(payment.PolicyId, cancellationToken);
         if (policy == null || policy.MemberId != memberId)
-            throw new InvalidOperationException("Unauthorized");
+            return new PaymentResponse { Success = false, Message = "Unauthorized" };
 
-        // Generate mock transaction ID
-        var transactionId = $"MOCK-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString().Substring(0, 6)}";
-        var receiptUrl = $"/uploads/receipts/{transactionId}.pdf";
-
-        payment.MarkCompleted(transactionId, receiptUrl);
+        // Mark payment as completed
+        var transactionId = $"MOCK_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString().Substring(0, 8)}";
+        payment.MarkCompleted(transactionId, $"/receipts/{paymentId}.pdf");
         await _paymentRepository.UpdateAsync(payment, cancellationToken);
 
+        // ✅ CRITICAL FIX: Update policy's last payment date
+        policy.RecordPayment(payment);
+        await _policyRepository.UpdateAsync(policy, cancellationToken);
+
         // Send confirmation email
-        var member = await _memberRepository.GetByIdAsync(memberId, cancellationToken);
-        if (member != null)
-        {
-            await _emailService.SendPaymentConfirmationEmailAsync(
-                member.Email,
-                member.FullName,
-                policy.PolicyNumber,
-                payment.Amount,
-                transactionId,
-                cancellationToken);
-        }
+        await _emailService.SendPaymentConfirmationEmailAsync(
+            policy.Member.Email,
+            policy.Member.FullName,
+            policy.PolicyNumber,
+            payment.Amount,
+            transactionId,
+            cancellationToken);
 
         return new PaymentResponse
         {
-            PaymentId = paymentId,
             Success = true,
             Message = "Payment processed successfully",
             TransactionId = transactionId
         };
     }
+
 
     public async Task<PaymentHistoryResponse> GetPaymentHistoryAsync(Guid memberId, CancellationToken cancellationToken)
     {
