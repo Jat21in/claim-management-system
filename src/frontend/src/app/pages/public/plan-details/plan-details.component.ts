@@ -26,14 +26,25 @@ import {
 } from '@angular/animations';
 
 import { AuthService } from '../../../auth/auth.service';
+import { PremiumCalculatorComponent } from '../../../components/premium-calculator/premium-calculator.component';
+import { PremiumCalculationResult } from '../../../services/premium-calculator.service';
 
 import Chart from 'chart.js/auto';
 import type { Chart as ChartJS } from 'chart.js';
+import { FooterComponent } from '../landing/components/footer/footer.component';
 
 interface PlanDetail {
   coverageAmount: number;
-  monthlyPremium: number;
-  yearlyPremium: number;
+  basePremiumAnnual: number;
+  dependentLoadingPercentage: number;
+  maxDependentsAllowed: number;
+  maxNomineesAllowed: number;
+  ageLoadingPercentage: number;
+  corporateDiscountPercentage: number;
+  isFamilyFloater: boolean;
+  locationRiskMultiplier: number;
+  preExistingConditionLoading: number;
+  smokerLoadingPercentage: number;
   hospitalNetwork: number;
   claimSettlementRatio: number;
   networkHospitals: number;
@@ -51,12 +62,19 @@ interface PlanDetail {
   coverageUtilization: number;
   customerSatisfaction: number;
   renewalRate: number;
+  doctorConsultations: string;
+  hospitalization: string;
+  emergencyCare: string;
+  familyCoverage: string;
+  cashlessHospitals: string;
+  claimSettlement: string;
+  noClaimBonusLabel: string;
 }
 
 @Component({
   selector: 'app-plan-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, CurrencyPipe],
+  imports: [CommonModule, RouterLink, CurrencyPipe, PremiumCalculatorComponent, FooterComponent],
   templateUrl: './plan-details.component.html',
   styleUrls: ['./plan-details.component.scss'],
   animations: [
@@ -147,6 +165,7 @@ export class PlanDetailComponent implements OnInit, AfterViewInit {
 
   selectedYear = 2024;
   planId: string | null = null;
+  savedHealthFactors: any = null;
 
   // Chart instances
   private claimsChart: ChartJS | null = null;
@@ -198,8 +217,16 @@ export class PlanDetailComponent implements OnInit, AfterViewInit {
 
     'Essential Care Plan': {
       coverageAmount: 300000,
-      monthlyPremium: 1250,
-      yearlyPremium: 15000,
+      basePremiumAnnual: 25000,
+      dependentLoadingPercentage: 15,
+      maxDependentsAllowed: 2,
+      maxNomineesAllowed: 2,
+      ageLoadingPercentage: 10,
+      corporateDiscountPercentage: 5,
+      isFamilyFloater: false,
+      locationRiskMultiplier: 1.0,
+      preExistingConditionLoading: 20,
+      smokerLoadingPercentage: 15,
       hospitalNetwork: 2500,
       claimSettlementRatio: 92,
       networkHospitals: 2500,
@@ -216,13 +243,66 @@ export class PlanDetailComponent implements OnInit, AfterViewInit {
       icuCover: 'Up to 7 days',
       coverageUtilization: 68,
       customerSatisfaction: 4.2,
-      renewalRate: 85
+      renewalRate: 85,
+      doctorConsultations: 'Basic',
+      hospitalization: 'Standard',
+      emergencyCare: 'No',
+      familyCoverage: 'Limited',
+      cashlessHospitals: 'Network',
+      claimSettlement: 'Standard',
+      noClaimBonusLabel: 'No'
+    },
+
+    'Health Pro Plus': {
+      coverageAmount: 500000,
+      basePremiumAnnual: 45000,
+      dependentLoadingPercentage: 25,
+      maxDependentsAllowed: 4,
+      maxNomineesAllowed: 3,
+      ageLoadingPercentage: 15,
+      corporateDiscountPercentage: 10,
+      isFamilyFloater: true,
+      locationRiskMultiplier: 1.0,
+      preExistingConditionLoading: 30,
+      smokerLoadingPercentage: 25,
+      hospitalNetwork: 4500,
+      claimSettlementRatio: 94,
+      networkHospitals: 4500,
+      ambulanceCover: 5000,
+      preExistingWaiting: 36,
+      noClaimBonus: 15,
+      healthCheckup: true,
+      maternityCover: true,
+      ayushCover: false,
+      mentalHealthCover: true,
+      organDonorCover: false,
+      dailyHospitalCash: 1800,
+      roomRentLimit: 'Private Room',
+      icuCover: 'Up to 5 days',
+      coverageUtilization: 70,
+      customerSatisfaction: 4.3,
+      renewalRate: 88,
+      doctorConsultations: 'Unlimited',
+      hospitalization: 'Standard',
+      emergencyCare: 'Yes',
+      familyCoverage: 'Standard',
+      cashlessHospitals: 'Network',
+      claimSettlement: 'Priority',
+      noClaimBonusLabel: '5%/year'
     },
 
     'Advanced Care Plus Plan': {
       coverageAmount: 750000,
-      monthlyPremium: 3125,
-      yearlyPremium: 37500,
+      basePremiumAnnual: 65000,
+      dependentLoadingPercentage: 25,
+      maxDependentsAllowed: 5,
+      maxNomineesAllowed: 4,
+      ageLoadingPercentage: 15,
+      corporateDiscountPercentage: 10,
+      isFamilyFloater: true,
+      locationRiskMultiplier: 1.2,
+      preExistingConditionLoading: 30,
+      smokerLoadingPercentage: 25,
       hospitalNetwork: 5000,
       claimSettlementRatio: 95,
       networkHospitals: 5000,
@@ -239,13 +319,28 @@ export class PlanDetailComponent implements OnInit, AfterViewInit {
       icuCover: 'Full Coverage',
       coverageUtilization: 72,
       customerSatisfaction: 4.5,
-      renewalRate: 88
+      renewalRate: 88,
+      doctorConsultations: 'Unlimited',
+      hospitalization: 'Enhanced',
+      emergencyCare: 'Yes',
+      familyCoverage: 'Extended',
+      cashlessHospitals: 'Network +',
+      claimSettlement: 'Priority',
+      noClaimBonusLabel: '5%/year'
     },
 
     'Elite Family Protection Plan': {
       coverageAmount: 1000000,
-      monthlyPremium: 4166,
-      yearlyPremium: 50000,
+      basePremiumAnnual: 85000,
+      dependentLoadingPercentage: 20,
+      maxDependentsAllowed: 6,
+      maxNomineesAllowed: 5,
+      ageLoadingPercentage: 12,
+      corporateDiscountPercentage: 15,
+      isFamilyFloater: true,
+      locationRiskMultiplier: 1.15,
+      preExistingConditionLoading: 25,
+      smokerLoadingPercentage: 20,
       hospitalNetwork: 7500,
       claimSettlementRatio: 98,
       networkHospitals: 7500,
@@ -262,7 +357,14 @@ export class PlanDetailComponent implements OnInit, AfterViewInit {
       icuCover: 'Full Coverage',
       coverageUtilization: 76,
       customerSatisfaction: 4.8,
-      renewalRate: 92
+      renewalRate: 92,
+      doctorConsultations: 'Unlimited',
+      hospitalization: 'Premium',
+      emergencyCare: 'Yes',
+      familyCoverage: 'Complete',
+      cashlessHospitals: 'All Network',
+      claimSettlement: 'Fast-Track',
+      noClaimBonusLabel: '5%/year'
     }
   };
 
@@ -513,41 +615,68 @@ export class PlanDetailComponent implements OnInit, AfterViewInit {
     );
   }
 
+  getBaseAnnual(): number {
+    const detail = this.getPlanDetail();
+    return detail ? detail.basePremiumAnnual : 0;
+  }
+
+  getBaseMonthly(): number {
+    return Math.round(this.getBaseAnnual() / 12);
+  }
+
+  // Yearly price shown to user uses the same savings formula: monthly * 12 * 0.92
+  getComputedYearly(): number {
+    const monthly = this.getBaseMonthly();
+    return Math.round(monthly * 12 * 0.92);
+  }
+
+  getGSTAnnual(): number {
+    return Math.round(this.getComputedYearly() * 1.18);
+  }
+
+  getGSTMonthly(): number {
+    return Math.round(this.getBaseMonthly() * 1.18);
+  }
+
+  getDependentAnnual(dependents = 1): number {
+    const detail = this.getPlanDetail();
+    if (!detail) return 0;
+    return Math.round(
+      detail.basePremiumAnnual *
+        (1 + detail.dependentLoadingPercentage / 100)
+    );
+  }
+
+  getDependentMonthly(dependents = 1): number {
+    return Math.round(this.getDependentAnnual(dependents) / 12);
+  }
+
   getCurrentPremium(): number {
 
-    const detail = this.getPlanDetail();
+    if (this.billingCycle === 'monthly') {
+      return this.getBaseMonthly();
+    }
 
-    if (!detail) return 0;
-
-    return this.billingCycle === 'monthly'
-      ? detail.monthlyPremium
-      : detail.yearlyPremium;
+    return this.getBaseAnnual();
   }
 
   getFormattedPremium(): string {
 
     const amount = this.getCurrentPremium();
 
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
+    return this.formatCurrency(amount);
   }
 
   getSavingsPercentage(): number {
+    const monthly = this.getBaseMonthly();
+    const monthlyTotal = monthly * 12;
+    const yearly = this.getComputedYearly();
 
-    const detail = this.getPlanDetail();
+    if (!monthlyTotal) return 0;
 
-    if (!detail) return 0;
-
-    const monthlyTotal = detail.monthlyPremium * 12;
-
-    return Math.round(
-      ((monthlyTotal - detail.yearlyPremium) / monthlyTotal) * 100
-    );
+    return Math.round(((monthlyTotal - yearly) / monthlyTotal) * 100);
   }
+
 
   getCoveragePercentage(): number {
 
@@ -559,6 +688,12 @@ export class PlanDetailComponent implements OnInit, AfterViewInit {
       100,
       Math.round((detail.coverageUtilization / 100) * 100)
     );
+  }
+
+  getPlanDetailValue(planName: string, key: string): any {
+    const detail = this.planDetails[planName as keyof typeof this.planDetails];
+    if (!detail) return null;
+    return (detail as any)[key];
   }
 
   updateWorkflowStep(step: number) {
@@ -573,43 +708,45 @@ export class PlanDetailComponent implements OnInit, AfterViewInit {
 
     const token = this.authService.getToken();
 
-    // ✅ Store selected plan ID regardless of login status
+    // Store selected plan ID regardless of login status
     if (this.planId) {
       this.authService.setSelectedPlanId(this.planId);
+    }
 
-      console.log(
-        '[PlanDetails] Stored plan ID:',
-        this.planId
+    // Store health factors if calculated
+    if (this.savedHealthFactors) {
+      localStorage.setItem(
+        'premiumHealthFactors',
+        JSON.stringify(this.savedHealthFactors)
       );
     }
 
     if (!token) {
-
-      console.log(
-        '[PlanDetails] User not logged in, redirecting to login'
-      );
-
       this.router.navigate(['/auth'], {
         queryParams: {
           mode: 'login',
           redirect: '/app/policy-setup'
         }
       });
-
     } else {
-
-      console.log(
-        '[PlanDetails] User logged in, redirecting to policy setup'
-      );
-
-      if (this.planId) {
-        this.router.navigate(['/app/policy-setup'], {
-          queryParams: {
-            planId: this.planId
-          }
-        });
-      }
+      this.router.navigate(['/app/policy-setup'], {
+        queryParams: {
+          planId: this.planId
+        }
+      });
     }
+  }
+
+  onPremiumCalculated(event: {
+    result: PremiumCalculationResult;
+    factors: any;
+  }) {
+    // Store health factors for when user clicks "Get Started"
+    this.savedHealthFactors = event.factors;
+    localStorage.setItem(
+      'premiumHealthFactors',
+      JSON.stringify(event.factors)
+    );
   }
 
   navigateToRegister() {

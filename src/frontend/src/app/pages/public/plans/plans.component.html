@@ -81,118 +81,57 @@
         <span [class.active]="billing === 'yearly'">Yearly</span>
     </div>
 
-    <!-- ✅ ✅ PLANS (UPDATED WITH API + SAME DESIGN) -->
-    <div class="pricing-grid" *ngIf="plans.length >= 3">
+    <!-- ✅ ✅ PLANS (UPDATED WITH API + DYNAMIC RENDERING) -->
+    <div class="pricing-grid" *ngIf="plans.length > 0">
 
-        <!-- ✅ ELITE -->
-        <div class="pricing-card" (mouseenter)="setGlowColor('gold')" (mouseleave)="resetGlowColor()">
+        <div class="pricing-card" *ngFor="let plan of plans; let i = index" [class.popular-card]="i === 1" (mouseenter)="setGlowColor(i === 1 ? 'silver' : i === 0 ? 'gold' : 'blue')" (mouseleave)="resetGlowColor()">
 
-            <h2 class="plan-name">{{ plans[0].name }}</h2>
+            <div class="best-value-badge" *ngIf="i === 1">Best Value</div>
+
+            <h2 class="plan-name">{{ plan.name }}</h2>
+            <p class="desc">{{ plan.description }}</p>
 
             <div class="price">
-                <span class="currency">$</span>
-                <span class="amount">
-          {{ billing === 'monthly'
-              ? plans[0].insuredAmount / 1000
-              : (plans[0].insuredAmount / 1000) * 10 }}
-        </span>
+                <!-- <span class="currency"></span> -->
+                <span class="amount">{{ formatPlanPremium(plan) }}</span>
                 <span class="billing">
           / {{ billing === 'monthly' ? 'month' : 'year' }}
         </span>
             </div>
 
-            <div class="sub-price">
-                <span class="highlight-amount">+20</span> / person per month
-            </div>
-
-            <div class="divider"></div>
-
-            <ul class="features">
-                <li *ngFor="let feature of plans[0].features">
-                    <span class="tick"></span> {{ feature }}
-                </li>
-            </ul>
-
-            <!-- ✅ ROUTE -->
-            <a class="cta-btn" [routerLink]="['/plans', plans[0].planId]">
-                <div class="cta-inner">
-                    <span class="text-default">Schedule a demo</span>
-                    <span class="text-hover">Get started</span>
+            <div class="price-row">
+                <span class="best-for-pill">{{ getPlanBestFor(plan) }}</span>
+                <div class="savings" *ngIf="billing === 'yearly'">
+                    <span class="save-label">Save</span>
+                    <span class="save-amt">{{ formatCurrency(getPlanSavings(plan).saved) }}</span>
+                    <span class="save-pct">({{ getPlanSavings(plan).percent }}%)</span>
                 </div>
-            </a>
-        </div>
+            </div>
 
-        <!-- ✅ CENTER CARD -->
-        <div class="pricing-card popular-card" (mouseenter)="setGlowColor('silver')" (mouseleave)="resetGlowColor()">
+            <div class="plan-meta">
+                <span>Coverage</span>
+                <span class="coverage-box">{{ plan.insuredAmount | currency:'INR':'symbol':'1.0-0' }}</span>
+            </div>
 
-            <div class="best-value-badge">Best Value</div>
-
-            <h2 class="plan-name">{{ plans[1].name }}</h2>
-
-            <div class="price">
-                <span class="currency">$</span>
-                <span class="amount">
-          {{ billing === 'monthly'
-              ? plans[1].insuredAmount / 1000
-              : (plans[1].insuredAmount / 1000) * 10 }}
-        </span>
-                <span class="billing">
-          / {{ billing === 'monthly' ? 'month' : 'year' }}
-        </span>
+            <div class="plan-meta">
+                <span>Best for </span>
+                <span>{{ getPlanBestFor(plan) }}</span>
             </div>
 
             <div class="sub-price">
-                <span class="highlight-amount">+20</span> / person per month
+                <span class="highlight-amount">{{ plan.durationInMonths }}</span> months coverage
             </div>
 
             <div class="divider"></div>
 
             <ul class="features">
-                <li *ngFor="let feature of plans[1].features">
+                <li *ngFor="let feature of plan.features">
                     <span class="tick"></span> {{ feature }}
                 </li>
             </ul>
 
             <!-- ✅ ROUTE -->
-            <a class="cta-btn" [routerLink]="['/plans', plans[1].planId]">
-                <div class="cta-inner">
-                    <span class="text-default">Schedule a demo</span>
-                    <span class="text-hover">Get started</span>
-                </div>
-            </a>
-        </div>
-
-        <!-- ✅ ADVANCED -->
-        <div class="pricing-card" (mouseenter)="setGlowColor('blue')" (mouseleave)="resetGlowColor()">
-
-            <h2 class="plan-name">{{ plans[2].name }}</h2>
-
-            <div class="price">
-                <span class="currency">$</span>
-                <span class="amount">
-          {{ billing === 'monthly'
-              ? plans[2].insuredAmount / 1000
-              : (plans[2].insuredAmount / 1000) * 10 }}
-        </span>
-                <span class="billing">
-          / {{ billing === 'monthly' ? 'month' : 'year' }}
-        </span>
-            </div>
-
-            <div class="sub-price">
-                <span class="highlight-amount">+20</span> / person per month
-            </div>
-
-            <div class="divider"></div>
-
-            <ul class="features">
-                <li *ngFor="let feature of plans[2].features">
-                    <span class="tick"></span> {{ feature }}
-                </li>
-            </ul>
-
-            <!-- ✅ ROUTE -->
-            <a class="cta-btn" [routerLink]="['/plans', plans[2].planId]">
+            <a class="cta-btn" [routerLink]="['/plans', plan.planId]">
                 <div class="cta-inner">
                     <span class="text-default">Schedule a demo</span>
                     <span class="text-hover">Get started</span>
@@ -203,115 +142,115 @@
     </div>
 
 </div>
-<div class="comparison-section">
 
-    <h3 class="comparison-title">Overview</h3>
+<div class="comparison-section" *ngIf="plans.length > 0">
 
-    <div class="comparison-table">
-
-        <!-- HEADER -->
-        <div class="row header">
-            <div></div>
-            <div>Elite</div>
-            <div>Essential</div>
-            <div>Advanced</div>
+    <div class="comparison-header">
+        <div>
+            <h3 class="comparison-title">Feature Comparison Table</h3>
+            <p class="comparison-intro">
+                Recommended for plan details page. Compare our product portfolio side-by-side.
+            </p>
         </div>
-
-        <!-- ROW -->
-
-        <div class="row">
-            <div class="feature">
-                Basic Features
-                <span class="info-icon">?
-          <span class="tooltip">Includes core functionalities required to get started</span>
-                </span>
-            </div>
-            <div><span class="tick"></span></div>
-            <div><span class="tick"></span></div>
-            <div><span class="tick"></span></div>
-        </div>
-
-        <div class="row">
-            <div class="feature">
-                Users
-                <span class="info-icon">?
-          <span class="tooltip">Maximum number of users allowed in the plan</span>
-                </span>
-            </div>
-            <div>10</div>
-            <div>20</div>
-            <div>Unlimited</div>
-        </div>
-
-        <div class="row">
-            <div class="feature">
-                Storage
-                <span class="info-icon">?
-          <span class="tooltip">Total cloud storage capacity for your data</span>
-                </span>
-            </div>
-            <div>20GB</div>
-            <div>40GB</div>
-            <div>Unlimited</div>
-        </div>
-
-        <div class="row">
-            <div class="feature">
-                Support
-                <span class="info-icon">?
-          <span class="tooltip">Access to customer support assistance</span>
-                </span>
-            </div>
-            <div><span class="tick"></span></div>
-            <div><span class="tick"></span></div>
-            <div><span class="tick"></span></div>
-        </div>
-
-        <div class="row">
-            <div class="feature">
-                API Access
-                <span class="info-icon">?
-          <span class="tooltip">Allows integration with external apps and services</span>
-                </span>
-            </div>
-            <div>Limited</div>
-            <div>Standard</div>
-            <div>Full</div>
-        </div>
-
-        <div class="row">
-            <div class="feature">
-                Analytics Dashboard
-                <span class="info-icon">?
-          <span class="tooltip">Access insights, reports, and analytics tools</span>
-                </span>
-            </div>
-            <div><span class="tick"></span></div>
-            <div><span class="tick"></span></div>
-            <div><span class="tick"></span></div>
-        </div>
-
-        <div class="row">
-            <div class="feature">
-                Custom Branding
-                <span class="info-icon">?
-          <span class="tooltip">Customize logo, colors, and visual identity</span>
-                </span>
-            </div>
-            <div><span class="cross"></span></div>
-            <div><span class="tick"></span></div>
-            <div><span class="tick"></span></div>
-        </div>
-
-        <div class="row">
-            <div class="feature">
-                Priority Support
-                <span class="info-icon">?
-          <span class="tooltip">Faster response times and dedicated assistance</span>
-                </span>
-            </div>
-            <div><span class="cross"></span></div>
-            <div><span class="cross"></span></div>
-            <div><span class="tick"></span></div>
+        <div class="pill-group">
+            <span class="pill">Enterprise-ready</span>
+            <span class="pill">Scalable</span>
+            <span class="pill">Risk-aware</span>
         </div>
     </div>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Essential</th>
+                    <th>Health Pro</th>
+                    <th>Advanced Care</th>
+                    <th>Elite Family</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Coverage Amount</td>
+                    <td>{{ formatCurrency(getCoverageByName('Essential Care Plan')) }}</td>
+                    <td>{{ formatCurrency(getCoverageByName('Health Pro Plus')) }}</td>
+                    <td>{{ formatCurrency(getCoverageByName('Advanced Care Plus Plan')) }}</td>
+                    <td>{{ formatCurrency(getCoverageByName('Elite Family Protection Plan')) }}</td>
+                </tr>
+                <tr>
+                    <td>Doctor Consultations</td>
+                    <td>{{ getConfigByPlanName('Essential Care Plan')?.doctorConsultations || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Health Pro Plus')?.doctorConsultations || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.doctorConsultations || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.doctorConsultations || '-' }}</td>
+                </tr>
+                <tr>
+                    <td>Hospitalization</td>
+                    <td>{{ getConfigByPlanName('Essential Care Plan')?.hospitalization || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Health Pro Plus')?.hospitalization || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.hospitalization || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.hospitalization || '-' }}</td>
+                </tr>
+                <tr>
+                    <td>Maternity Cover</td>
+                    <td>{{ getConfigByPlanName('Essential Care Plan')?.maternityCover ? '✅' : '❌' }}</td>
+                    <td>{{ getConfigByPlanName('Health Pro Plus')?.maternityCover ? '✅' : '❌' }}</td>
+                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.maternityCover ? '✅' : '❌' }}</td>
+                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.maternityCover ? '✅' : '❌' }}</td>
+                </tr>
+                <tr>
+                    <td>Preventive Checkups</td>
+                    <td>{{ getConfigByPlanName('Essential Care Plan')?.healthCheckup ? '✅' : '❌' }}</td>
+                    <td>{{ getConfigByPlanName('Health Pro Plus')?.healthCheckup ? '✅' : '❌' }}</td>
+                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.healthCheckup ? '✅' : '❌' }}</td>
+                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.healthCheckup ? '✅' : '❌' }}</td>
+                </tr>
+                <tr>
+                    <td>Emergency Care</td>
+                    <td>{{ getConfigByPlanName('Essential Care Plan')?.emergencyCare ? '✅' : '❌' }}</td>
+                    <td>{{ getConfigByPlanName('Health Pro Plus')?.emergencyCare ? '✅' : '❌' }}</td>
+                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.emergencyCare ? '✅' : '❌' }}</td>
+                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.emergencyCare ? '✅' : '❌' }}</td>
+                </tr>
+                <tr>
+                    <td>Family Coverage</td>
+                    <td>{{ getConfigByPlanName('Essential Care Plan')?.familyCoverage || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Health Pro Plus')?.familyCoverage || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.familyCoverage || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.familyCoverage || '-' }}</td>
+                </tr>
+                <tr>
+                    <td>Max Dependents</td>
+                    <td>{{ getConfigByPlanName('Essential Care Plan')?.maxDependents ?? '-' }}</td>
+                    <td>{{ getConfigByPlanName('Health Pro Plus')?.maxDependents ?? '-' }}</td>
+                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.maxDependents ?? '-' }}</td>
+                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.maxDependents ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td>Cashless Hospitals</td>
+                    <td>{{ getConfigByPlanName('Essential Care Plan')?.cashlessHospitals || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Health Pro Plus')?.cashlessHospitals || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.cashlessHospitals || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.cashlessHospitals || '-' }}</td>
+                </tr>
+                <tr>
+                    <td>Claim Settlement</td>
+                    <td>{{ getConfigByPlanName('Essential Care Plan')?.claimSettlement || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Health Pro Plus')?.claimSettlement || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.claimSettlement || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.claimSettlement || '-' }}</td>
+                </tr>
+                <tr>
+                    <td>No Claim Bonus</td>
+                    <td>{{ getConfigByPlanName('Essential Care Plan')?.noClaimBonusLabel === 'No' ? '❌' : getConfigByPlanName('Essential Care Plan')?.noClaimBonusLabel || '❌' }}</td>
+                    <td>{{ getConfigByPlanName('Health Pro Plus')?.noClaimBonusLabel || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.noClaimBonusLabel || '-' }}</td>
+                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.noClaimBonusLabel || '-' }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+<app-footer></app-footer>

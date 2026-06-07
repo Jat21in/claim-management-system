@@ -111,9 +111,7 @@
                 <button class="tab" [class.active]="activeTab === 'exclusions'" (click)="switchTab('exclusions')">
           Exclusions
         </button>
-                <button class="tab" [class.active]="activeTab === 'addons'" (click)="switchTab('addons')">
-          Add-ons
-        </button>
+
             </div>
         </div>
 
@@ -135,53 +133,9 @@
                 </div>
             </div>
 
-            <!-- Coverage Summary Cards -->
-            <div class="coverage-summary-cards">
-                <div class="summary-card">
-                    <div class="summary-icon">🏥</div>
-                    <div class="summary-content">
-                        <div class="summary-value">{{ getPlanDetail()?.networkHospitals }}+</div>
-                        <div class="summary-label">Network Hospitals</div>
-                        <div class="summary-sub">Cashless treatment available</div>
-                    </div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-icon">🔄</div>
-                    <div class="summary-content">
-                        <div class="summary-value">{{ getPlanDetail()?.noClaimBonus }}%</div>
-                        <div class="summary-label">No Claim Bonus</div>
-                        <div class="summary-sub">Accumulates yearly</div>
-                    </div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-icon">⏱️</div>
-                    <div class="summary-content">
-                        <div class="summary-value">{{ getPlanDetail()?.preExistingWaiting }}</div>
-                        <div class="summary-label">Waiting Period</div>
-                        <div class="summary-sub">For pre-existing conditions</div>
-                    </div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-icon">📞</div>
-                    <div class="summary-content">
-                        <div class="summary-value">24/7</div>
-                        <div class="summary-label">Customer Support</div>
-                        <div class="summary-sub">Dedicated assistance</div>
-                    </div>
-                </div>
-            </div>
+            <app-premium-calculator *ngIf="plan" [planId]="plan.planId" [planName]="plan.name" [coverageAmount]="plan.insuredAmount" (premiumCalculated)="onPremiumCalculated($event)">
+            </app-premium-calculator>
 
-            <!-- Coverage Utilization -->
-            <div class="utilization-section">
-                <h3>Coverage Utilization</h3>
-                <div class="utilization-bar">
-                    <div class="utilization-fill" [style.width.%]="getCoveragePercentage()"></div>
-                </div>
-                <div class="utilization-stats">
-                    <span>Used: {{ getPlanDetail()?.coverageUtilization }}%</span>
-                    <span>Remaining: {{ 100 - (getPlanDetail()?.coverageUtilization || 0) }}%</span>
-                </div>
-            </div>
         </div>
 
         <!-- Tab: Coverage Details -->
@@ -264,27 +218,6 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="metrics-row">
-                    <div class="metric-card">
-                        <div class="metric-icon">📈</div>
-                        <div class="metric-value">{{ getPlanDetail()?.renewalRate }}%</div>
-                        <div class="metric-label">Renewal Rate</div>
-                        <div class="metric-trend positive">↑ 8% vs last year</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-icon">⚡</div>
-                        <div class="metric-value">2.5 days</div>
-                        <div class="metric-label">Avg Claim Processing</div>
-                        <div class="metric-trend positive">↓ 1.2 days faster</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-icon">🏆</div>
-                        <div class="metric-value">98%</div>
-                        <div class="metric-label">Customer Retention</div>
-                        <div class="metric-trend positive">Industry best</div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -346,48 +279,6 @@
             </div>
         </div>
 
-        <!-- Tab: Add-ons -->
-        <div class="tab-content" *ngIf="activeTab === 'addons'" @staggerCards>
-
-            <div class="addons-grid">
-                <div class="addon-card">
-                    <div class="addon-header">
-                        <div class="addon-name">Critical Illness Cover</div>
-                        <div class="addon-price">+ ₹1,250/year</div>
-                    </div>
-                    <p>Lump sum payment on diagnosis of 15+ critical illnesses including cancer, heart attack, kidney failure.</p>
-                    <button class="addon-btn">Add to Plan</button>
-                </div>
-
-                <div class="addon-card">
-                    <div class="addon-header">
-                        <div class="addon-name">Personal Accident Cover</div>
-                        <div class="addon-price">+ ₹750/year</div>
-                    </div>
-                    <p>Coverage for accidental death, permanent disability, and temporary total disability.</p>
-                    <button class="addon-btn">Add to Plan</button>
-                </div>
-
-                <div class="addon-card">
-                    <div class="addon-header">
-                        <div class="addon-name">Room Rent Upgrade</div>
-                        <div class="addon-price">+ ₹1,500/year</div>
-                    </div>
-                    <p>Upgrade to superior room category with higher coverage limits.</p>
-                    <button class="addon-btn">Add to Plan</button>
-                </div>
-
-                <div class="addon-card">
-                    <div class="addon-header">
-                        <div class="addon-name">Consumables Cover</div>
-                        <div class="addon-price">+ ₹1,000/year</div>
-                    </div>
-                    <p>Coverage for consumables like PPE kits, gloves, masks, and other medical consumables.</p>
-                    <button class="addon-btn">Add to Plan</button>
-                </div>
-            </div>
-        </div>
-
         <!-- FAQ Section -->
         <div class="faq-section" @slideUp>
             <h2>Frequently Asked Questions</h2>
@@ -413,3 +304,4 @@
 
     </ng-container>
 </div>
+<app-footer></app-footer>

@@ -72,6 +72,102 @@
         </div>
     </div>
 
+    <!-- PREMIUM PAYMENT TRACKER - Darker Version -->
+    <div *ngIf="nextPremiumDue" class="mb-8">
+        <div class="bg-slate-800/60 rounded-xl border border-slate-700/50 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-700/50 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+                    </div>
+                    <h3 class="text-white font-semibold">Premium Payment Tracker</h3>
+                </div>
+                <button (click)="navigateToPayments()" class="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
+            View History →
+          </button>
+            </div>
+
+            <div class="p-6">
+                <!-- On Time -->
+                <div *ngIf="daysUntilDue > 15" class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <p class="text-slate-400 text-sm">Next Premium Due</p>
+                        <p class="text-2xl font-bold text-white">{{ nextPremiumDue | date:'dd MMM yyyy' }}</p>
+                        <p class="text-slate-500 text-sm mt-1">{{ formatCurrency(nextPremiumAmount) }}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-flex items-center gap-1 px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm">
+                <span class="w-1.5 h-1.5 bg-green-400 rounded-full"></span> On Time
+                        </span>
+                        <p class="text-slate-500 text-xs mt-2">{{ daysUntilDue }} days remaining</p>
+                    </div>
+                    <button (click)="navigateToPayments()" class="px-6 py-2 bg-cyan-500 text-black font-medium rounded-lg hover:bg-cyan-400 transition-colors">
+              Pay Now
+            </button>
+                </div>
+
+                <!-- Grace Period -->
+                <div *ngIf="isGracePeriod">
+                    <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-4">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                            <div>
+                                <p class="text-amber-400 font-medium">Grace Period Active</p>
+                                <p class="text-amber-300 text-sm">Pay within {{ daysUntilDue }} days to avoid late fee</p>
+                                <p class="text-amber-300/70 text-xs mt-1">Late fee of {{ formatCurrency(lateFee) }} applies after due date</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button (click)="navigateToPayments()" class="w-full py-2 bg-amber-500 text-black font-medium rounded-lg hover:bg-amber-400 transition-colors">
+              Pay Now ({{ formatCurrency(nextPremiumAmount) }})
+            </button>
+                </div>
+
+                <!-- Overdue -->
+                <div *ngIf="daysUntilDue <= 0 && daysUntilDue > -30">
+                    <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                            <div>
+                                <p class="text-red-400 font-medium">Payment Overdue</p>
+                                <p class="text-red-300 text-sm">Overdue by {{ Math.abs(daysUntilDue) }} days</p>
+                                <p class="text-red-300/70 text-xs mt-1">Late fee of {{ formatCurrency(lateFee) }} applicable</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button (click)="navigateToPayments()" class="w-full py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors">
+              Pay Now ({{ formatCurrency(nextPremiumAmount + lateFee) }})
+            </button>
+                </div>
+
+                <!-- Lapsed -->
+                <div *ngIf="isLapsed">
+                    <div class="bg-red-500/20 border border-red-500/50 rounded-lg p-4">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                </svg>
+                            <div>
+                                <p class="text-red-400 font-medium">Policy Lapsed</p>
+                                <p class="text-red-300 text-sm">Your policy has lapsed due to non-payment</p>
+                                <p class="text-red-300/70 text-xs mt-1">Reinstate within 180 days to avoid buying new policy</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button (click)="navigateToReinstate()" class="w-full mt-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors">
+              Reinstate Policy
+            </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Key Metrics Grid -->
     <div class="metrics-grid">
         <div class="metric-card" (click)="navigateTo('/app/claims')">

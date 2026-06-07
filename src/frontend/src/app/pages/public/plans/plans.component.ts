@@ -1,12 +1,13 @@
 import { AfterViewInit, Component, OnInit } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
+import { NgFor, NgIf, CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PlanService, PublicPlan } from '../../../services/plan.service';
+import { FooterComponent } from '../landing/components/footer/footer.component';
 
 @Component({
   selector: 'app-plans',
   standalone: true,
-  imports: [NgIf, NgFor, RouterLink],
+  imports: [NgIf, NgFor, RouterLink, CurrencyPipe, FooterComponent],
   templateUrl: './plans.component.html',
   styleUrls: ['./plans.component.scss']
 })
@@ -48,6 +49,188 @@ export class PlansComponent implements OnInit, AfterViewInit {
     });
 
     this.animate();
+  }
+
+  private planConfigs: Record<string, {
+    basePremiumAnnual: number;
+    dependentLoadingPercentage: number;
+    maxDependents: number;
+    maxNominees: number;
+    bestFor: string;
+    familyCoverage: string;
+    cashlessHospitals: string;
+    claimSettlement: string;
+    coverageAmount?: number;
+    doctorConsultations?: string;
+    hospitalization?: string;
+    maternityCover?: boolean;
+    healthCheckup?: boolean;
+    emergencyCare?: boolean;
+    noClaimBonusLabel?: string;
+  }> = {
+    '2b94d09f-4bb8-44db-9ff5-ac3fa24edc79': {
+      basePremiumAnnual: 25000,
+      dependentLoadingPercentage: 15,
+      maxDependents: 2,
+      maxNominees: 2,
+      bestFor: 'Individuals',
+      familyCoverage: 'Limited',
+      cashlessHospitals: 'Network',
+      claimSettlement: 'Standard',
+      coverageAmount: 300000,
+      doctorConsultations: 'Basic',
+      hospitalization: 'Standard',
+      maternityCover: false,
+      healthCheckup: false,
+      emergencyCare: false,
+      noClaimBonusLabel: 'No'
+    },
+    'cb47cd47-9920-471d-bff5-071061211e10': {
+      basePremiumAnnual: 65000,
+      dependentLoadingPercentage: 25,
+      maxDependents: 5,
+      maxNominees: 4,
+      bestFor: 'Families',
+      familyCoverage: 'Extended',
+      cashlessHospitals: 'Network +',
+      claimSettlement: 'Priority',
+      coverageAmount: 750000,
+      doctorConsultations: 'Unlimited',
+      hospitalization: 'Enhanced',
+      maternityCover: true,
+      healthCheckup: true,
+      emergencyCare: true,
+      noClaimBonusLabel: '5%/year'
+    },
+    'cbedf83d-4caf-4c90-ab5d-549000e4ac41': {
+      basePremiumAnnual: 85000,
+      dependentLoadingPercentage: 20,
+      maxDependents: 6,
+      maxNominees: 5,
+      bestFor: 'Premium Families',
+      familyCoverage: 'Complete',
+      cashlessHospitals: 'All Network',
+      claimSettlement: 'Fast-Track',
+      coverageAmount: 1000000,
+      doctorConsultations: 'Unlimited',
+      hospitalization: 'Premium',
+      maternityCover: true,
+      healthCheckup: true,
+      emergencyCare: true,
+      noClaimBonusLabel: '5%/year'
+    },
+    'bb4354ec-77fb-4e84-91ec-f01f4cda87e8': {
+      basePremiumAnnual: 45000,
+      dependentLoadingPercentage: 25,
+      maxDependents: 4,
+      maxNominees: 3,
+      bestFor: 'Professionals',
+      familyCoverage: 'Standard',
+      cashlessHospitals: 'Network',
+      claimSettlement: 'Priority',
+      coverageAmount: 500000,
+      doctorConsultations: 'Unlimited',
+      hospitalization: 'Standard',
+      maternityCover: true,
+      healthCheckup: true,
+      emergencyCare: true,
+      noClaimBonusLabel: '5%/year'
+    }
+  };
+
+  findPlanByName(name: string) {
+    return this.plans.find(p => p.name?.toLowerCase() === name.toLowerCase());
+  }
+
+  getConfigByPlanName(name: string) {
+    const plan = this.findPlanByName(name);
+    if (!plan) return undefined;
+    return this.getPlanConfig(plan);
+  }
+
+  getCoverageByName(name: string) {
+    const plan = this.findPlanByName(name);
+    const cfg = this.getConfigByPlanName(name);
+    return plan?.insuredAmount ?? cfg?.coverageAmount ?? 0;
+  }
+
+  getPlanConfig(plan: PublicPlan): {
+    basePremiumAnnual: number;
+    dependentLoadingPercentage: number;
+    maxDependents: number;
+    maxNominees: number;
+    bestFor: string;
+    familyCoverage: string;
+    cashlessHospitals: string;
+    claimSettlement: string;
+    coverageAmount?: number;
+    doctorConsultations?: string;
+    hospitalization?: string;
+    maternityCover?: boolean;
+    healthCheckup?: boolean;
+    emergencyCare?: boolean;
+    noClaimBonusLabel?: string;
+  } | undefined {
+    return this.planConfigs[plan.planId?.toLowerCase() ?? ''];
+  }
+
+  getBaseAnnual(plan: PublicPlan): number {
+    const config = this.getPlanConfig(plan);
+    return config ? config.basePremiumAnnual : 0;
+  }
+
+  getBaseMonthly(plan: PublicPlan): number {
+    return Math.round(this.getBaseAnnual(plan) / 12);
+  }
+
+  getPlanYearlyBase(plan: PublicPlan): number {
+    // Display yearly as: Monthly × 12 × 0.92 (8% discount)
+    const monthly = this.getBaseMonthly(plan);
+    return Math.round(monthly * 12 * 0.92);
+  }
+
+  getPlanSavings(plan: PublicPlan) {
+    const monthly = this.getBaseMonthly(plan);
+    const yearly = Math.round(monthly * 12 * 0.92);
+    const monthlyTotal = monthly * 12;
+    const saved = monthlyTotal - yearly;
+    const percent = monthlyTotal ? Math.round((saved / monthlyTotal) * 100) : 0;
+    return { saved, percent };
+  }
+
+  getPlanGSTMonthly(plan: PublicPlan): number {
+    return Math.round(this.getBaseMonthly(plan) * 1.18);
+  }
+
+  getPlanGSTYearly(plan: PublicPlan): number {
+    return Math.round(this.getPlanYearlyBase(plan) * 1.18);
+  }
+
+  getPlanMonthlyBase(plan: PublicPlan): number {
+    return this.getBaseMonthly(plan);
+  }
+
+  getPlanPremium(plan: PublicPlan): number {
+    return this.billing === 'monthly'
+      ? this.getBaseMonthly(plan)
+      : this.getPlanYearlyBase(plan);
+  }
+
+  getPlanBestFor(plan: PublicPlan): string {
+    return this.getPlanConfig(plan)?.bestFor ?? 'Business';
+  }
+
+  formatPlanPremium(plan: PublicPlan): string {
+    return this.formatCurrency(this.getPlanPremium(plan));
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
   }
 
   // ✅ billing logic stays same

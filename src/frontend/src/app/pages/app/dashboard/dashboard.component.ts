@@ -14,6 +14,7 @@ import { Router } from '@angular/router';
 import { trigger, transition, style, animate, keyframes } from '@angular/animations';
 import { MemberService, MemberDashboardResponse, PolicySummary } from '../../../services/member.service';
 import { ClaimService } from '../../../services/claim.service';
+import { PolicyService } from '../../../services/policy.service';
 import { Subject, interval, takeUntil, forkJoin } from 'rxjs';
 import { of } from 'rxjs';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
@@ -77,6 +78,7 @@ interface AIInsight {
 export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   private memberService = inject(MemberService);
   private claimService = inject(ClaimService);
+  private policyService = inject(PolicyService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
@@ -87,6 +89,8 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   private claimsChartInstance: Chart | null = null;
   private statusChartInstance: Chart | null = null;
 
+  Math = Math;
+
   // User Data
   memberName = 'User';
   healthScore = 85;
@@ -96,6 +100,12 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   daysRemaining = 0;
   coverageUtilization = 0;
   totalClaimedAmount = 0;
+  nextPremiumDue: Date | null = null;
+  nextPremiumAmount = 0;
+  daysUntilDue = 0;
+  lateFee = 0;
+  isGracePeriod = false;
+  isLapsed = false;
 
   // Claims Data
   totalClaims = 0;
@@ -437,6 +447,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
           this.daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)));
         }
 
+        this.loadPremiumPaymentStatus();
         this.generateAIInsights();
         this.cdr.markForCheck();
 
@@ -452,6 +463,29 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         setTimeout(() => {
           this.initCharts();
         }, 100);
+      }
+    });
+  }
+
+  private loadPremiumPaymentStatus(): void {
+    this.policyService.getPolicySummary().subscribe({
+      next: (summary) => {
+        if (summary?.nextPremiumDueDate) {
+          this.nextPremiumDue = new Date(summary.nextPremiumDueDate);
+          this.nextPremiumAmount = summary.nextPremiumAmount || 0;
+
+          const today = new Date();
+          this.daysUntilDue = Math.ceil((this.nextPremiumDue.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+          this.isGracePeriod = this.daysUntilDue <= 15 && this.daysUntilDue > 0;
+          this.isLapsed = this.daysUntilDue <= -30;
+
+          if (this.daysUntilDue <= 0 && this.daysUntilDue > -30) {
+            this.lateFee = this.nextPremiumAmount * 0.05;
+          }
+        }
+
+        this.cdr.markForCheck();
       }
     });
   }
@@ -558,6 +592,14 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   navigateTo(path: string): void {
     this.router.navigate([path]);
+  }
+
+  navigateToPayments(): void {
+    this.router.navigate(['/app/payments']);
+  }
+
+  navigateToReinstate(): void {
+    this.router.navigate(['/app/policy/reinstate']);
   }
 
   switchChartType(type: 'claims' | 'amount'): void {

@@ -1,0 +1,227 @@
+<div class="premium-calculator-widget mt-8">
+    <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+
+        <!-- Header -->
+        <div class="border-b border-white/10 px-6 py-4">
+            <h3 class="text-lg font-semibold text-white">Calculate Your Premium</h3>
+            <p class="text-slate-400 text-sm">Get an instant estimate based on your profile</p>
+        </div>
+
+        <!-- Calculator Body -->
+        <div class="p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                <!-- Left Side: Inputs -->
+                <div class="space-y-5">
+                    <!-- Age Slider -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Your Age</label>
+                        <div class="flex items-center gap-4">
+                            <input type="range" [(ngModel)]="age" min="18" max="80" class="flex-1 accent-cyan-500" (change)="calculatePremium()">
+                            <span class="text-cyan-400 font-mono font-semibold w-12">{{ age }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Smoker & PED -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg cursor-pointer hover:bg-slate-800 transition-colors">
+              <span class="text-sm text-slate-300">Smoker</span>
+              <div class="relative">
+                <input type="checkbox" [(ngModel)]="isSmoker" class="sr-only" (change)="calculatePremium()">
+                <div class="w-10 h-5 bg-slate-600 rounded-full transition-colors" [class.bg-cyan-500]="isSmoker">
+                  <div class="w-4 h-4 bg-white rounded-full transition-transform" [class.translate-x-5]="isSmoker"></div>
+                </div>
+              </div>
+            </label>
+                        <label class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg cursor-pointer hover:bg-slate-800 transition-colors">
+              <span class="text-sm text-slate-300">Pre-existing Condition</span>
+              <div class="relative">
+                <input type="checkbox" [(ngModel)]="hasPED" class="sr-only" (change)="calculatePremium()">
+                <div class="w-10 h-5 bg-slate-600 rounded-full transition-colors" [class.bg-cyan-500]="hasPED">
+                  <div class="w-4 h-4 bg-white rounded-full transition-transform" [class.translate-x-5]="hasPED"></div>
+                </div>
+              </div>
+            </label>
+                    </div>
+
+                    <!-- Pin Code -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Pin Code</label>
+                        <input type="text" [(ngModel)]="pinCode" placeholder="Enter pin code for location-based pricing" class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500 text-white placeholder-slate-500" (change)="calculatePremium()">
+                    </div>
+
+                    <!-- Advanced Options Toggle -->
+                    <button (click)="showAdvanced = !showAdvanced" class="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
+            <svg class="w-4 h-4 transition-transform" [class.rotate-180]="showAdvanced" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+            {{ showAdvanced ? 'Hide advanced options' : 'Show advanced options (dependents, discounts)' }}
+          </button>
+
+                    <!-- Advanced Options (Collapsible) -->
+                    <div *ngIf="showAdvanced" @expandCollapse class="space-y-4 pt-2">
+                        <!-- Dependents -->
+                        <div class="bg-slate-800/30 rounded-lg p-4">
+                            <p class="text-sm font-medium text-slate-300 mb-3">Dependents</p>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-slate-400 text-sm">Spouse</span>
+                                    <div class="flex items-center gap-3">
+                                        <button (click)="changeDependentCount('spouseCount', -1)" class="w-7 h-7 rounded-full bg-slate-700 text-white hover:bg-slate-600">-</button>
+                                        <span class="text-white w-6 text-center">{{ spouseCount }}</span>
+                                        <button (click)="changeDependentCount('spouseCount', 1)" class="w-7 h-7 rounded-full bg-slate-700 text-white hover:bg-slate-600">+</button>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-slate-400 text-sm">Child (under 18)</span>
+                                    <div class="flex items-center gap-3">
+                                        <button (click)="changeDependentCount('childCount', -1)" class="w-7 h-7 rounded-full bg-slate-700 text-white hover:bg-slate-600">-</button>
+                                        <span class="text-white w-6 text-center">{{ childCount }}</span>
+                                        <button (click)="changeDependentCount('childCount', 1)" class="w-7 h-7 rounded-full bg-slate-700 text-white hover:bg-slate-600">+</button>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-slate-400 text-sm">Parent (under 65)</span>
+                                    <div class="flex items-center gap-3">
+                                        <button (click)="changeDependentCount('parentCount', -1)" class="w-7 h-7 rounded-full bg-slate-700 text-white hover:bg-slate-600">-</button>
+                                        <span class="text-white w-6 text-center">{{ parentCount }}</span>
+                                        <button (click)="changeDependentCount('parentCount', 1)" class="w-7 h-7 rounded-full bg-slate-700 text-white hover:bg-slate-600">+</button>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-slate-400 text-sm">Senior Parent (65+)</span>
+                                    <div class="flex items-center gap-3">
+                                        <button (click)="changeDependentCount('seniorParentCount', -1)" class="w-7 h-7 rounded-full bg-slate-700 text-white hover:bg-slate-600">-</button>
+                                        <span class="text-white w-6 text-center">{{ seniorParentCount }}</span>
+                                        <button (click)="changeDependentCount('seniorParentCount', 1)" class="w-7 h-7 rounded-full bg-slate-700 text-white hover:bg-slate-600">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Discounts -->
+                        <div class="bg-slate-800/30 rounded-lg p-4">
+                            <p class="text-sm font-medium text-slate-300 mb-3">Discounts</p>
+                            <div class="space-y-3">
+                                <label class="flex items-center justify-between">
+                  <span class="text-slate-400 text-sm">No Claim Bonus</span>
+                  <div class="relative">
+                    <input type="checkbox" [(ngModel)]="hasNoClaimBonus" class="sr-only" (change)="calculatePremium()">
+                    <div class="w-10 h-5 bg-slate-600 rounded-full transition-colors" [class.bg-cyan-500]="hasNoClaimBonus">
+                      <div class="w-4 h-4 bg-white rounded-full transition-transform" [class.translate-x-5]="hasNoClaimBonus"></div>
+                    </div>
+                  </div>
+                </label>
+                                <select *ngIf="hasNoClaimBonus" [(ngModel)]="noClaimBonusYears" (change)="calculatePremium()" class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm">
+                  <option value="0">0 years (0%)</option>
+                  <option value="1">1 year (5% off)</option>
+                  <option value="2">2 years (10% off)</option>
+                  <option value="3">3 years (15% off)</option>
+                  <option value="4">4 years (20% off)</option>
+                  <option value="5">5+ years (25% off)</option>
+                </select>
+                                <input type="text" [(ngModel)]="corporateCode" placeholder="Corporate code" class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500" (change)="calculatePremium()">
+                                <input type="text" [(ngModel)]="couponCode" placeholder="Coupon code (WELCOME20, FAMILY25)" class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500" (change)="calculatePremium()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Frequency Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Payment Frequency</label>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button *ngFor="let freq of frequencyOptions" (click)="selectFrequency(freq.value)" class="py-2 text-sm rounded-lg transition-all" [class.bg-cyan-500]="selectedFrequency === freq.value" [class.text-black]="selectedFrequency === freq.value" [class.font-semibold]="selectedFrequency === freq.value"
+                                [class.bg-slate-700]="selectedFrequency !== freq.value" [class.text-slate-300]="selectedFrequency !== freq.value">
+                {{ freq.label }}
+              </button>
+                        </div>
+                    </div>
+
+                    <button (click)="calculatePremium()" [disabled]="isLoading" class="w-full py-3 bg-cyan-500 text-black font-semibold rounded-lg hover:bg-cyan-400 transition-all disabled:opacity-50">
+            {{ isLoading ? 'Calculating...' : 'Calculate Premium' }}
+          </button>
+                </div>
+
+                <!-- Right Side: Results -->
+                <div class="bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-xl border border-cyan-500/20 p-5">
+                    <div *ngIf="calculationResult; else noResult">
+                        <!-- Monthly Premium (Highlight) -->
+                        <div class="text-center mb-5">
+                            <p class="text-slate-400 text-sm">Estimated Monthly Premium</p>
+                            <p class="text-3xl font-bold text-cyan-400">{{ formatCurrency(getMonthlyAmount()) }}</p>
+                            <p class="text-slate-500 text-xs mt-1">or {{ formatCurrency(calculationResult.grandTotal) }} yearly</p>
+                        </div>
+
+                        <!-- Breakdown Toggle -->
+                        <button (click)="showBreakdown = !showBreakdown" class="w-full flex items-center justify-between text-sm text-cyan-400 hover:text-cyan-300 py-2">
+              <span>View full breakdown</span>
+              <svg class="w-4 h-4 transition-transform" [class.rotate-180]="showBreakdown" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+
+                        <!-- Detailed Breakdown -->
+                        <div *ngIf="showBreakdown" class="mt-3 space-y-2 text-sm border-t border-cyan-500/20 pt-3">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Base Premium</span>
+                                <span class="text-white">{{ formatCurrency(calculationResult.basePremium) }}</span>
+                            </div>
+                            <div *ngIf="calculationResult.ageLoading > 0" class="flex justify-between">
+                                <span class="text-slate-400">Age Loading ({{ age }} yrs)</span>
+                                <span class="text-amber-400">+ {{ formatCurrency(calculationResult.ageLoading) }}</span>
+                            </div>
+                            <div *ngIf="calculationResult.smokerLoading > 0" class="flex justify-between">
+                                <span class="text-slate-400">Smoker Loading</span>
+                                <span class="text-amber-400">+ {{ formatCurrency(calculationResult.smokerLoading) }}</span>
+                            </div>
+                            <div *ngIf="calculationResult.preExistingLoading > 0" class="flex justify-between">
+                                <span class="text-slate-400">PED Loading</span>
+                                <span class="text-amber-400">+ {{ formatCurrency(calculationResult.preExistingLoading) }}</span>
+                            </div>
+                            <div *ngIf="calculationResult.dependentLoading > 0" class="flex justify-between">
+                                <span class="text-slate-400">Dependent Loading</span>
+                                <span class="text-amber-400">+ {{ formatCurrency(calculationResult.dependentLoading) }}</span>
+                            </div>
+                            <div *ngIf="calculationResult.noClaimBonusDiscount > 0" class="flex justify-between">
+                                <span class="text-slate-400">No Claim Bonus</span>
+                                <span class="text-green-400">- {{ formatCurrency(calculationResult.noClaimBonusDiscount) }}</span>
+                            </div>
+                            <div *ngIf="calculationResult.frequencyDiscount > 0" class="flex justify-between">
+                                <span class="text-slate-400">Frequency Discount</span>
+                                <span class="text-green-400">- {{ formatCurrency(calculationResult.frequencyDiscount) }}</span>
+                            </div>
+                            <div *ngIf="calculationResult.corporateDiscount > 0" class="flex justify-between">
+                                <span class="text-slate-400">Corporate Discount</span>
+                                <span class="text-green-400">- {{ formatCurrency(calculationResult.corporateDiscount) }}</span>
+                            </div>
+                            <div *ngIf="calculationResult.couponDiscount > 0" class="flex justify-between">
+                                <span class="text-slate-400">Coupon Discount</span>
+                                <span class="text-green-400">- {{ formatCurrency(calculationResult.couponDiscount) }}</span>
+                            </div>
+                            <div class="border-t border-slate-700 my-2 pt-2">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">GST (18%)</span>
+                                    <span class="text-white">+ {{ formatCurrency(calculationResult.taxAmount) }}</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between pt-2 font-semibold">
+                                <span class="text-white">Total Annual</span>
+                                <span class="text-cyan-400">{{ formatCurrency(calculationResult.grandTotal) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ng-template #noResult>
+                        <div class="text-center py-8">
+                            <svg class="w-12 h-12 text-slate-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+                            <p class="text-slate-400 text-sm">Enter your details above</p>
+                            <p class="text-slate-500 text-xs">Click "Calculate Premium" to see estimate</p>
+                        </div>
+                    </ng-template>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

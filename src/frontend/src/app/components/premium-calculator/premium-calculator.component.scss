@@ -1,0 +1,28 @@
+.premium-calculator-widget {
+    input[type="range"] {
+        -webkit-appearance: none;
+        background: transparent;
+        &:focus {
+            outline: none;
+        }
+        &::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+        &::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #22D3EE;
+            margin-top: -6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            &:hover {
+                transform: scale(1.2);
+            }
+        }
+    }
+}

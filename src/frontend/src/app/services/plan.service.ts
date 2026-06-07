@@ -11,11 +11,17 @@ export interface PublicPlan {
   durationInMonths: number;
   features: string[];
   isFeatured: boolean;
-  // Extended fields from backend
+  // Premium calculation fields
   basePremiumAnnual?: number;
   dependentLoadingPercentage?: number;
   maxDependentsAllowed?: number;
   maxNomineesAllowed?: number;
+  ageLoadingPercentage?: number;
+  smokerLoadingPercentage?: number;
+  preExistingConditionLoading?: number;
+  locationRiskMultiplier?: number;
+  corporateDiscountPercentage?: number;
+  isFamilyFloater?: boolean;
 }
 
 
