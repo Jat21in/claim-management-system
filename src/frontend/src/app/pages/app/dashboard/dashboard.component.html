@@ -1,17 +1,17 @@
 <div class="dashboard-container">
     <!-- Hero Section with Welcome Message -->
-    <div class="hero-section">
+    <div class="hero-section" @fadeInUp>
         <div class="hero-content">
             <div class="welcome-badge">
-                <span class="welcome-icon">👋</span>
-                <span>Welcome back, {{ memberName }}</span>
+                <span class="welcome-icon">{{ getSunMoonIcon() }}</span>
+                <span>{{ getTimeBasedGreeting() }}, {{ memberName }}</span>
             </div>
             <h1 class="hero-title">
                 Your Insurance Dashboard
                 <span class="hero-gradient">✨</span>
             </h1>
             <p class="hero-subtitle">
-                Track your coverage, monitor claims, and get AI-powered insights at a glance
+                {{ typedGreeting }}
             </p>
         </div>
         <div class="hero-stats">
@@ -24,12 +24,12 @@
     </div>
 
     <!-- Active Plan Spotlight -->
-    <div class="plan-spotlight" *ngIf="activePlan">
+    <div class="plan-spotlight" *ngIf="activePlan" @slideInLeft>
         <div class="spotlight-glow"></div>
         <div class="spotlight-content">
             <div class="spotlight-header">
                 <span class="spotlight-badge">Active Plan</span>
-                <button class="spotlight-action" routerLink="/app/change-plan">
+                <button class="spotlight-action" (click)="navigateTo('/app/change-plan')">
           Change Plan <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
             </div>
@@ -46,7 +46,7 @@
                     <div class="plan-meta">
                         <div class="meta-item">
                             <span class="meta-label">Coverage Amount</span>
-                            <span class="meta-value">₹{{ activePlan.insuredAmount | number }}</span>
+                            <span class="meta-value">{{ formatCurrency(activePlan.insuredAmount) }}</span>
                         </div>
                         <div class="meta-item">
                             <span class="meta-label">Valid Until</span>
@@ -63,8 +63,8 @@
                             <div class="coverage-fill" [style.width]="coverageUtilization + '%'"></div>
                         </div>
                         <div class="coverage-stats">
-                            <span>₹{{ totalClaimedAmount | number }} used</span>
-                            <span>₹{{ getRemainingCoverage() | number }} remaining</span>
+                            <span>{{ formatCurrency(totalClaimedAmount) }} used</span>
+                            <span>{{ formatCurrency(getRemainingCoverage()) }} remaining</span>
                         </div>
                     </div>
                 </div>
@@ -145,7 +145,9 @@
                     <button class="chart-btn" [class.active]="chartType === 'amount'" (click)="switchChartType('amount')">Amount</button>
                 </div>
             </div>
-            <canvas #claimsChart></canvas>
+            <div class="chart-wrapper">
+                <canvas #claimsChart></canvas>
+            </div>
             <div class="chart-insights" *ngIf="aiPrediction">
                 <div class="insight-badge">AI Insight</div>
                 <span>{{ aiPrediction }}</span>
@@ -227,7 +229,7 @@
                 <h3>Recent Activity</h3>
                 <p>Your latest claims and updates</p>
             </div>
-            <button class="view-all" routerLink="/app/claims">View All →</button>
+            <button class="view-all" (click)="navigateTo('/app/claims')">View All →</button>
         </div>
 
         <div class="activity-timeline">
@@ -242,7 +244,7 @@
                 <div class="timeline-content">
                     <div class="timeline-header">
                         <span class="timeline-title">{{ claim.description || 'Medical Claim' }}</span>
-                        <span class="timeline-amount">₹{{ claim.amount | number }}</span>
+                        <span class="timeline-amount">{{ formatCurrency(claim.amount) }}</span>
                     </div>
                     <div class="timeline-meta">
                         <span class="timeline-date">{{ claim.claimDate | date:'MMM dd, yyyy' }}</span>
@@ -259,70 +261,14 @@
           <path d="M20 12V8H4v12h16v-4M12 2v4M4 4l4 4M20 4l-4 4"/>
         </svg>
                 <p>No claims yet</p>
-                <button routerLink="/app/claims/new" class="btn-primary">Submit Your First Claim</button>
+                <button class="btn-primary" (click)="navigateTo('/app/claims/submit')">Submit Your First Claim</button>
             </div>
         </div>
     </div>
 
-
-    <!-- NEW: Enhanced Policy Details (only shows if we have enhanced data) -->
-    <section class="enhanced-section" *ngIf="showEnhancedFeatures && enhancedData" @fadeInUp>
-        <h2 class="section-title">Enhanced Policy Details</h2>
-
-        <div class="enhanced-grid">
-            <!-- Policy Number Card -->
-            <div class="enhanced-card">
-                <div class="enhanced-icon">📄</div>
-                <div class="enhanced-content">
-                    <div class="enhanced-label">Policy Number</div>
-                    <div class="enhanced-value">{{ getPolicyNumber() }}</div>
-                </div>
-            </div>
-
-            <!-- Remaining Coverage Card -->
-            <div class="enhanced-card">
-                <div class="enhanced-icon">💰</div>
-                <div class="enhanced-content">
-                    <div class="enhanced-label">Remaining Coverage</div>
-                    <div class="enhanced-value">{{ formatCurrency(getRemainingCoverage()) }}</div>
-                </div>
-            </div>
-
-            <!-- Next Premium Card -->
-            <div class="enhanced-card">
-                <div class="enhanced-icon">📅</div>
-                <div class="enhanced-content">
-                    <div class="enhanced-label">Next Premium Due</div>
-                    <div class="enhanced-value">{{ getNextPremiumDate() }}</div>
-                    <div class="enhanced-sub">{{ enhancedData.policySummary?.nextPremiumAmount | currency:'INR' }}</div>
-                </div>
-            </div>
-
-            <!-- Dependents Card -->
-            <div class="enhanced-card" routerLink="/app/policy/dependents" style="cursor: pointer;">
-                <div class="enhanced-icon">👨‍👩‍👧</div>
-                <div class="enhanced-content">
-                    <div class="enhanced-label">Dependents Covered</div>
-                    <div class="enhanced-value">{{ getDependentsCount() }}</div>
-                    <div class="enhanced-sub">Click to manage</div>
-                </div>
-            </div>
-
-            <!-- Nominees Card -->
-            <div class="enhanced-card" routerLink="/app/policy/nominees" style="cursor: pointer;">
-                <div class="enhanced-icon">⚖️</div>
-                <div class="enhanced-content">
-                    <div class="enhanced-label">Nominees</div>
-                    <div class="enhanced-value">{{ getNomineesCount() }}</div>
-                    <div class="enhanced-sub">Click to manage</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- Quick Actions -->
     <div class="quick-actions">
-        <div class="action-card" (click)="navigateTo('/app/claims/new')">
+        <div class="action-card" (click)="navigateTo('/app/claims/submit')">
             <div class="action-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M12 5v14M5 12h14"/>
@@ -339,7 +285,7 @@
             </div>
             <span>Update Profile</span>
         </div>
-        <div class="action-card" (click)="navigateTo('/app/change-plan')">
+        <div class="action-card" (click)="navigateTo('/plans')">
             <div class="action-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>

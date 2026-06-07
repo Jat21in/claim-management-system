@@ -30,6 +30,9 @@ import { KycStatusComponent } from './pages/app/kyc/kyc-status.component';
 // guards
 import { authGuard } from './guards/auth.guard';
 import { kycGuard } from './guards/kyc.guard';
+import { PolicySetupComponent } from './pages/app/policy-setup/policy-setup.component';
+import { policySetupGuard } from './guards/policy-setup.guard';
+import { PolicySetupLayoutComponent } from './layout/policy-setup-layout/policy-setup-layout.component';
 
 export const routes: Routes = [
   /**
@@ -69,6 +72,7 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DashboardComponent },
+      // {path: 'policy-setup',component: PolicySetupComponent, canActivate:[policySetupGuard]},
       { path: 'claims', component: ClaimsComponent },
       { path: 'claims/new', component: SubmitClaimComponent },
       { path: 'profile', component: ProfileComponent },
@@ -76,6 +80,14 @@ export const routes: Routes = [
       { path: 'policy/dependents', component: DependentsComponent },
       { path: 'policy/nominees', component: NomineesComponent },
     ],
+  },
+  {
+    path: 'app/policy-setup',
+    component: PolicySetupLayoutComponent,
+    canActivate: [authGuard, kycGuard], // ✅ Only auth required, NOT KYC
+    children: [
+      { path: '', component: PolicySetupComponent },
+    ]
   },
 
   /**

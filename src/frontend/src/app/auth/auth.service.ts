@@ -1,182 +1,149 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable, BehaviorSubject, tap } from 'rxjs';
 import { Router } from '@angular/router';
-import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { jwtDecode } from 'jwt-decode';
 
-export interface LoginResponse {
+interface LoginResponse {
   token: string;
-  expiresAt: string; // ISO timestamp
+  expiresAt: string;
+}
+
+interface DecodedToken {
+  sub: string;
+  'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier': string;
+  'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': string;
+  email: string;
+  exp: number;
+  iss: string;
+  aud: string;
+  name?: string;
+  fullName?: string;
+}
+
+export interface UserProfile {
+  id: string | null;
+  email: string | null;
+  role: string | null;
+  fullName: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private http = inject(HttpClient);
+  private router = inject(Router);
+  private apiUrl = environment.apiBaseUrl;
 
-  private readonly TOKEN_KEY = 'cms_token';
-  private readonly EXPIRY_KEY = 'cms_expiry';
-  private readonly ROLE_KEY = 'user_role'; // ✅ added
+  private authStatusSubject = new BehaviorSubject<boolean>(this.isAuthenticated());
+  authStatus$ = this.authStatusSubject.asObservable();
 
-  constructor(
-    private http: HttpClient,
-    private router: Router
-  ) {}
-
-  // =====================
-  // ✅ LOGIN
-  // =====================
-  login(
-    payload: { email: string; password: string },
-    rememberMe: boolean
-  ) {
-    return this.http
-      .post<LoginResponse>(
-        `${environment.apiBaseUrl}/auth/login`,
-        payload
-      )
+  login(credentials: { email: string; password: string }, rememberMe: boolean = false): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials)
       .pipe(
-        tap(res => {
+        tap(response => {
           const storage = rememberMe ? localStorage : sessionStorage;
+          storage.setItem('token', response.token);
+          storage.setItem('tokenExpiry', response.expiresAt);
 
-          storage.setItem(this.TOKEN_KEY, res.token);
-          storage.setItem(this.EXPIRY_KEY, res.expiresAt);
-
-          // ✅ Decode JWT & store role
-          try {
-            const decoded: any = jwtDecode(res.token);
-
-            const role =
-              decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
-              decoded['role'] ||
-              decoded['Role'] ||
-              'Member';
-
-            storage.setItem(this.ROLE_KEY, role);
-          } catch (err) {
-            console.error('JWT decode failed:', err);
-            storage.setItem(this.ROLE_KEY, 'Member');
+          // Decode and store user info
+          const decoded = this.decodeToken(response.token);
+          if (decoded) {
+            storage.setItem('userRole', decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']);
+            storage.setItem('userId', decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']);
+            storage.setItem('userEmail', decoded['email']);
           }
 
-          // ✅ Start expiry tracking
-          this.startExpiryWatcher(res.expiresAt);
+          this.authStatusSubject.next(true);
         })
       );
   }
 
-  // =====================
-  // ✅ REGISTER
-  // =====================
-  register(payload: {
-    fullName: string;
-    email: string;
-    password: string;
-    dateOfBirth: string;
-    selectedPlanId?: string;
-  }) {
-    console.log('🚀 AuthService.register called with:', payload);
-    console.log('📤 Sending to backend:', payload);
-
-    return this.http.post(
-      `${environment.apiBaseUrl}/auth/register`,
-      payload
-    );
+  register(userData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/register`, userData);
   }
 
-  // =====================
-  // ✅ AUTH STATE
-  // =====================
+  logout(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('tokenExpiry');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('selectedPlanId');
+
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('tokenExpiry');
+    sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem('userId');
+    sessionStorage.removeItem('userEmail');
+    sessionStorage.removeItem('selectedPlanId');
+
+    this.authStatusSubject.next(false);
+    this.router.navigate(['/']);
+  }
+
   getToken(): string | null {
-    return (
-      localStorage.getItem(this.TOKEN_KEY) ??
-      sessionStorage.getItem(this.TOKEN_KEY)
-    );
+    return localStorage.getItem('token') || sessionStorage.getItem('token');
   }
 
   getUserRole(): string | null {
-    return (
-      localStorage.getItem(this.ROLE_KEY) ??
-      sessionStorage.getItem(this.ROLE_KEY)
-    );
+    return localStorage.getItem('userRole') || sessionStorage.getItem('userRole');
+  }
+
+  getUserId(): string | null {
+    return localStorage.getItem('userId') || sessionStorage.getItem('userId');
+  }
+
+  getUserEmail(): string | null {
+    return localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail');
+  }
+
+  getUser(): UserProfile {
+    const token = this.getToken();
+    const decoded = token ? this.decodeToken(token) : null;
+
+    return {
+      id: decoded?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || this.getUserId(),
+      email: decoded?.email || this.getUserEmail(),
+      role: decoded?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || this.getUserRole(),
+      fullName: decoded?.fullName || decoded?.name || null
+    };
   }
 
   isAuthenticated(): boolean {
     const token = this.getToken();
-    if (!token) return false;
+    const expiry = localStorage.getItem('tokenExpiry') || sessionStorage.getItem('tokenExpiry');
 
-    const expiry =
-      localStorage.getItem(this.EXPIRY_KEY) ??
-      sessionStorage.getItem(this.EXPIRY_KEY);
+    if (!token || !expiry) {
+      return false;
+    }
 
-    if (!expiry) return false;
-
-    return new Date(expiry).getTime() > Date.now();
+    const expiryDate = new Date(expiry);
+    return expiryDate > new Date();
   }
 
-  // =====================
-  // ✅ TOKEN HELPERS
-  // =====================
-  /**
-   * Decode the currently stored JWT token and return the payload.
-   * Returns null when no token is available or decoding fails.
-   */
-  getDecodedToken(): any | null {
-    const token = this.getToken();
-    if (!token) return null;
+  private decodeToken(token: string): DecodedToken | null {
     try {
-      return jwtDecode(token) as any;
-    } catch (err) {
-      console.warn('Failed to decode token', err);
+      const payload = token.split('.')[1];
+      const decoded = JSON.parse(atob(payload));
+      return decoded as DecodedToken;
+    } catch (error) {
+      console.error('Token decode error:', error);
       return null;
     }
   }
 
-  /**
-   * Get the current user information from the decoded JWT token.
-   * Returns an object with user details (email, fullName, etc.) or null if not authenticated.
-   */
-  getUser(): { email?: string; fullName?: string; [key: string]: any } | null {
-    const decoded = this.getDecodedToken();
-    if (!decoded) return null;
-
-    return {
-      email: decoded.email || decoded.sub,
-      fullName: decoded.name || decoded.fullName || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'],
-      ...decoded
-    };
+  setSelectedPlanId(planId: string): void {
+    const storage = this.isAuthenticated() ?
+      (localStorage.getItem('token') ? localStorage : sessionStorage) : sessionStorage;
+    storage.setItem('selectedPlanId', planId);
   }
 
-  // =====================
-  // ✅ LOGOUT
-  // =====================
-  logout(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.EXPIRY_KEY);
-    localStorage.removeItem(this.ROLE_KEY);
-
-    sessionStorage.removeItem(this.TOKEN_KEY);
-    sessionStorage.removeItem(this.EXPIRY_KEY);
-    sessionStorage.removeItem(this.ROLE_KEY);
-
-    this.router.navigate(['/auth'], {
-      queryParams: { mode: 'login' },
-      replaceUrl: true,
-    });
+  getSelectedPlanId(): string | null {
+    return localStorage.getItem('selectedPlanId') || sessionStorage.getItem('selectedPlanId');
   }
 
-  // =====================
-  // ✅ EXPIRY HANDLING
-  // =====================
-  private startExpiryWatcher(expiresAt: string): void {
-    const expiryTime = new Date(expiresAt).getTime();
-    const timeout = expiryTime - Date.now();
-
-    if (timeout <= 0) {
-      this.logout();
-      return;
-    }
-
-    setTimeout(() => {
-      this.logout();
-    }, timeout);
+  clearSelectedPlanId(): void {
+    localStorage.removeItem('selectedPlanId');
+    sessionStorage.removeItem('selectedPlanId');
   }
 }

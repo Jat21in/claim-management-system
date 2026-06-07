@@ -1,0 +1,32 @@
+.policy-setup-container {
+     ::-webkit-scrollbar {
+        width: 8px;
+    }
+     ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+    }
+     ::-webkit-scrollbar-thumb {
+        background: rgba(34, 211, 238, 0.3);
+        border-radius: 4px;
+        &:hover {
+            background: rgba(34, 211, 238, 0.5);
+        }
+    }
+}
+
+input,
+select {
+    transition: all 0.2s ease;
+    &:focus {
+        box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
+    }
+}
+
+button {
+    transition: all 0.2s ease;
+    cursor: pointer;
+    &:active {
+        transform: scale(0.98);
+    }
+}

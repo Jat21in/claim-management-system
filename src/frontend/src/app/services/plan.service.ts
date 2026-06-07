@@ -11,7 +11,13 @@ export interface PublicPlan {
   durationInMonths: number;
   features: string[];
   isFeatured: boolean;
+  // Extended fields from backend
+  basePremiumAnnual?: number;
+  dependentLoadingPercentage?: number;
+  maxDependentsAllowed?: number;
+  maxNomineesAllowed?: number;
 }
+
 
 @Injectable({ providedIn: 'root' })
 export class PlanService {

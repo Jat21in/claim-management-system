@@ -4,7 +4,10 @@ import {
   OnDestroy,
   inject,
   ChangeDetectionStrategy,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  ElementRef,
+  ViewChild,
+  AfterViewInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -13,6 +16,9 @@ import { MemberService, MemberDashboardResponse, PolicySummary } from '../../../
 import { ClaimService } from '../../../services/claim.service';
 import { Subject, interval, takeUntil, forkJoin } from 'rxjs';
 import { of } from 'rxjs';
+import { Chart, ChartConfiguration, registerables } from 'chart.js';
+
+Chart.register(...registerables);
 
 interface DashboardStats {
   claimsSubmitted: number;
@@ -68,12 +74,18 @@ interface AIInsight {
     ])
   ]
 })
-export class DashboardComponent implements OnInit, OnDestroy {
+export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   private memberService = inject(MemberService);
   private claimService = inject(ClaimService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
+
+  @ViewChild('claimsChart') claimsChartCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('statusChart') statusChartCanvas!: ElementRef<HTMLCanvasElement>;
+
+  private claimsChartInstance: Chart | null = null;
+  private statusChartInstance: Chart | null = null;
 
   // User Data
   memberName = 'User';
@@ -105,12 +117,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   aiInsights: AIInsight[] = [];
   recentClaims: RecentClaim[] = [];
 
-  // Enhanced Policy Data (NEW)
+  // Enhanced Policy Data
   enhancedPolicy: PolicySummary | null = null;
   dependentsList: any[] = [];
   nomineesList: any[] = [];
   showEnhancedFeatures = false;
   enhancedData: any = null;
+
+  // Chart Data
+  claimsChartData = [65, 45, 78, 32, 89, 56, 92];
+  amountChartData = [25000, 18000, 32000, 15000, 45000, 28000, 52000];
+  chartLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   // Time & Greeting
   currentTime = '';
@@ -136,9 +153,146 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.typeGreeting(this.currentGreeting);
   }
 
+  ngAfterViewInit(): void {
+    // Charts will be initialized after data loads
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.destroyCharts();
+  }
+
+  private destroyCharts(): void {
+    if (this.claimsChartInstance) {
+      this.claimsChartInstance.destroy();
+      this.claimsChartInstance = null;
+    }
+    if (this.statusChartInstance) {
+      this.statusChartInstance.destroy();
+      this.statusChartInstance = null;
+    }
+  }
+
+  private initCharts(): void {
+    this.initClaimsChart();
+    this.initStatusChart();
+  }
+
+  private initClaimsChart(): void {
+    if (!this.claimsChartCanvas?.nativeElement) return;
+
+    if (this.claimsChartInstance) {
+      this.claimsChartInstance.destroy();
+    }
+
+    const data = this.chartType === 'claims' ? this.claimsChartData : this.amountChartData;
+    const label = this.chartType === 'claims' ? 'Number of Claims' : 'Claim Amount (₹)';
+    const backgroundColor = this.chartType === 'claims'
+      ? 'rgba(34, 211, 238, 0.6)'
+      : 'rgba(139, 92, 246, 0.6)';
+
+    const config: ChartConfiguration = {
+      type: 'line',
+      data: {
+        labels: this.chartLabels,
+        datasets: [{
+          label: label,
+          data: data,
+          borderColor: '#22D3EE',
+          backgroundColor: backgroundColor,
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: '#22D3EE',
+          pointBorderColor: '#0B1220',
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: {
+              color: '#94A3B8',
+              font: { size: 11 }
+            }
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            callbacks: {
+              label: (context) => {
+                let value = context.raw as number;
+                if (this.chartType === 'amount') {
+                  return `₹${value.toLocaleString()}`;
+                }
+                return `${value} claims`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: { color: '#94A3B8' },
+            title: {
+              display: true,
+              text: this.chartType === 'amount' ? 'Amount (₹)' : 'Claims Count',
+              color: '#64748B'
+            }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: '#94A3B8' }
+          }
+        }
+      }
+    };
+
+    this.claimsChartInstance = new Chart(this.claimsChartCanvas.nativeElement, config);
+  }
+
+  private initStatusChart(): void {
+    if (!this.statusChartCanvas?.nativeElement) return;
+
+    if (this.statusChartInstance) {
+      this.statusChartInstance.destroy();
+    }
+
+    const config: ChartConfiguration<'doughnut'> = {
+      type: 'doughnut',
+      data: {
+        labels: ['Approved', 'Pending', 'Rejected'],
+        datasets: [{
+          data: [this.approvedPercent, this.pendingPercent, this.rejectedPercent],
+          backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
+          borderWidth: 0,
+          hoverOffset: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const label = context.label || '';
+                const value = context.raw as number;
+                return `${label}: ${value}%`;
+              }
+            }
+          }
+        },
+        cutout: '65%'
+      }
+    };
+
+    this.statusChartInstance = new Chart(this.statusChartCanvas.nativeElement, config);
   }
 
   private typeGreeting(text: string): void {
@@ -222,224 +376,170 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadDashboardData(): void {
-  console.log('🚀 Dashboard Load Started');
+    console.log('🚀 Dashboard Load Started');
 
-  const member$ = this.memberService.getDashboard();
-  const claims$ = this.claimService.getMyClaims();
-  const policySummary$ = this.memberService.getEnhancedDashboard
-    ? this.memberService.getEnhancedDashboard()
-    : of(this.getFallbackPolicyData());
-  const dependents$ = this.getDependentsData();
-  const nominees$ = this.getNomineesData();
+    const member$ = this.memberService.getDashboard();
+    const claims$ = this.claimService.getMyClaims();
+    const dependents$ = of([]);
+    const nominees$ = of([]);
 
-  console.log('📡 Observables created:', {
-    member$,
-    claims$,
-    policySummary$,
-    dependents$,
-    nominees$
-  });
+    forkJoin({
+      member: member$,
+      claims: claims$,
+      dependents: dependents$,
+      nominees: nominees$
+    }).subscribe({
+      next: (result) => {
+        console.log('✅ Dashboard data loaded');
 
-  console.log('🧪 Type checks:', {
-    member: typeof member$,
-    claims: typeof claims$,
-    policy: typeof policySummary$,
-  });
-
-  forkJoin({
-    member: member$,
-    claims: claims$,
-    policySummary: policySummary$,
-    dependents: dependents$,
-    nominees: nominees$
-  }).subscribe({
-    next: (result) => {
-      console.log('✅ forkJoin SUCCESS:', result);
-
-      try {
-        console.log('👤 Member response:', result.member);
-        console.log('📄 Claims response:', result.claims);
-        console.log('📊 Policy summary response:', result.policySummary);
-        console.log('👨‍👩‍👧 Dependents response:', result.dependents);
-        console.log('🧾 Nominees response:', result.nominees);
-
-        // ✅ Assign safely
-        this.memberName = result.member?.fullName;
+        this.memberName = result.member?.fullName || 'User';
         this.activePlan = result.member?.activePlan;
 
-        console.log('✅ Assigned member + plan:', {
-          memberName: this.memberName,
-          activePlan: this.activePlan
-        });
-
-        // ✅ Process claims
         const claims = result.claims as any[];
-        console.log('📊 Processing claims:', claims);
+        this.recentClaims = claims?.slice(0, 5).map((c: any) => ({
+          id: c.claimId,
+          date: c.claimDate,
+          claimDate: c.claimDate,
+          amount: c.amount,
+          status: c.status,
+          description: c.description,
+          aiConfidenceScore: c.aiConfidenceScore
+        })) || [];
 
         this.totalClaims = claims?.length || 0;
-        this.approvedClaims = claims.filter(c => c.status === 'Approved').length;
-        this.pendingClaims = claims.filter(c => c.status === 'Submitted' || c.status === 'Pending').length;
-        this.rejectedClaims = claims.filter(c => c.status === 'Rejected').length;
+        this.approvedClaims = claims?.filter(c => c.status === 'Approved' || c.status === 'Paid').length || 0;
+        this.pendingClaims = claims?.filter(c => c.status === 'Submitted' || c.status === 'Pending').length || 0;
+        this.rejectedClaims = claims?.filter(c => c.status === 'Rejected').length || 0;
 
-        console.log('📊 Claims stats:', {
-          total: this.totalClaims,
-          approved: this.approvedClaims,
-          pending: this.pendingClaims,
-          rejected: this.rejectedClaims
-        });
+        this.approvalRate = this.totalClaims > 0
+          ? Math.round((this.approvedClaims / this.totalClaims) * 100)
+          : 0;
 
-        // ✅ Coverage
+        this.approvedPercent = this.totalClaims > 0
+          ? Math.round((this.approvedClaims / this.totalClaims) * 100)
+          : 0;
+        this.pendingPercent = this.totalClaims > 0
+          ? Math.round((this.pendingClaims / this.totalClaims) * 100)
+          : 0;
+        this.rejectedPercent = this.totalClaims > 0
+          ? Math.round((this.rejectedClaims / this.totalClaims) * 100)
+          : 0;
+
         if (this.activePlan) {
-          this.totalClaimedAmount = claims.reduce((sum, c) =>
-            c.status === 'Approved' ? sum + c.amount : sum, 0);
+          this.totalClaimedAmount = claims?.reduce((sum, c) =>
+            (c.status === 'Approved' || c.status === 'Paid') ? sum + c.amount : sum, 0) || 0;
 
           this.coverageUtilization = Math.min(100, Math.round(
             (this.totalClaimedAmount / this.activePlan.insuredAmount) * 100
           ));
 
-          console.log('💰 Coverage:', {
-            claimed: this.totalClaimedAmount,
-            utilization: this.coverageUtilization
-          });
+          const endDate = new Date(this.activePlan.endDate);
+          this.daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)));
         }
 
-        console.log('🎯 Before AI insights');
         this.generateAIInsights();
-        console.log('🎯 After AI insights');
+        this.cdr.markForCheck();
 
-      } catch (err) {
-        console.error('💥 ERROR inside success block:', err);
+        setTimeout(() => {
+          this.initCharts();
+        }, 100);
+      },
+      error: (err) => {
+        console.error('❌ Dashboard data error:', err);
+        this.generateFallbackData();
+        this.cdr.markForCheck();
+
+        setTimeout(() => {
+          this.initCharts();
+        }, 100);
       }
-
-      console.log('🔄 Triggering change detection');
-      this.cdr.markForCheck();
-    },
-
-    error: (err) => {
-      console.error('❌ forkJoin ERROR:', err);
-      console.error('🔥 Full error object:', JSON.stringify(err));
-
-      this.generateFallbackData();
-      this.cdr.markForCheck();
-    },
-
-    complete: () => {
-      console.log('✅ forkJoin COMPLETED');
-    }
-  });
-}
-
-  private getFallbackPolicyData(): any {
-    // Return empty data structure
-    return { policySummary: null, dependents: [], nominees: [] };
+    });
   }
-
-  private getDependentsData() {
-  return of([]);
-}
-
-private getNomineesData() {
-  return of([]);
-}
 
   private generateAIInsights(): void {
     this.aiInsights = [];
 
-    // Premium due insight
-    if (this.enhancedPolicy?.nextPremiumDueDate) {
-      const dueDate = new Date(this.enhancedPolicy.nextPremiumDueDate);
-      const daysUntilDue = Math.ceil((dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-
-      if (daysUntilDue <= 7) {
-        this.aiInsights.push({
-          title: '⏰ Premium Due Soon',
-          message: `Your premium of ₹${this.enhancedPolicy.nextPremiumAmount} is due in ${daysUntilDue} days. Pay now to avoid policy lapse.`,
-          type: 'warning',
-          action: 'Pay Premium',
-          actionLabel: 'Pay Premium'
-        });
-      }
-    }
-    // In loadDashboardData, after setting enhancedPolicy
-    if (this.enhancedPolicy || this.activePlan) {
-        this.showEnhancedFeatures = true;
-        this.enhancedData = {
-            policySummary: this.enhancedPolicy || {
-                hasActivePolicy: true,
-                policyNumber: this.activePlan?.id,
-                planName: this.activePlan?.name,
-                sumInsured: this.activePlan?.insuredAmount,
-                nextPremiumAmount: 125
-            },
-            dependents: this.dependentsList,
-            nominees: this.nomineesList
-        };
-    }
-    // Coverage utilization insight
     if (this.coverageUtilization > 70) {
       this.aiInsights.push({
         title: '📊 Coverage Alert',
-        message: `You've utilized ${this.coverageUtilization}% of your coverage. Consider upgrading your plan.`,
-        type: 'info',
+        message: `You've utilized ${this.coverageUtilization}% of your coverage. Consider upgrading your plan for continued protection.`,
+        type: 'warning',
         action: 'Upgrade Plan',
         actionLabel: 'Upgrade Plan'
       });
     }
 
-    // Claims approval insight
     if (this.approvalRate < 60 && this.totalClaims > 0) {
       this.aiInsights.push({
         title: '✓ Improve Approval Rate',
-        message: `Your claim approval rate is ${this.approvalRate}%. Review claim requirements for better success.`,
+        message: `Your claim approval rate is ${this.approvalRate}%. Review documentation requirements for better success.`,
         type: 'warning',
         action: 'View Guidelines',
         actionLabel: 'View Guidelines'
       });
     }
 
-    // Add default insight if none
+    if (this.pendingClaims > 3) {
+      this.aiInsights.push({
+        title: '⏳ Pending Claims Alert',
+        message: `You have ${this.pendingClaims} claims pending review. Track their status in the claims section.`,
+        type: 'info',
+        action: 'Track Claims',
+        actionLabel: 'Track Now'
+      });
+    }
+
+    if (this.daysRemaining < 30 && this.daysRemaining > 0) {
+      this.aiInsights.push({
+        title: '🔄 Renewal Reminder',
+        message: `Your policy renews in ${this.daysRemaining} days. Renew early to avoid coverage gaps.`,
+        type: 'warning',
+        action: 'Renew Now',
+        actionLabel: 'Renew Now'
+      });
+    }
+
     if (this.aiInsights.length === 0) {
       this.aiInsights.push({
-        title: '✅ All Set!',
-        message: `You're all set! Your policy is active with ₹${this.activePlan?.insuredAmount?.toLocaleString() || '0'} coverage.`,
+        title: 'All Set!',
+        message: `Your policy is active with ${this.formatCurrency(this.activePlan?.insuredAmount || 0)} coverage. Everything looks good!`,
         type: 'success'
       });
     }
 
-    // Set AI prediction
     if (this.totalClaims > 0) {
-      this.aiPrediction = `Based on your history, your next claim is likely to be processed within ${this.avgProcessingTime}`;
+      this.aiPrediction = `Based on your claim history, your next claim is estimated to be processed within ${this.avgProcessingTime}`;
     } else {
-      this.aiPrediction = 'Start your first claim to see AI-powered predictions';
+      this.aiPrediction = 'Start your first claim to see AI-powered predictions and insights';
     }
   }
 
   private generateFallbackData(): void {
-    this.memberName = 'John Doe';
+    this.memberName = 'Valued Customer';
     this.healthScore = 85;
-    this.totalClaims = 12;
-    this.approvedClaims = 10;
-    this.pendingClaims = 1;
-    this.rejectedClaims = 1;
-    this.approvalRate = 83;
-    this.approvedPercent = 83;
-    this.pendingPercent = 8;
-    this.rejectedPercent = 8;
-    this.avgProcessingTime = '3.2 days';
-    this.pendingTrend = -2;
+    this.totalClaims = 0;
+    this.approvedClaims = 0;
+    this.pendingClaims = 0;
+    this.rejectedClaims = 0;
+    this.approvalRate = 0;
+    this.approvedPercent = 0;
+    this.pendingPercent = 0;
+    this.rejectedPercent = 0;
+    this.avgProcessingTime = '3-5 days';
+    this.pendingTrend = 0;
+    this.coverageUtilization = 0;
+    this.totalClaimedAmount = 0;
+    this.daysRemaining = 365;
 
     this.activePlan = {
       id: '1',
-      name: 'Essential Care Plan',
-      insuredAmount: 300000,
+      name: 'Health Pro Plus',
+      insuredAmount: 500000,
       startDate: new Date().toISOString(),
       endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
     };
 
-    this.daysRemaining = 245;
-    this.coverageUtilization = 15;
-    this.totalClaimedAmount = 45000;
-
+    this.recentClaims = [];
     this.generateAIInsights();
   }
 
@@ -462,40 +562,48 @@ private getNomineesData() {
 
   switchChartType(type: 'claims' | 'amount'): void {
     this.chartType = type;
+    this.initClaimsChart();
     this.cdr.markForCheck();
   }
 
   handleInsightAction(action: string): void {
-    if (action === 'Pay Premium') {
+    if (action === 'Pay Premium' || action === 'Renew Now') {
       this.router.navigate(['/app/payments']);
     } else if (action === 'Upgrade Plan') {
       this.router.navigate(['/plans']);
     } else if (action === 'View Guidelines') {
       this.router.navigate(['/app/claims/guidelines']);
+    } else if (action === 'Track Claims' || action === 'Track Now') {
+      this.router.navigate(['/app/claims']);
     }
   }
 
   downloadReport(): void {
-    // Generate and download a simple report
     const reportData = {
       memberName: this.memberName,
-      date: new Date().toISOString(),
-      policy: this.activePlan,
+      generatedAt: new Date().toISOString(),
+      policy: {
+        name: this.activePlan?.name,
+        coverageAmount: this.activePlan?.insuredAmount,
+        validUntil: this.activePlan?.endDate,
+        daysRemaining: this.daysRemaining,
+        utilization: this.coverageUtilization
+      },
       claims: {
         total: this.totalClaims,
         approved: this.approvedClaims,
         pending: this.pendingClaims,
         rejected: this.rejectedClaims,
-        approvalRate: this.approvalRate
-      },
-      coverageUtilization: this.coverageUtilization
+        approvalRate: this.approvalRate,
+        totalClaimedAmount: this.totalClaimedAmount
+      }
     };
 
     const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `dashboard-report-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `claimcore-report-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     window.URL.revokeObjectURL(url);
   }
@@ -510,7 +618,7 @@ private getNomineesData() {
       return this.enhancedPolicy.policyNumber;
     }
     if (this.activePlan?.id) {
-      return this.activePlan.id;
+      return this.activePlan.id.slice(0, 8).toUpperCase();
     }
     return 'N/A';
   }
@@ -533,7 +641,13 @@ private getNomineesData() {
         day: 'numeric'
       });
     }
-    return 'N/A';
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + 30);
+    return nextDate.toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   }
 
   getDependentsCount(): number {

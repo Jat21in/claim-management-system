@@ -1,27 +1,25 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { NgIf } from '@angular/common';
+import { CommonModule } from '@angular/common';
 
 import { AuthService } from '../../../auth/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, NgIf],
+  imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './login.component.html',
 })
 export class LoginComponent implements OnInit {
-
   private fb = inject(FormBuilder);
-  private auth = inject(AuthService);
+  private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
   loading = false;
   error: string | null = null;
   successMessage: string | null = null;
-
   redirectUrl = '/app/dashboard';
 
   form = this.fb.group({
@@ -31,7 +29,10 @@ export class LoginComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    // Get redirect URL from query params
     this.redirectUrl = this.route.snapshot.queryParams['redirect'] || '/app/dashboard';
+
+    console.log('[Login] Redirect URL:', this.redirectUrl);
 
     // Show success message if coming from registration
     if (this.route.snapshot.queryParams['registered'] === 'true') {
@@ -60,32 +61,32 @@ export class LoginComponent implements OnInit {
 
     const { email, password, rememberMe } = this.form.value;
 
-    this.auth
-      .login(
-        { email: email!, password: password! },
-        rememberMe ?? false
-      )
-      .subscribe({
-        next: () => {
-          this.loading = false;
+    this.authService.login(
+      { email: email!, password: password! },
+      rememberMe ?? false
+    ).subscribe({
+      next: () => {
+        this.loading = false;
 
-          // ✅ ROLE-BASED REDIRECT
-          const role = this.auth.getUserRole();
-          console.log('🔐 User role after login:', role);
+        // Get role after login
+        const role = this.authService.getUserRole();
+        console.log('[Login] User role after login:', role);
+        console.log('[Login] Redirect target:', this.redirectUrl);
 
-          if (role === 'Admin' || role === 'ClaimsProcessor') {
-            console.log('👑 Redirecting to Admin Panel');
-            this.router.navigateByUrl('/admin/dashboard');
-          } else {
-            console.log('👤 Redirecting to User Dashboard');
-            this.router.navigateByUrl(this.redirectUrl);
-          }
-        },
-        error: (err) => {
-          this.loading = false;
-          this.error = err.error?.error || 'Invalid credentials';
-          console.error('Login error:', err);
-        },
-      });
+        // Role-based redirect
+        if (role === 'Admin' || role === 'ClaimsProcessor') {
+          console.log('[Login] Redirecting to Admin Panel');
+          this.router.navigateByUrl('/admin/dashboard');
+        } else {
+          console.log('[Login] Redirecting to:', this.redirectUrl);
+          this.router.navigateByUrl(this.redirectUrl);
+        }
+      },
+      error: (err) => {
+        this.loading = false;
+        this.error = err.error?.error || err.error?.message || 'Invalid credentials. Please try again.';
+        console.error('[Login] Error:', err);
+      },
+    });
   }
 }

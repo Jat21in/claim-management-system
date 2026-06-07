@@ -6,12 +6,13 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { jwtInterceptor } from './app/interceptors/jwt.interceptor';
 import { routes } from './app/app.routes';
 import { App } from './app/app';
+import { httpErrorInterceptor } from './app/interceptors/http-error.interceptor';
 
 
 bootstrapApplication(App, {
   providers: [
     provideHttpClient(
-      withInterceptors([jwtInterceptor])
+      withInterceptors([jwtInterceptor, httpErrorInterceptor]) // ✅ Add the JWT interceptor here
     ),
     provideRouter(routes),
     provideAnimations(), // ✅ REQUIRED

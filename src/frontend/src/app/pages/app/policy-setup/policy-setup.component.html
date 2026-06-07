@@ -1,0 +1,425 @@
+<div class="policy-setup-container min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+
+    <!-- Header with Progress Indicator -->
+    <div class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-lg border-b border-slate-700">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <button (click)="previousStep()" *ngIf="currentStep > 1" class="text-slate-400 hover:text-white transition-colors duration-200 flex items-center gap-2 group">
+          <svg class="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          Back
+        </button>
+                <div class="flex-1"></div>
+                <div class="flex items-center gap-4">
+                    <div class="text-sm text-slate-400">Step {{ currentStep }} of {{ totalSteps }}</div>
+                    <div *ngIf="premiumCalculation" class="text-sm font-medium text-cyan-400">
+                        Total: {{ formatCurrency(premiumCalculation.grandTotal) }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mt-4 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500 ease-out rounded-full" [style.width]="(currentStep / totalSteps) * 100 + '%'">
+                </div>
+            </div>
+
+            <!-- Step Titles -->
+            <div class="flex justify-between mt-4 text-xs">
+                <div class="text-center flex-1" [class.text-cyan-400]="currentStep >= 1" [class.text-slate-500]="currentStep < 1">
+                    Plan & Premium
+                </div>
+                <div class="text-center flex-1" [class.text-cyan-400]="currentStep >= 2" [class.text-slate-500]="currentStep < 2">
+                    Dependents & Nominees
+                </div>
+                <div class="text-center flex-1" [class.text-cyan-400]="currentStep >= 3" [class.text-slate-500]="currentStep < 3">
+                    Payment
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- Left Column: Form Content -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Loading State -->
+                <div *ngIf="isLoading" class="flex items-center justify-center py-20" @fadeIn>
+                    <div class="relative">
+                        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-cyan-500"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-3 h-3 bg-cyan-500 rounded-full animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                <div *ngIf="errorMessage && !isLoading" @slideDown class="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 flex items-start gap-3">
+                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+                    <span>{{ errorMessage }}</span>
+                </div>
+
+                <!-- Success Message -->
+                <div *ngIf="successMessage" @slideDown class="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-green-400 flex items-start gap-3">
+                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+                    <span>{{ successMessage }}</span>
+                </div>
+
+                <!-- Step 1: Plan Summary & Premium Frequency -->
+                <div *ngIf="currentStep === 1 && selectedPlan" @stepTransition>
+                    <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                                <span class="text-cyan-400 font-bold">1</span>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-semibold text-white">Review Your Coverage</h2>
+                                <p class="text-slate-400 text-sm">Verify the plan details and choose your payment preference</p>
+                            </div>
+                        </div>
+
+                        <!-- Plan Card -->
+                        <div class="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-xl p-6 border border-cyan-500/20 mb-6">
+                            <div class="flex flex-col md:flex-row items-start justify-between gap-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <h3 class="text-xl font-semibold text-white">{{ selectedPlan.name }}</h3>
+                                        <span *ngIf="selectedPlan.isFeatured" class="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full">
+                      Featured
+                    </span>
+                                    </div>
+                                    <p class="text-slate-400 text-sm">{{ selectedPlan.description }}</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-cyan-400">{{ formatCurrency(selectedPlan.insuredAmount) }}</div>
+                                    <div class="text-xs text-slate-500">Total Coverage</div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <span *ngFor="let feature of selectedPlan.features.slice(0, 4)" class="text-xs bg-white/10 px-3 py-1 rounded-full text-slate-300">
+                  {{ feature }}
+                </span>
+                            </div>
+                        </div>
+
+                        <!-- Premium Frequency Selection -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-slate-300 mb-3">Choose Payment Frequency</label>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <button *ngFor="let freq of frequencyOptions" (click)="selectFrequency(freq.value)" [class.border-cyan-500]="selectedFrequency === freq.value" [class.bg-cyan-500/20]="selectedFrequency === freq.value" class="relative px-4 py-3 rounded-xl border border-white/10 hover:border-cyan-500/50 transition-all duration-200 text-left overflow-hidden group">
+                  <div class="relative z-10">
+                    <div class="text-sm font-medium text-white">{{ freq.label }}</div>
+                    <div class="text-xs text-slate-400 mt-1">
+                      {{ formatCurrency(premiumCalculation?.availableFrequencies?.[freq.value] || 0) }}
+                    </div>
+                    <div *ngIf="freq.discount > 0" class="text-xs text-green-400 mt-1">
+                      Save {{ freq.discount }}%
+                    </div>
+                  </div>
+                  <div *ngIf="selectedFrequency === freq.value" class="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent"></div>
+                </button>
+                            </div>
+                        </div>
+
+                        <!-- Coupon Section -->
+                        <div class="bg-white/5 rounded-xl p-4">
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Have a promo code?</label>
+                            <div class="flex gap-3">
+                                <input type="text" [(ngModel)]="appliedCoupon" [disabled]="isCouponValid" placeholder="Enter coupon code (WELCOME20, FIRST10, HEALTH15)" class="flex-1 px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-white placeholder-slate-500">
+                                <button *ngIf="!isCouponValid" (click)="applyCoupon()" class="px-6 py-2 bg-cyan-500 text-black font-medium rounded-lg hover:bg-cyan-400 transition-all duration-200 hover:scale-105">
+                  Apply
+                </button>
+                                <button *ngIf="isCouponValid" (click)="removeCoupon()" class="px-6 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-all duration-200">
+                  Remove
+                </button>
+                            </div>
+                            <p *ngIf="couponError" class="text-red-400 text-xs mt-2">{{ couponError }}</p>
+                            <p *ngIf="isCouponValid" class="text-green-400 text-xs mt-2 flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg> Coupon applied! {{ formatCurrency(premiumCalculation?.couponDiscount || 0) }} saved
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Dependents & Nominees -->
+                <div *ngIf="currentStep === 2" @stepTransition>
+
+                    <!-- Dependents Section -->
+                    <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                                    <span class="text-cyan-400 font-bold">2</span>
+                                </div>
+                                <div>
+                                    <h2 class="text-xl font-semibold text-white">Add Dependents</h2>
+                                    <p class="text-slate-400 text-sm">Add family members covered under this policy</p>
+                                </div>
+                            </div>
+                            <button (click)="addDependent()" *ngIf="dependentsFormArray.length < ((selectedPlan?.maxDependentsAllowed) || 4)" class="px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition-all duration-200 text-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Dependent
+              </button>
+                        </div>
+
+                        <div *ngIf="dependentsFormArray.length === 0" class="text-center py-12 text-slate-500">
+                            <svg class="w-12 h-12 mx-auto mb-3 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+                            <p>No dependents added yet</p>
+                            <p class="text-xs mt-1">Click "Add Dependent" to include family members</p>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div *ngFor="let dependent of dependentsFormArray.controls; let i = index" class="bg-slate-800/50 rounded-xl p-4 border border-white/5 hover:border-white/10 transition-all duration-200">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h3 class="text-white font-medium flex items-center gap-2">
+                                        <span class="w-6 h-6 rounded-full bg-slate-700 text-center text-xs leading-6">D{{ i + 1 }}</span> Dependent {{ i + 1 }}
+                                    </h3>
+                                    <button (click)="removeDependent(i)" class="text-red-400 hover:text-red-300 text-sm transition-colors">
+                    Remove
+                  </button>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <input [formControl]="getControl(dependent,'fullName')" placeholder="Full Name" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500 text-white text-sm">
+                                        <div *ngIf="getControl(dependent,'fullName').invalid && getControl(dependent,'fullName').touched" class="text-red-400 text-xs mt-1">
+                                            Full name is required
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <select [formControl]="getControl(dependent,'relationship')" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500 text-white text-sm">
+                      <option value="">Select Relationship</option>
+                      <option *ngFor="let rel of relationshipOptions" [value]="rel.value">{{ rel.label }}</option>
+                    </select>
+                                        <div *ngIf="getControl(dependent,'relationship').invalid && getControl(dependent,'relationship').touched" class="text-red-400 text-xs mt-1">
+                                            Relationship is required
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <input [formControl]="getControl(dependent,'dateOfBirth')" type="date" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500 text-white text-sm">
+                                        <div *ngIf="getControl(dependent,'dateOfBirth').invalid && getControl(dependent,'dateOfBirth').touched" class="text-red-400 text-xs mt-1">
+                                            Valid date of birth is required
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <select [formControl]="getControl(dependent,'gender')" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500 text-white text-sm">
+                      <option *ngFor="let gender of genderOptions" [value]="gender.value">{{ gender.label }}</option>
+                    </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 text-sm text-slate-400">
+                            <span>Each dependent adds {{ (selectedPlan?.dependentLoadingPercentage || 25) }}% loading to base premium</span>
+                        </div>
+                    </div>
+
+                    <!-- Nominees Section -->
+                    <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h2 class="text-xl font-semibold text-white">Add Nominees</h2>
+                                <p class="text-slate-400 text-sm">Nominees will receive claim benefits in case of unfortunate events</p>
+                            </div>
+                            <button (click)="addNominee()" *ngIf="nomineesFormArray.length < ((selectedPlan?.maxNomineesAllowed) || 3)" class="px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition-all duration-200 text-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Nominee
+              </button>
+                        </div>
+
+                        <div *ngIf="nomineesFormArray.length === 0" class="text-center py-12 text-slate-500">
+                            <svg class="w-12 h-12 mx-auto mb-3 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+                            <p>No nominees added yet</p>
+                            <p class="text-xs mt-1">Please add at least one nominee</p>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div *ngFor="let nominee of nomineesFormArray.controls; let i = index" class="bg-slate-800/50 rounded-xl p-4 border border-white/5 hover:border-white/10 transition-all duration-200">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <h3 class="text-white font-medium">Nominee {{ i + 1 }}</h3>
+                                        <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                            <input type="checkbox" [formControl]="getControl(nominee,'isPrimary')" (change)="onPrimaryNomineeChange(i)" class="rounded border-slate-600">
+                                            <span class="text-slate-300">Primary Nominee</span>
+                                        </label>
+                                    </div>
+                                    <button (click)="removeNominee(i)" class="text-red-400 hover:text-red-300 text-sm transition-colors">
+                    Remove
+                  </button>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <input [formControl]="getControl(nominee,'fullName')" placeholder="Full Name" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500 text-white text-sm">
+                                    </div>
+                                    <div>
+                                        <select [formControl]="getControl(nominee,'relationship')" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500 text-white text-sm">
+                      <option value="">Select Relationship</option>
+                      <option *ngFor="let rel of relationshipOptions" [value]="rel.value">{{ rel.label }}</option>
+                      <option value="Sibling">Sibling</option>
+                    </select>
+                                    </div>
+                                    <div>
+                                        <input [formControl]="getControl(nominee,'percentageAllocation')" type="number" placeholder="Allocation %" min="1" max="100" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500 text-white text-sm">
+                                    </div>
+                                    <div>
+                                        <input [formControl]="getControl(nominee,'guardianName')" placeholder="Guardian Name (if minor)" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500 text-white text-sm">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div *ngIf="nomineesFormArray.length > 0" class="mt-4 text-sm">
+                            <div class="flex justify-between items-center p-3 bg-slate-800/30 rounded-lg">
+                                <span class="text-slate-400">Total Allocation:</span>
+                                <span class="font-medium" [class.text-green-400]="getTotalAllocation() === 100" [class.text-red-400]="getTotalAllocation() !== 100">
+                  {{ getTotalAllocation() }}% / 100%
+                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Payment Confirmation -->
+                <div *ngIf="currentStep === 3" @stepTransition>
+                    <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                                <span class="text-cyan-400 font-bold">3</span>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-semibold text-white">Confirm & Pay</h2>
+                                <p class="text-slate-400 text-sm">Review your policy details and complete the payment</p>
+                            </div>
+                        </div>
+
+                        <!-- Policy Summary Card -->
+                        <div class="space-y-3 mb-6">
+                            <div class="flex justify-between py-3 border-b border-white/10">
+                                <span class="text-slate-400">Policy Type</span>
+                                <span class="text-white font-medium">{{ selectedPlan?.name }}</span>
+                            </div>
+                            <div class="flex justify-between py-3 border-b border-white/10">
+                                <span class="text-slate-400">Coverage Amount</span>
+                                <span class="text-white font-medium">{{ formatCurrency(selectedPlan?.insuredAmount || 0) }}</span>
+                            </div>
+                            <div class="flex justify-between py-3 border-b border-white/10">
+                                <span class="text-slate-400">Dependents Covered</span>
+                                <span class="text-white font-medium">{{ dependentsFormArray.length }}</span>
+                            </div>
+                            <div class="flex justify-between py-3 border-b border-white/10">
+                                <span class="text-slate-400">Nominees Registered</span>
+                                <span class="text-white font-medium">{{ nomineesFormArray.length }}</span>
+                            </div>
+                            <div class="flex justify-between py-3 border-b border-white/10">
+                                <span class="text-slate-400">Payment Frequency</span>
+                                <span class="text-white font-medium">{{ selectedFrequency | titlecase }}</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 mb-6">
+                            <div class="flex items-start gap-3">
+                                <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                                <div class="text-sm text-amber-300">
+                                    By proceeding, you agree to the policy terms and conditions. The policy will be active immediately after successful payment.
+                                </div>
+                            </div>
+                        </div>
+
+                        <button (click)="processPayment()" [disabled]="isProcessingPayment" class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-xl hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]">
+              <span *ngIf="!isProcessingPayment">Pay {{ formatCurrency(premiumCalculation?.grandTotal || 0) }}</span>
+              <span *ngIf="isProcessingPayment" class="flex items-center justify-center gap-2">
+                <svg class="animate-spin h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing Payment...
+              </span>
+            </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Checkout Panel -->
+            <div class="lg:col-span-1">
+                <div class="sticky top-24">
+                    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 p-6 shadow-xl">
+                        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-700">
+                            <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+              </svg>
+                            <h3 class="text-lg font-semibold text-white">Premium Summary</h3>
+                        </div>
+
+                        <div class="space-y-3 text-sm" *ngIf="premiumCalculation">
+                            <div class="flex justify-between text-slate-400">
+                                <span>Base Premium</span>
+                                <span>{{ formatCurrency(premiumCalculation.basePremium) }}</span>
+                            </div>
+                            <div class="flex justify-between text-slate-400" *ngIf="premiumCalculation.dependentLoading > 0">
+                                <span>Dependent Loading ({{ dependentsFormArray.length }} persons)</span>
+                                <span>+ {{ formatCurrency(premiumCalculation.dependentLoading) }}</span>
+                            </div>
+                            <div class="flex justify-between text-green-400" *ngIf="premiumCalculation.frequencyDiscount > 0">
+                                <span>Frequency Discount ({{ selectedFrequency }})</span>
+                                <span>- {{ formatCurrency(premiumCalculation.frequencyDiscount) }}</span>
+                            </div>
+                            <div class="flex justify-between text-green-400" *ngIf="premiumCalculation.couponDiscount > 0">
+                                <span>Coupon Discount</span>
+                                <span>- {{ formatCurrency(premiumCalculation.couponDiscount) }}</span>
+                            </div>
+                            <div class="border-t border-slate-700 my-3 pt-3">
+                                <div class="flex justify-between text-white font-semibold">
+                                    <span>Subtotal</span>
+                                    <span>{{ formatCurrency(premiumCalculation.subTotal) }}</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-slate-400 text-xs">
+                                <span>GST (18%)</span>
+                                <span>{{ formatCurrency(premiumCalculation.taxAmount) }}</span>
+                            </div>
+                            <div class="border-t border-slate-700 my-3 pt-3">
+                                <div class="flex justify-between text-2xl font-bold text-cyan-400">
+                                    <span>Total Payable</span>
+                                    <span>{{ formatCurrency(premiumCalculation.grandTotal) }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="mt-6">
+                            <button *ngIf="currentStep < totalSteps" (click)="nextStep()" class="w-full py-3 bg-cyan-500 text-black font-medium rounded-lg hover:bg-cyan-400 transition-all duration-200">
+                Continue to {{ currentStep === 1 ? 'Add Dependents' : 'Payment' }}
+              </button>
+                        </div>
+
+                        <div class="mt-4 text-center">
+                            <p class="text-xs text-slate-500">
+                                Secure payment powered by <span class="text-slate-400">Razorpay</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>

@@ -782,6 +782,20 @@ $border-color: rgba(200, 200, 200, 0.3);
     }
 }
 
+// Chart Wrapper
+.chart-wrapper {
+    height: 250px;
+    position: relative;
+    margin: 16px 0;
+}
+
+.chart-card {
+    canvas {
+        max-height: 250px;
+        width: 100%;
+    }
+}
+
 @media (max-width: 1200px) {
     .metrics-grid {
         grid-template-columns: repeat(2, 1fr);
