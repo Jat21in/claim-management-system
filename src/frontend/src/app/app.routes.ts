@@ -33,6 +33,8 @@ import { kycGuard } from './guards/kyc.guard';
 import { PolicySetupComponent } from './pages/app/policy-setup/policy-setup.component';
 import { policySetupGuard } from './guards/policy-setup.guard';
 import { PolicySetupLayoutComponent } from './layout/policy-setup-layout/policy-setup-layout.component';
+import { PaymentPageComponent } from './pages/app/payments/payment-page.component';
+import { PaymentHistoryComponent } from './pages/app/payments/payment-history.component';
 
 export const routes: Routes = [
   /**
@@ -79,6 +81,8 @@ export const routes: Routes = [
       { path: 'change-plan', component: ChangePlanComponent },
       { path: 'policy/dependents', component: DependentsComponent },
       { path: 'policy/nominees', component: NomineesComponent },
+      {path:'payments', component: PaymentHistoryComponent, canActivate:[authGuard]}, // ✅ Only auth required, NOT KYC
+      {path:'payments/new', component: PaymentPageComponent, canActivate:[authGuard]}, // ✅ Only auth required, NOT KYC
     ],
   },
   {

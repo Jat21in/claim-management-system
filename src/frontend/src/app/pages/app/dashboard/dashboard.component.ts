@@ -10,7 +10,7 @@ import {
   AfterViewInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { trigger, transition, style, animate, keyframes } from '@angular/animations';
 import { MemberService, MemberDashboardResponse, PolicySummary } from '../../../services/member.service';
 import { ClaimService } from '../../../services/claim.service';
@@ -80,6 +80,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   private claimService = inject(ClaimService);
   private policyService = inject(PolicyService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
 
@@ -106,6 +107,12 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   lateFee = 0;
   isGracePeriod = false;
   isLapsed = false;
+  isPremiumPaid = false; // ✅ NEW
+  lastPaymentDate: Date | null = null; // ✅ NEW
+
+  // Payment success banner
+  showPaymentSuccess = false;
+  lastPaymentAmount = 0;
 
   // Claims Data
   totalClaims = 0;
@@ -161,6 +168,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.startTimeUpdates();
     this.loadDashboardData();
     this.typeGreeting(this.currentGreeting);
+    this.checkPaymentSuccess();
   }
 
   ngAfterViewInit(): void {
@@ -470,7 +478,17 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   private loadPremiumPaymentStatus(): void {
     this.policyService.getPolicySummary().subscribe({
       next: (summary) => {
-        if (summary?.nextPremiumDueDate) {
+        // ✅ Check if premium is already paid for current month
+        this.isPremiumPaid = summary.isPremiumPaidForCurrentMonth || false;
+
+        if (this.isPremiumPaid) {
+          this.lastPaymentDate = summary.lastPaymentDate ? new Date(summary.lastPaymentDate) : null;
+          this.lastPaymentAmount = summary.lastPaymentAmount || 0;
+          this.cdr.markForCheck();
+          return; // No need to show due payment
+        }
+
+        if (summary.nextPremiumDueDate && !this.isPremiumPaid) {
           this.nextPremiumDue = new Date(summary.nextPremiumDueDate);
           this.nextPremiumAmount = summary.nextPremiumAmount || 0;
 
@@ -594,11 +612,16 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.router.navigate([path]);
   }
 
-  navigateToPayments(): void {
-    this.router.navigate(['/app/payments']);
+  // Update these methods
+  navigateToPayments() {
+    this.router.navigate(['/app/payments/new']); // Goes to payment page
   }
 
-  navigateToReinstate(): void {
+  navigateToPaymentHistory() {
+    this.router.navigate(['/app/payments']); // Goes to history page
+  }
+
+  navigateToReinstate() {
     this.router.navigate(['/app/policy/reinstate']);
   }
 
@@ -672,6 +695,30 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
+  }
+
+  private checkPaymentSuccess(): void {
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      if (params['paymentSuccess'] === 'true') {
+        this.showPaymentSuccess = true;
+        this.lastPaymentAmount = Number(params['amount']) || 0;
+
+        // Clear cache if available and refresh payment status
+        try {
+          this.policyService.clearCache?.();
+        } catch (e) {
+          // ignore if not implemented
+        }
+        this.loadPremiumPaymentStatus();
+        this.cdr.markForCheck();
+
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+          this.showPaymentSuccess = false;
+          this.cdr.markForCheck();
+        }, 5000);
+      }
+    });
   }
 
   getNextPremiumDate(): string {

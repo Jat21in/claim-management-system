@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable, of, BehaviorSubject } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { Policy, PolicySummary, Dependent, Nominee } from '../models/policy.model';
 
@@ -9,6 +9,10 @@ import { Policy, PolicySummary, Dependent, Nominee } from '../models/policy.mode
 export class PolicyService {
   private http = inject(HttpClient);
   private baseUrl = `${environment.apiBaseUrl}/v1/policies`;
+
+  // Cache for policy summary
+  private policySummaryCache = new BehaviorSubject<PolicySummary | null>(null);
+  policySummary$ = this.policySummaryCache.asObservable();
 
   createPolicyFromPlan(planId: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/create-from-plan/${planId}`, {});
@@ -24,11 +28,17 @@ export class PolicyService {
   }
 
   getPolicySummary(): Observable<PolicySummary> {
+    // Check cache first
+    const cached = this.policySummaryCache.value;
+    if (cached) {
+      return of(cached);
+    }
+
     return this.http.get<PolicySummary>(`${this.baseUrl}/summary`).pipe(
+      tap(summary => this.policySummaryCache.next(summary)),
       catchError((error) => {
         console.error('Error fetching policy summary:', error);
-        // Return default summary indicating no active policy
-        return of({
+        const defaultSummary: PolicySummary = {
           hasActivePolicy: false,
           policyNumber: undefined,
           planName: undefined,
@@ -38,9 +48,18 @@ export class PolicyService {
           nextPremiumAmount: undefined,
           dependentsCount: undefined,
           nomineesCount: undefined
-        });
+        };
+        this.policySummaryCache.next(defaultSummary);
+        return of(defaultSummary);
       })
     );
+  }
+
+  // Add this method to clear cache after payment
+  clearCache(): void {
+    this.policySummaryCache.next(null);
+    // Also force refresh by fetching new data
+    this.getPolicySummary().subscribe();
   }
 
   addDependent(dependent: { fullName: string; relationship: string; dateOfBirth: string }): Observable<any> {

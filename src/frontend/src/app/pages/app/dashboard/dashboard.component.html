@@ -1,4 +1,26 @@
 <div class="dashboard-container">
+    <!-- Payment Success Banner -->
+    <div *ngIf="showPaymentSuccess" class="fixed top-20 right-6 z-50 animate-slide-down">
+        <div class="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl shadow-2xl p-4 max-w-md">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-white font-semibold">Payment Successful!</h3>
+                    <p class="text-green-100 text-sm">Your premium payment of {{ formatCurrency(lastPaymentAmount) }} has been received.</p>
+                    <p class="text-green-100 text-xs mt-1">Your policy is active and up to date.</p>
+                </div>
+                <button (click)="showPaymentSuccess = false" class="text-white/70 hover:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+            </div>
+        </div>
+    </div>
     <!-- Hero Section with Welcome Message -->
     <div class="hero-section" @fadeInUp>
         <div class="hero-content">
@@ -72,9 +94,53 @@
         </div>
     </div>
 
-    <!-- PREMIUM PAYMENT TRACKER - Darker Version -->
-    <div *ngIf="nextPremiumDue" class="mb-8">
-        <div class="bg-slate-800/60 rounded-xl border border-slate-700/50 overflow-hidden">
+    <!-- PREMIUM PAYMENT TRACKER - Updated -->
+    <div class="mb-8">
+
+        <!-- All Clear - Premium Paid for Current Month -->
+        <div *ngIf="isPremiumPaid" class="bg-slate-800/60 rounded-xl border border-green-500/30 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-700/50 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+                    </div>
+                    <h3 class="text-white font-semibold">Premium Status</h3>
+                </div>
+                <button (click)="navigateToPaymentHistory()" class="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
+            View History →
+          </button>
+            </div>
+
+            <div class="p-6">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-xs">
+                  <span class="w-1.5 h-1.5 bg-green-400 rounded-full"></span> Current Month Cleared
+                            </span>
+                        </div>
+                        <p class="text-2xl font-bold text-white mb-1">No Payment Due</p>
+                        <p class="text-slate-400 text-sm">Your premium for this month has been paid</p>
+                        <p class="text-slate-500 text-xs mt-2" *ngIf="lastPaymentDate">
+                            Last payment: {{ formatCurrency(lastPaymentAmount) }} on {{ lastPaymentDate | date:'dd MMM yyyy' }}
+                        </p>
+                    </div>
+                    <div class="text-right">
+                        <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mx-auto md:mx-0">
+                            <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                        </div>
+                        <p class="text-green-400 text-sm font-medium mt-2">Up to Date</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Due - On Time -->
+        <div *ngIf="!isPremiumPaid && nextPremiumDue && daysUntilDue > 15" class="bg-slate-800/60 rounded-xl border border-slate-700/50 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-700/50 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center">
@@ -82,16 +148,15 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
                     </div>
-                    <h3 class="text-white font-semibold">Premium Payment Tracker</h3>
+                    <h3 class="text-white font-semibold">Premium Payment Due</h3>
                 </div>
-                <button (click)="navigateToPayments()" class="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
+                <button (click)="navigateToPaymentHistory()" class="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
             View History →
           </button>
             </div>
 
             <div class="p-6">
-                <!-- On Time -->
-                <div *ngIf="daysUntilDue > 15" class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center justify-between flex-wrap gap-4">
                     <div>
                         <p class="text-slate-400 text-sm">Next Premium Due</p>
                         <p class="text-2xl font-bold text-white">{{ nextPremiumDue | date:'dd MMM yyyy' }}</p>
@@ -107,63 +172,117 @@
               Pay Now
             </button>
                 </div>
+            </div>
+        </div>
 
-                <!-- Grace Period -->
-                <div *ngIf="isGracePeriod">
-                    <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-4">
-                        <div class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                            <div>
-                                <p class="text-amber-400 font-medium">Grace Period Active</p>
-                                <p class="text-amber-300 text-sm">Pay within {{ daysUntilDue }} days to avoid late fee</p>
-                                <p class="text-amber-300/70 text-xs mt-1">Late fee of {{ formatCurrency(lateFee) }} applies after due date</p>
-                            </div>
+        <!-- Grace Period -->
+        <div *ngIf="!isPremiumPaid && isGracePeriod" class="bg-slate-800/60 rounded-xl border border-amber-500/30 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-700/50 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+                    </div>
+                    <h3 class="text-white font-semibold">Grace Period Active</h3>
+                </div>
+                <button (click)="navigateToPaymentHistory()" class="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
+            View History →
+          </button>
+            </div>
+
+            <div class="p-6">
+                <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+                        <div>
+                            <p class="text-amber-400 font-medium">Payment Overdue by {{ Math.abs(daysUntilDue) }} days</p>
+                            <p class="text-amber-300 text-sm">Pay within {{ daysUntilDue }} days to avoid late fee</p>
+                            <p class="text-amber-300/70 text-xs mt-1">Late fee of {{ formatCurrency(lateFee) }} applies after due date</p>
                         </div>
                     </div>
-                    <button (click)="navigateToPayments()" class="w-full py-2 bg-amber-500 text-black font-medium rounded-lg hover:bg-amber-400 transition-colors">
-              Pay Now ({{ formatCurrency(nextPremiumAmount) }})
+                </div>
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <p class="text-slate-400 text-sm">Amount Due</p>
+                        <p class="text-2xl font-bold text-white">{{ formatCurrency(nextPremiumAmount) }}</p>
+                    </div>
+                    <button (click)="navigateToPayments()" class="px-6 py-2 bg-amber-500 text-black font-medium rounded-lg hover:bg-amber-400 transition-colors">
+              Pay Now
             </button>
                 </div>
+            </div>
+        </div>
 
-                <!-- Overdue -->
-                <div *ngIf="daysUntilDue <= 0 && daysUntilDue > -30">
-                    <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
-                        <div class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                </svg>
-                            <div>
-                                <p class="text-red-400 font-medium">Payment Overdue</p>
-                                <p class="text-red-300 text-sm">Overdue by {{ Math.abs(daysUntilDue) }} days</p>
-                                <p class="text-red-300/70 text-xs mt-1">Late fee of {{ formatCurrency(lateFee) }} applicable</p>
-                            </div>
+        <!-- Overdue with Late Fee -->
+        <div *ngIf="!isPremiumPaid && daysUntilDue <= 0 && daysUntilDue > -30" class="bg-slate-800/60 rounded-xl border border-red-500/30 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-700/50 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+                    </div>
+                    <h3 class="text-white font-semibold">Payment Overdue</h3>
+                </div>
+                <button (click)="navigateToPaymentHistory()" class="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
+            View History →
+          </button>
+            </div>
+
+            <div class="p-6">
+                <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+                        <div>
+                            <p class="text-red-400 font-medium">Payment Overdue by {{ Math.abs(daysUntilDue) }} days</p>
+                            <p class="text-red-300 text-sm">Late fee of {{ formatCurrency(lateFee) }} applicable</p>
                         </div>
                     </div>
-                    <button (click)="navigateToPayments()" class="w-full py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors">
-              Pay Now ({{ formatCurrency(nextPremiumAmount + lateFee) }})
+                </div>
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <p class="text-slate-400 text-sm">Total Amount Due</p>
+                        <p class="text-2xl font-bold text-white">{{ formatCurrency(nextPremiumAmount + lateFee) }}</p>
+                        <p class="text-slate-500 text-xs">Includes {{ formatCurrency(lateFee) }} late fee</p>
+                    </div>
+                    <button (click)="navigateToPayments()" class="px-6 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors">
+              Pay Now
             </button>
                 </div>
+            </div>
+        </div>
 
-                <!-- Lapsed -->
-                <div *ngIf="isLapsed">
-                    <div class="bg-red-500/20 border border-red-500/50 rounded-lg p-4">
-                        <div class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
-                </svg>
-                            <div>
-                                <p class="text-red-400 font-medium">Policy Lapsed</p>
-                                <p class="text-red-300 text-sm">Your policy has lapsed due to non-payment</p>
-                                <p class="text-red-300/70 text-xs mt-1">Reinstate within 180 days to avoid buying new policy</p>
-                            </div>
+        <!-- Lapsed Policy -->
+        <div *ngIf="!isPremiumPaid && isLapsed" class="bg-slate-800/60 rounded-xl border border-red-500/50 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-700/50 flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+            </svg>
+                </div>
+                <h3 class="text-white font-semibold">Policy Lapsed</h3>
+            </div>
+
+            <div class="p-6">
+                <div class="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mb-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+              </svg>
+                        <div>
+                            <p class="text-red-400 font-medium">Your policy has lapsed due to non-payment</p>
+                            <p class="text-red-300 text-sm">Reinstate within 180 days to avoid buying new policy</p>
                         </div>
                     </div>
-                    <button (click)="navigateToReinstate()" class="w-full mt-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors">
-              Reinstate Policy
-            </button>
                 </div>
+                <button (click)="navigateToReinstate()" class="w-full py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors">
+            Reinstate Policy
+          </button>
             </div>
         </div>
     </div>

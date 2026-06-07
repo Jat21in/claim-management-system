@@ -27,6 +27,9 @@ export interface PolicySummary {
   nextPremiumAmount?: number;
   dependentsCount?: number;
   nomineesCount?: number;
+  isPremiumPaidForCurrentMonth?: boolean;
+  lastPaymentDate?: string;
+  lastPaymentAmount?: number;
 }
 
 export interface UpdateProfileRequest {
