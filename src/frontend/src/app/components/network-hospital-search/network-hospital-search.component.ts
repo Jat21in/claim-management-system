@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HospitalService, NetworkHospital } from '../../services/hospital.service';
@@ -24,7 +24,7 @@ export class NetworkHospitalSearchComponent implements OnInit {
   cities: string[] = ['Mumbai', 'Bangalore', 'New Delhi', 'Chennai', 'Kolkata', 'Pune', 'Hyderabad'];
   specializations: string[] = ['Cardiology', 'Neurology', 'Orthopedics', 'Oncology', 'Gastroenterology', 'Urology', 'Pediatrics'];
 
-  constructor(private hospitalService: HospitalService) {}
+  constructor(private hospitalService: HospitalService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.searchHospitals();
@@ -32,15 +32,18 @@ export class NetworkHospitalSearchComponent implements OnInit {
 
   searchHospitals() {
     this.isLoading = true;
+    this.cdr.markForCheck();
     this.hospitalService.searchNetworkHospitals(this.selectedCity || undefined, this.selectedSpecialization || undefined)
       .subscribe({
         next: (hospitals) => {
           this.hospitals = hospitals;
           this.isLoading = false;
+          this.cdr.markForCheck();
         },
         error: (error) => {
           console.error('Failed to load hospitals:', error);
           this.isLoading = false;
+          this.cdr.markForCheck();
         }
       });
   }

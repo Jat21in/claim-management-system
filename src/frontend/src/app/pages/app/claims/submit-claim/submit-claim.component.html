@@ -5,11 +5,49 @@
             <p class="page-subtitle">Upload medical report and fill in the details to initiate your insurance claim</p>
         </div>
         <button class="btn-secondary" routerLink="/app/claims">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M19 12H5M12 19l-7-7 7-7"/>
-      </svg>
-      Back to Claims
-    </button>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back to Claims
+        </button>
+    </div>
+
+    <!-- ========== NEW: Claim Type Toggle (Added) ========== -->
+    <div class="claim-type-toggle">
+        <button (click)="setClaimType('regular')" class="toggle-btn" [class.active]="claimType === 'regular'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            Regular Claim
+        </button>
+        <button (click)="setClaimType('hospitalization')" class="toggle-btn" [class.active]="claimType === 'hospitalization'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+                <line x1="12" y1="11" x2="12" y2="6"/>
+            </svg>
+            Hospitalization (Pre-Authorization)
+        </button>
+    </div>
+
+    <!-- ========== NEW: Pre-Auth Success Message ========== -->
+    <div class="preauth-success" *ngIf="preAuthResponse && !loading">
+        <div class="preauth-success-content">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <div>
+                <strong>Pre-Authorization Request Submitted!</strong>
+                <span>Reference: {{ preAuthResponse.claimId }}</span>
+                <span *ngIf="preAuthResponse.cashlessEligible" class="cashless-badge">✅ Cashless Available up to {{ formatCurrency(preAuthResponse.cashlessLimit) }}</span>
+                <span *ngIf="!preAuthResponse.cashlessEligible" class="reimbursement-badge">⚠️ Reimbursement Claim</span>
+            </div>
+        </div>
     </div>
 
     <div class="content-grid">
@@ -18,12 +56,12 @@
             <div class="form-header">
                 <div class="form-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-            <polyline points="10 9 9 9 8 9"/>
-          </svg>
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
                 </div>
                 <div>
                     <h3>Claim Information</h3>
@@ -32,38 +70,116 @@
             </div>
 
             <form [formGroup]="form" (ngSubmit)="submit()">
-                <!-- Claim Date -->
-                <div class="form-group">
-                    <label>Claim Date *</label>
-                    <input type="date" formControlName="claimDate" [max]="maxDate" />
-                    <div class="error-hint" *ngIf="form.get('claimDate')?.touched && form.get('claimDate')?.invalid">
-                        Please select a valid claim date
-                    </div>
-                </div>
 
-                <!-- Claim Amount -->
-                <div class="form-group">
-                    <label>Claim Amount (₹) *</label>
-                    <div class="amount-input-wrapper">
-                        <span class="currency-symbol">₹</span>
-                        <input type="number" formControlName="amount" placeholder="0.00" step="1000" />
+                <!-- ========== REGULAR CLAIM FIELDS (Existing - Unchanged) ========== -->
+                <ng-container *ngIf="claimType === 'regular'">
+                    <!-- Claim Date -->
+                    <div class="form-group">
+                        <label>Claim Date *</label>
+                        <input type="date" formControlName="claimDate" [max]="maxDate" />
+                        <div class="error-hint" *ngIf="form.get('claimDate')?.touched && form.get('claimDate')?.invalid">
+                            Please select a valid claim date
+                        </div>
                     </div>
-                    <div class="error-hint" *ngIf="form.get('amount')?.touched && form.get('amount')?.invalid">
-                        Amount must be greater than 0
-                    </div>
-                </div>
 
-                <!-- Medical Report Upload -->
-                <div class="form-group">
+                    <!-- Claim Amount -->
+                    <div class="form-group">
+                        <label>Claim Amount (₹) *</label>
+                        <div class="amount-input-wrapper">
+                            <span class="currency-symbol">₹</span>
+                            <input type="number" formControlName="amount" placeholder="0.00" step="1000" />
+                        </div>
+                        <div class="error-hint" *ngIf="form.get('amount')?.touched && form.get('amount')?.invalid">
+                            Amount must be greater than 0
+                        </div>
+                    </div>
+                </ng-container>
+
+                <!-- ========== HOSPITALIZATION FIELDS (NEW - Only shown when selected) ========== -->
+                <ng-container *ngIf="claimType === 'hospitalization'">
+
+                    <!-- Hospital Search -->
+                    <div class="form-group">
+                        <label>Network Hospital *</label>
+                        <div class="hospital-search-wrapper">
+                            <input type="text" formControlName="hospitalName" placeholder="Select a network hospital" readonly class="hospital-input" (click)="openHospitalModal()" />
+                            <button type="button" class="search-hospital-btn" (click)="openHospitalModal()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
+                                Search
+                            </button>
+                        </div>
+                        <div class="selected-hospital-info" *ngIf="selectedHospital">
+                            <span class="hospital-name">🏥 {{ selectedHospital.hospitalName }}</span>
+                            <span class="cashless-limit" *ngIf="!form.get('estimatedAmount')?.value"> Cashless up to {{ formatCurrency(selectedHospital.cashlessLimit) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Admission Date -->
+                    <div class="form-group">
+                        <label>Admission Date *</label>
+                        <input type="date" formControlName="admissionDate" />
+                        <div class="error-hint" *ngIf="form.get('admissionDate')?.touched && form.get('admissionDate')?.invalid">
+                            Admission date is required
+                        </div>
+                    </div>
+
+                    <!-- Doctor Name -->
+                    <div class="form-group">
+                        <label>Doctor Name *</label>
+                        <input type="text" formControlName="doctorName" placeholder="Enter attending doctor's name" />
+                    </div>
+
+                    <!-- Diagnosis -->
+                    <div class="form-group">
+                        <label>Diagnosis *</label>
+                        <input type="text" formControlName="diagnosis" placeholder="e.g., Acute Appendicitis, Fracture" />
+                    </div>
+
+                    <!-- Treatment Type -->
+                    <div class="form-group">
+                        <label>Treatment Type</label>
+                        <select formControlName="treatmentType">
+                            <option value="">Select treatment type</option>
+                            <option value="Surgery">Surgery</option>
+                            <option value="Medical">Medical Treatment</option>
+                            <option value="ICU">ICU Care</option>
+                            <option value="Maternity">Maternity</option>
+                            <option value="Emergency">Emergency</option>
+                        </select>
+                    </div>
+
+                    <!-- Estimated Amount -->
+                    <div class="form-group">
+                        <label>Estimated Amount (₹) *</label>
+                        <div class="amount-input-wrapper">
+                            <span class="currency-symbol">₹</span>
+                            <input type="number" formControlName="estimatedAmount" placeholder="0.00" step="1000" />
+                        </div>
+                        <div class="cashless-status" *ngIf="selectedHospital && form.get('estimatedAmount')?.value">
+                            <div class="status-eligible" *ngIf="getCashlessStatus().eligible">
+                                ✅ {{ getCashlessStatus().message }}
+                            </div>
+                            <div class="status-not-eligible" *ngIf="!getCashlessStatus().eligible">
+                                ⚠️ {{ getCashlessStatus().message }}
+                            </div>
+                        </div>
+                    </div>
+                </ng-container>
+
+                <!-- Medical Report Upload (Only for Regular Claims) -->
+                <div class="form-group" *ngIf="claimType === 'regular'">
                     <label>Medical Report / Document *</label>
                     <div class="upload-area" [class.drag-over]="isDragging" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
                         <input type="file" #fileInput accept=".pdf,.jpg,.jpeg,.png" (change)="onFileSelected($event)" style="display: none" />
                         <div class="upload-placeholder" *ngIf="!selectedFile">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
-              </svg>
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
                             <p>Drag & drop your medical report here</p>
                             <span>or</span>
                             <button type="button" class="browse-btn" (click)="fileInput.click()">Browse Files</button>
@@ -72,27 +188,27 @@
                         <div class="upload-preview" *ngIf="selectedFile">
                             <div class="file-icon" [class.pdf]="selectedFile.type === 'application/pdf'">
                                 <svg *ngIf="selectedFile.type === 'application/pdf'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="16" y1="13" x2="8" y2="13"/>
-                  <line x1="16" y1="17" x2="8" y2="17"/>
-                </svg>
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                </svg>
                                 <svg *ngIf="selectedFile.type.startsWith('image/')" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
-                  <circle cx="8.5" cy="8.5" r="1.5"/>
-                  <polyline points="21 15 16 10 5 21"/>
-                </svg>
+                                    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                </svg>
                             </div>
                             <div class="file-info">
                                 <span class="file-name">{{ selectedFile.name }}</span>
                                 <span class="file-size">{{ getFileSize(selectedFile.size) }}</span>
                             </div>
                             <button type="button" class="remove-file" (click)="removeFile()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"/>
+                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                     <div class="error-hint" *ngIf="fileError">
@@ -100,30 +216,31 @@
                     </div>
                 </div>
 
-                <div class="upload-progress" *ngIf="loading && selectedFile">
+                <!-- Upload Progress (Regular Claim only) -->
+                <div class="upload-progress" *ngIf="loading && selectedFile && claimType === 'regular'">
                     <div class="progress-bar-container">
                         <div class="progress-bar-fill" [style.width]="uploadProgress + '%'"></div>
                     </div>
                     <span class="progress-text">{{ uploadProgress }}%</span>
                 </div>
 
-                <!-- Description -->
+                <!-- Description (Both claim types) -->
                 <div class="form-group">
-                    <label>Description / Reason *</label>
-                    <textarea formControlName="description" rows="4" placeholder="Describe the nature of your claim (e.g., hospitalization, treatment, medication...)"></textarea>
+                    <label>{{ claimType === 'hospitalization' ? 'Additional Notes' : 'Description / Reason' }} *</label>
+                    <textarea formControlName="description" rows="4" placeholder="{{ claimType === 'hospitalization' ? 'Any additional information about the hospitalization...' : 'Describe the nature of your claim (e.g., hospitalization, treatment, medication...)' }}"></textarea>
                     <div class="char-counter">{{ (form.get('description')?.value?.length || 0) }}/500</div>
                     <div class="error-hint" *ngIf="form.get('description')?.touched && form.get('description')?.invalid">
                         Description is required (max 500 characters)
                     </div>
                 </div>
 
-                <!-- AI Processing Indicator -->
-                <div class="ai-process-card" *ngIf="selectedFile">
+                <!-- AI Processing Indicator (Regular Claim only) -->
+                <div class="ai-process-card" *ngIf="selectedFile && claimType === 'regular'">
                     <div class="ai-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M12 2a10 10 0 0 1 10 10c0 3.5-2 6.5-5 8l-2 2h-6l-2-2c-3-1.5-5-4.5-5-8a10 10 0 0 1 10-10z"/>
-              <path d="M12 8v4M12 16h.01"/>
-            </svg>
+                            <path d="M12 2a10 10 0 0 1 10 10c0 3.5-2 6.5-5 8l-2 2h-6l-2-2c-3-1.5-5-4.5-5-8a10 10 0 0 1 10-10z"/>
+                            <path d="M12 8v4M12 16h.01"/>
+                        </svg>
                     </div>
                     <div class="ai-info">
                         <strong>AI-Powered Processing</strong>
@@ -131,45 +248,55 @@
                     </div>
                 </div>
 
+                <!-- Pre-Auth Info Note -->
+                <div class="preauth-info-note" *ngIf="claimType === 'hospitalization'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4M12 16h.01"/>
+                    </svg>
+                    <span>Pre-authorization must be submitted at least 3 days before planned hospitalization.</span>
+                </div>
+
                 <!-- Form Actions -->
                 <div class="form-actions">
                     <button type="button" class="btn-cancel" routerLink="/app/claims">Cancel</button>
-                    <button type="submit" class="btn-submit" [disabled]="form.invalid || loading || !selectedFile">
-            <svg *ngIf="!loading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-            <div *ngIf="loading" class="btn-spinner"></div>
-            {{ loading ? 'Processing & Submitting...' : 'Submit Claim' }}
-          </button>
+                    <button type="submit" class="btn-submit" [disabled]="form.invalid || loading || (claimType === 'regular' && !selectedFile)">
+                        <svg *ngIf="!loading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        <div *ngIf="loading" class="btn-spinner"></div>
+                        {{ loading ? 'Processing...' : (claimType === 'hospitalization' ? 'Request Pre-Authorization' : 'Submit Claim') }}
+                    </button>
                 </div>
 
                 <!-- Messages -->
-                <div class="success-message" *ngIf="success">
+                <div class="success-message" *ngIf="success && !preAuthResponse">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg> {{ success }}
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg> {{ success }}
                 </div>
 
                 <div class="error-message" *ngIf="error">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg> {{ error }}
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg> {{ error }}
                 </div>
             </form>
         </div>
 
-        <!-- Info Sidebar -->
+        <!-- Info Sidebar (Existing - Unchanged) -->
         <div class="info-sidebar">
+            <!-- Timeline Card (Existing - Unchanged) -->
             <div class="info-card">
                 <div class="info-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 16v-4M12 8h.01"/>
-          </svg>
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4M12 8h.01"/>
+                    </svg>
                 </div>
                 <h4>Claim Process Timeline</h4>
                 <div class="timeline">
@@ -204,12 +331,13 @@
                 </div>
             </div>
 
+            <!-- Tips Card (Existing - Unchanged) -->
             <div class="info-card tips">
                 <div class="info-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 2a10 10 0 0 1 10 10c0 3.5-2 6.5-5 8l-2 2h-6l-2-2c-3-1.5-5-4.5-5-8a10 10 0 0 1 10-10z"/>
-            <path d="M12 6v4M12 14h.01"/>
-          </svg>
+                        <path d="M12 2a10 10 0 0 1 10 10c0 3.5-2 6.5-5 8l-2 2h-6l-2-2c-3-1.5-5-4.5-5-8a10 10 0 0 1 10-10z"/>
+                        <path d="M12 6v4M12 14h.01"/>
+                    </svg>
                 </div>
                 <h4>Tips for Faster Approval</h4>
                 <ul>
@@ -221,13 +349,14 @@
                 </ul>
             </div>
 
+            <!-- Supported Formats Card (Existing - Unchanged) -->
             <div class="info-card supported-formats">
                 <div class="info-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-            <polyline points="2 17 12 22 22 17"/>
-            <polyline points="2 12 12 17 22 12"/>
-          </svg>
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                        <polyline points="2 17 12 22 22 17"/>
+                        <polyline points="2 12 12 17 22 12"/>
+                    </svg>
                 </div>
                 <h4>Supported Formats</h4>
                 <div class="format-badges">
@@ -241,3 +370,7 @@
         </div>
     </div>
 </div>
+
+<!-- Hospital Search Modal -->
+<app-network-hospital-search *ngIf="showHospitalModal" (close)="closeHospitalModal()" (selectHospital)="onHospitalSelected($event)">
+</app-network-hospital-search>

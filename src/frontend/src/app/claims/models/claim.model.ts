@@ -17,4 +17,17 @@ export interface Claim {
   medicalReportContentType?: string;
   createdAt?: string;
   updatedAt?: string;
+
+  // Hospitalization / Pre-Authorization fields
+  isPreAuthorization?: boolean;
+  hospitalId?: string;
+  hospitalName?: string;
+  admissionDate?: string;
+  dischargeDate?: string;
+  doctorName?: string;
+  diagnosis?: string;
+  treatmentType?: string;
+  estimatedAmount?: number;
+  isCashless?: boolean;
+  cashlessLimit?: number;
 }

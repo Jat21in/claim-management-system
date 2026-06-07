@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Subject, Observable, map } from 'rxjs';
-
 import { Claim } from '../claims/models/claim.model';
 
 @Injectable({ providedIn: 'root' })
@@ -20,7 +19,7 @@ export class ClaimService {
 
   constructor(private http: HttpClient) {}
 
-  // GET claims with field mapping
+  // GET claims with field mapping (Updated to include hospitalization fields)
   getMyClaims(): Observable<Claim[]> {
     return this.http.get<any[]>(this.baseUrl).pipe(
       map(claims => claims.map(claim => ({
@@ -40,7 +39,19 @@ export class ClaimService {
         medicalReportSize: claim.medicalReportSize,
         medicalReportContentType: claim.medicalReportContentType,
         createdAt: claim.createdAt,
-        updatedAt: claim.updatedAt
+        updatedAt: claim.updatedAt,
+        // Hospitalization fields
+        isPreAuthorization: claim.isPreAuthorization,
+        hospitalId: claim.hospitalId,
+        hospitalName: claim.hospitalName,
+        admissionDate: claim.admissionDate,
+        dischargeDate: claim.dischargeDate,
+        doctorName: claim.doctorName,
+        diagnosis: claim.diagnosis,
+        treatmentType: claim.treatmentType,
+        estimatedAmount: claim.estimatedAmount,
+        isCashless: claim.isCashless,
+        cashlessLimit: claim.cashlessLimit
       })))
     );
   }
@@ -61,6 +72,34 @@ export class ClaimService {
   submitClaimWithFile(formData: FormData): Observable<{ claimId: string; message?: string }> {
     return this.http.post<{ claimId: string; message?: string }>(
       this.baseUrl,
+      formData
+    );
+  }
+
+  // ========== NEW: Pre-Authorization for Hospitalization ==========
+  submitPreAuthorization(payload: {
+    admissionDate: string;
+    hospitalId: string;
+    hospitalName: string;
+    doctorName: string;
+    diagnosis: string;
+    treatmentType: string;
+    estimatedAmount: number;
+    description: string;
+  }): Observable<{
+    claimId: string;
+    status: string;
+    message: string;
+    cashlessEligible: boolean;
+    cashlessLimit: number
+  }> {
+    return this.http.post<any>(`${this.baseUrl}/pre-authorize`, payload);
+  }
+
+  // ========== NEW: Submit final claim with bills after discharge ==========
+  submitClaimWithBills(formData: FormData): Observable<{ claimId: string; message?: string }> {
+    return this.http.post<{ claimId: string; message?: string }>(
+      `${this.baseUrl}/submit-with-bills`,
       formData
     );
   }
