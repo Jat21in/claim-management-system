@@ -21,6 +21,9 @@ public static class DependencyInjection
         services.AddScoped<IDocumentVerificationService, DocumentVerificationService>();
         services.AddScoped<IPremiumCalculatorService, PremiumCalculatorService>();
 
+        services.AddScoped<IGracePeriodService, GracePeriodService>();
+
+
         return services;
     }
 }

@@ -20,7 +20,7 @@ public enum ClaimStatus
     /// <summary>
     /// Claim is pending manual review.
     /// </summary>
-    Pending = 4,           // ✅ ADD THIS - matches database 'Pending'
+    Pending = 4,
 
     /// <summary>
     /// Claim is being processed by AI verification.
@@ -28,7 +28,12 @@ public enum ClaimStatus
     PendingAI = 5,
 
     /// <summary>
+    /// Pre-authorization requested before hospitalization.
+    /// </summary>
+    PreAuth = 6,
+
+    /// <summary>
     /// Approved claim has been paid.
     /// </summary>
-    Paid = 6
+    Paid = 7
 }

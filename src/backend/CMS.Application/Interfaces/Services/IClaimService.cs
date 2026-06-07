@@ -8,4 +8,10 @@ public interface IClaimService
     Guid memberId,
     SubmitClaimRequest request,
     CancellationToken cancellationToken);
+
+    Task<ClaimPaymentResult> ProcessClaimPaymentAsync(
+    Guid claimId,
+    ProcessClaimPaymentRequest request,
+    CancellationToken cancellationToken);
+
 }

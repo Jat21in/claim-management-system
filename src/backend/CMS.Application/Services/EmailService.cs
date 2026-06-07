@@ -389,4 +389,32 @@ public sealed class EmailService : IEmailService
         await SendEmailAsync(toEmail, subject, body, cancellationToken);
     }
 
+    public async Task SendPolicyLapsedEmailAsync(
+    string toEmail,
+    string fullName,
+    string policyNumber,
+    decimal outstandingAmount,
+    CancellationToken cancellationToken)
+    {
+        var subject = $"Policy Lapsed - {policyNumber}";
+
+        var body = $@"
+        Dear {fullName},
+
+        Your insurance policy {policyNumber} has been lapsed due to pending premium payments.
+
+        Outstanding Amount: ₹{outstandingAmount:N2}
+
+        Please contact support or initiate reinstatement to restore your coverage.
+
+        Regards,
+        CMS Insurance Team
+    ";
+
+        await SendEmailAsync(
+            toEmail,
+            subject,
+            body,
+            cancellationToken);
+    }
 }

@@ -1,4 +1,5 @@
 ﻿using CMS.Application.DTOs.Policy;
+using CMS.Application.DTOs.Premium;
 using CMS.Application.Interfaces.Repositories;
 using CMS.Application.Interfaces.Services;
 using CMS.Domain.Entities;
@@ -305,11 +306,30 @@ public sealed class PolicyService : IPolicyService
 
         // 3. Calculate premium
         var premiumCalc = new PremiumCalculatorService();
-        var breakdown = premiumCalc.CalculatePremium(
+
+        var premiumRequest = new CalculatePremiumRequest
+        {
+            MemberAge = request.MemberAge,
+            IsSmoker = request.IsSmoker,
+            HasPreExistingCondition = request.HasPreExistingCondition,
+            PinCode = request.PinCode,
+
+            DependentCount = request.Dependents.Count,
+
+            PremiumFrequency = request.PremiumFrequency,
+            CouponCode = request.CouponCode,
+            CorporateCode = request.CorporateCode,
+
+            HasNoClaimBonus = request.HasNoClaimBonus,
+            NoClaimBonusYears = request.NoClaimBonusYears,
+
+            DependentAgeGroups = request.DependentAgeGroups
+        };
+
+        var breakdown = await premiumCalc.CalculatePremiumAsync(
             plan,
-            request.Dependents.Count,
-            request.PremiumFrequency,
-            request.CouponCode);
+            premiumRequest,
+            cancellationToken);
 
         // 4. Create policy
         var policy = new Policy(

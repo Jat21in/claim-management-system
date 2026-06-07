@@ -1,30 +1,24 @@
-﻿using CMS.Domain.Entities;
+﻿using CMS.Application.DTOs.Premium;
+using CMS.Domain.Entities;
 
 namespace CMS.Application.Interfaces.Services;
 
 public interface IPremiumCalculatorService
 {
-    PremiumBreakdown CalculatePremium(
+    Task<PremiumCalculationResult> CalculatePremiumAsync(
         Plan plan,
-        int dependentCount,
-        string frequency, // "MONTHLY", "QUARTERLY", "HALF_YEARLY", "YEARLY"
-        string? couponCode = null);
+        CalculatePremiumRequest request,
+        CancellationToken cancellationToken = default);
 
-    decimal CalculateDependentLoading(Plan plan, int dependentCount);
-    decimal ApplyFrequencyDiscount(decimal amount, string frequency);
-    decimal ApplyCouponDiscount(decimal amount, string couponCode);
-}
+    decimal CalculateDependentLoading(
+        Plan plan,
+        int dependentCount);
 
-public class PremiumBreakdown
-{
-    public decimal BasePremium { get; set; }
-    public decimal DependentLoading { get; set; }
-    public decimal SubTotal { get; set; }
-    public decimal FrequencyDiscount { get; set; }
-    public decimal CouponDiscount { get; set; }
-    public decimal TaxAmount { get; set; } // 18% GST
-    public decimal GrandTotal { get; set; }
-    public string SelectedFrequency { get; set; } = string.Empty;
-    public int TotalDependents { get; set; }
-    public Dictionary<string, decimal> AvailableFrequencies { get; set; } = new();
+    decimal ApplyFrequencyDiscount(
+        decimal amount,
+        string frequency);
+
+    decimal ApplyCouponDiscount(
+        decimal amount,
+        string couponCode);
 }

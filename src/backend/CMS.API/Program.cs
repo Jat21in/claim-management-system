@@ -5,10 +5,15 @@ using CMS.Application.Services;
 using CMS.Infrastructure;
 using CMS.Infrastructure.Data;
 using CMS.Infrastructure.Data.Seed;
+
+using Hangfire;
+using Hangfire.SqlServer;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
+
 using System.Net;
 using System.Text;
 
@@ -32,12 +37,12 @@ builder.Services
             ValidAudience = jwt["Audience"],
 
             IssuerSigningKey = new SymmetricSecurityKey(
-        Encoding.UTF8.GetBytes(jwt["SecretKey"]!)
-        ),
+                Encoding.UTF8.GetBytes(jwt["SecretKey"]!)
+            ),
 
             RoleClaimType = System.Security.Claims.ClaimTypes.Role,
 
-            // ✅🔥 THIS IS THE FIX YOU NEED
+            // ✅ FIX
             NameClaimType = System.Security.Claims.ClaimTypes.NameIdentifier
         };
     });
@@ -64,12 +69,25 @@ builder.Services.AddCors(options =>
         });
 });
 
+// ✅ AI Verification HTTP Client
 builder.Services.AddHttpClient<IAiVerificationService, GrokAiVerificationService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
+// ✅ Hangfire Configuration
+builder.Services.AddHangfire(config =>
+    config.UseSqlServerStorage(
+        builder.Configuration.GetConnectionString("CmsDatabase"),
+        new SqlServerStorageOptions
+        {
+            PrepareSchemaIfNecessary = true,
+            QueuePollInterval = TimeSpan.FromSeconds(15)
+        }));
 
+builder.Services.AddHangfireServer();
+
+// ✅ File Upload Limits
 builder.Services.Configure<FormOptions>(options =>
 {
     options.ValueLengthLimit = int.MaxValue;
@@ -79,18 +97,7 @@ builder.Services.Configure<FormOptions>(options =>
 
 var app = builder.Build();
 
-//// Add this line after app = builder.Build() but before app.UseHttpsRedirection()
-//app.UseStaticFiles(); // Serves files from wwwroot
-
-//// Add this to serve uploaded files
-//app.UseStaticFiles(new StaticFileOptions
-//{
-//    FileProvider = new PhysicalFileProvider(
-//        Path.Combine(Directory.GetCurrentDirectory(), "Uploads")),
-//    RequestPath = "/uploads"
-//});
-
-
+// ✅ Serve uploaded files
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
@@ -98,13 +105,12 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads"
 });
 
-//  DATABASE SEEDING 
+// ✅ DATABASE SEEDING
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<CmsDbContext>();
     await PlanSeeder.SeedAsync(dbContext);
 }
-
 
 // Swagger (only in dev)
 if (app.Environment.IsDevelopment())
@@ -118,10 +124,31 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowFrontend");   
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
+
 app.UseAuthorization();
+
+// ✅ Hangfire Dashboard
+app.UseHangfireDashboard("/hangfire");
+
+// ✅ Recurring Background Jobs
+
+RecurringJob.AddOrUpdate<IGracePeriodService>(
+    "check-overdue-payments",
+    service => service.CheckAndUpdateOverduePaymentsAsync(CancellationToken.None),
+    Cron.Daily);
+
+RecurringJob.AddOrUpdate<IGracePeriodService>(
+    "send-grace-reminders",
+    service => service.SendGracePeriodRemindersAsync(CancellationToken.None),
+    Cron.Daily(9));
+
+RecurringJob.AddOrUpdate<IPaymentService>(
+    "check-lapsed-policies",
+    service => service.CheckOverduePaymentsAndLapsePoliciesAsync(CancellationToken.None),
+    Cron.Daily(1));
 
 app.MapControllers();
 

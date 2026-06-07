@@ -9,4 +9,10 @@ public interface IEmailService
     Task SendPolicyCreatedEmailAsync(string toEmail, string fullName, string policyNumber, CancellationToken cancellationToken);
     Task SendPaymentConfirmationEmailAsync(string toEmail, string fullName, string policyNumber, decimal amount, string transactionId, CancellationToken cancellationToken);
     Task SendOtpEmailAsync(string toEmail, string fullName, string otp, CancellationToken cancellationToken);
+    Task SendPolicyLapsedEmailAsync(
+    string toEmail,
+    string fullName,
+    string policyNumber,
+    decimal outstandingAmount,
+    CancellationToken cancellationToken);
 }

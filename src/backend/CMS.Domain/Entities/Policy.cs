@@ -140,4 +140,15 @@ public sealed class Policy
         var nextDue = GetNextPremiumDueDate();
         return currentDate >= nextDue;
     }
+
+    public void Reinstate()
+    {
+        if (Status != PolicyStatus.Lapsed)
+            throw new InvalidOperationException(
+                "Only lapsed policies can be reinstated."
+            );
+
+        Status = PolicyStatus.Active;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

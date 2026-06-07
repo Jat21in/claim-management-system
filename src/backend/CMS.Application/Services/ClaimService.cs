@@ -179,4 +179,47 @@ public sealed class ClaimService : IClaimService
             TotalAmount: claims.Sum(c => c.ClaimAmount.Amount)
         );
     }
+
+    public async Task<ClaimPaymentResult> ProcessClaimPaymentAsync(
+    Guid claimId,
+    ProcessClaimPaymentRequest request,
+    CancellationToken cancellationToken)
+    {
+        var claim = await _claimRepository.GetByIdAsync(
+            claimId,
+            cancellationToken);
+
+        if (claim == null)
+            throw new InvalidOperationException("Claim not found.");
+
+        if (claim.Status != ClaimStatus.Approved)
+            throw new InvalidOperationException(
+                "Only approved claims can be processed for payment."
+            );
+
+        // Generate payment reference
+        var paymentReference =
+            $"CLM-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}";
+
+        // Mark claim as paid
+        claim.MarkAsPaid(
+            paymentReference,
+            request.PaymentMode);
+
+        await _claimRepository.UpdateAsync(
+            claim,
+            cancellationToken);
+
+        _logger.LogInformation(
+            "Claim payment processed successfully for ClaimId: {ClaimId}",
+            claimId);
+
+        return new ClaimPaymentResult
+        {
+            Success = true,
+            PaymentReferenceNumber = paymentReference,
+            PaymentDate = DateTime.UtcNow,
+            Message = "Claim payment processed successfully"
+        };
+    }
 }
