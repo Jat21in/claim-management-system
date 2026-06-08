@@ -1,165 +1,166 @@
-import { Component, OnInit, inject, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { environment } from '../../../environments/environment';
-import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 interface Member {
   memberId: string;
   fullName: string;
   email: string;
-  role: string;
-  contactNumber: string;
+  phoneNumber: string;
   dateOfBirth: string;
-  createdAt: string;
-  status: string;
-  activePlan: {
-    planId: string;
-    name: string;
-    insuredAmount: number;
-  } | null;
-  claimsCount: number;
+  role: string;
+  status: number;
   kycStatus: string;
+  rejectionReason: string | null;
+  kycSubmittedAt: string | null;
+  kycVerifiedAt: string | null;
+  activePlanId: string | null;
+  activePlanName: string | null;
+  activePlanCoverage: number | null;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    country: string;
+    postalCode: string;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+  claimsCount: number;
+  claimsTotalAmount: number;
+  documents?: KycDocument[];
+}
+
+interface KycDocument {
+  documentId: string;
+  documentType: string;
+  documentNumber: string;
+  fileUrl: string;
+  fileName: string;
+  isVerified: boolean;
+  uploadedAt: string;
+}
+
+interface Plan {
+  planId: string;
+  name: string;
+  insuredAmount: number;
+  durationInMonths: number;
 }
 
 @Component({
   selector: 'app-admin-members',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin-members.component.html',
-  styleUrls: ['./admin-members.component.scss'],
-  animations: [
-    trigger('fadeIn', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(10px)' }),
-        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ]),
-    trigger('staggerList', [
-      transition('* => *', [
-        query(':enter', [
-          style({ opacity: 0, transform: 'translateX(-20px)' }),
-          stagger('50ms', [
-            animate('300ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
-          ])
-        ], { optional: true })
-      ])
-    ])
-  ]
+  styleUrls: ['./admin-members.component.scss']
 })
-export class AdminMembersComponent implements OnInit, OnDestroy {
+export class AdminMembersComponent implements OnInit {
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
+  private sanitizer = inject(DomSanitizer);
 
-  Math = Math; // Expose Math to template
-
-  loading = true;
-  members: Member[] = [];
+  // Data
+  allMembers: Member[] = [];
   filteredMembers: Member[] = [];
+  plans: Plan[] = [];
 
   // Filters
   searchTerm = '';
   roleFilter = 'all';
-  kycFilter = 'all';
+  kycStatusFilter = 'all';
   sortBy = 'newest';
 
   // Pagination
   currentPage = 1;
-  pageSize = 15;
+  pageSize = 10;
+  pageSizeOptions = [5, 10, 25, 50, 100];
+  readonly math = Math;
 
-  // Selected member for detail view
+  // Stats
+  stats = {
+    total: 0,
+    kycVerified: 0,
+    kycPending: 0,
+    kycRejected: 0,
+    totalClaims: 0,
+    totalClaimAmount: 0
+  };
+
+  // UI State
+  loading = true;
+  processingId: string | null = null;
+
+  // Member Detail Modal
+  showDetailModal = false;
   selectedMember: Member | null = null;
-  showMemberModal = false;
+  activeTab: 'profile' | 'claims' | 'documents' = 'profile';
+  memberClaims: any[] = [];
 
-  private refreshInterval: any;
+  // Document Modal
+  showDocumentModal = false;
+  selectedDocument: KycDocument | null = null;
+  documentUrl: SafeResourceUrl | null = null;
+  documentFileType = '';
+
+  // Assign Plan Modal
+  showAssignPlanModal = false;
+  selectedPlanId = '';
+  assignPlanProcessing = false;
+
+  // Role Change Modal
+  showRoleModal = false;
+  selectedRole = '';
+  roleOptions = [
+    { value: 'Member', label: 'Member' },
+    { value: 'Admin', label: 'Admin' },
+    { value: 'ClaimsProcessor', label: 'Claims Processor' }
+  ];
+
+  // Reject KYC Modal
+  showRejectKycModal = false;
+  rejectReason = '';
+  memberToReject: Member | null = null;
+
+  // Bulk Actions
+  selectedMembers: Set<string> = new Set();
+  showBulkActions = false;
 
   ngOnInit() {
     this.loadMembers();
-    this.refreshInterval = setInterval(() => this.loadMembers(), 60000); // Auto-refresh every minute
-  }
-
-  ngOnDestroy() {
-    if (this.refreshInterval) clearInterval(this.refreshInterval);
-  }
-
-  get filteredAndSortedMembers(): Member[] {
-    let filtered = [...this.members];
-
-    // Search filter
-    if (this.searchTerm) {
-      const term = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(m =>
-        m.fullName.toLowerCase().includes(term) ||
-        m.email.toLowerCase().includes(term) ||
-        m.memberId.toLowerCase().includes(term) ||
-        (m.contactNumber && m.contactNumber.includes(term))
-      );
-    }
-
-    // Role filter
-    if (this.roleFilter !== 'all') {
-      filtered = filtered.filter(m => m.role === this.roleFilter);
-    }
-
-    // KYC filter
-    if (this.kycFilter !== 'all') {
-      filtered = filtered.filter(m => m.kycStatus === this.kycFilter);
-    }
-
-    // Sorting
-    if (this.sortBy === 'newest') {
-      filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    } else if (this.sortBy === 'oldest') {
-      filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    } else if (this.sortBy === 'name') {
-      filtered.sort((a, b) => a.fullName.localeCompare(b.fullName));
-    } else if (this.sortBy === 'claims') {
-      filtered.sort((a, b) => b.claimsCount - a.claimsCount);
-    }
-
-    return filtered;
-  }
-
-  get paginatedMembers(): Member[] {
-    const start = (this.currentPage - 1) * this.pageSize;
-    return this.filteredAndSortedMembers.slice(start, start + this.pageSize);
-  }
-
-  get totalPages(): number {
-    return Math.ceil(this.filteredAndSortedMembers.length / this.pageSize);
-  }
-
-  get totalMembers(): number {
-    return this.members.length;
-  }
-
-  get stats() {
-    return {
-      total: this.members.length,
-      active: this.members.filter(m => m.status === 'Active').length,
-      pendingKyc: this.members.filter(m => m.kycStatus === 'Pending').length,
-      verified: this.members.filter(m => m.kycStatus === 'Verified').length,
-      totalClaims: this.members.reduce((sum, m) => sum + (m.claimsCount || 0), 0)
-    };
+    this.loadPlans();
   }
 
   loadMembers() {
     this.loading = true;
-
     this.http.get(`${environment.apiBaseUrl}/admin/members`).subscribe({
       next: (res: any) => {
-        let members = res;
-        if (res && res.data) members = res.data;
-        if (res && res.$values) members = res.$values;
-
-        this.members = (Array.isArray(members) ? members : []).map((m: any) => ({
-          ...m,
-          kycStatus: m.status === 1 ? 'Verified' : m.status === 2 ? 'Rejected' : 'Pending',
-          status: m.status === 1 ? 'Active' : 'Inactive'
+        this.allMembers = res.map((m: any) => ({
+          memberId: m.memberId,
+          fullName: m.fullName,
+          email: m.email,
+          phoneNumber: m.phoneNumber,
+          dateOfBirth: m.dateOfBirth,
+          role: m.role,
+          status: m.status,
+          kycStatus: m.kycStatus,
+          rejectionReason: m.rejectionReason,
+          kycSubmittedAt: m.kycSubmittedAt,
+          kycVerifiedAt: m.kycVerifiedAt,
+          activePlanId: m.activePlanId,
+          activePlanName: m.activePlanName,
+          activePlanCoverage: m.activePlanCoverage,
+          address: m.address,
+          createdAt: m.createdAt,
+          updatedAt: m.updatedAt,
+          claimsCount: m.claimsCount || 0,
+          claimsTotalAmount: m.claimsTotalAmount || 0,
+          documents: m.documents || []
         }));
-
+        this.calculateStats();
         this.applyFilters();
         this.loading = false;
         this.cdr.detectChanges();
@@ -172,76 +173,118 @@ export class AdminMembersComponent implements OnInit, OnDestroy {
     });
   }
 
-  applyFilters() {
-    this.currentPage = 1;
-    this.filteredMembers = this.filteredAndSortedMembers;
-    this.cdr.detectChanges();
+  loadPlans() {
+    this.http.get(`${environment.apiBaseUrl}/v1/public/plans`).subscribe({
+      next: (res: any) => {
+        this.plans = res;
+      },
+      error: (err) => console.error('Failed to load plans:', err)
+    });
   }
 
-  clearFilters() {
-    this.searchTerm = '';
-    this.roleFilter = 'all';
-    this.kycFilter = 'all';
-    this.sortBy = 'newest';
+  loadMemberClaims(memberId: string) {
+    this.http.get(`${environment.apiBaseUrl}/admin/members/${memberId}/claims`).subscribe({
+      next: (res: any) => {
+        this.memberClaims = res;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Failed to load member claims:', err)
+    });
+  }
+
+  calculateStats() {
+    this.stats = {
+      total: this.allMembers.length,
+      kycVerified: this.allMembers.filter(m => m.kycStatus === 'Verified').length,
+      kycPending: this.allMembers.filter(m => m.kycStatus === 'Pending').length,
+      kycRejected: this.allMembers.filter(m => m.kycStatus === 'Rejected').length,
+      totalClaims: this.allMembers.reduce((sum, m) => sum + (m.claimsCount || 0), 0),
+      totalClaimAmount: this.allMembers.reduce((sum, m) => sum + (m.claimsTotalAmount || 0), 0)
+    };
+  }
+
+  applyFilters() {
+    let filtered = [...this.allMembers];
+
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(m =>
+        m.fullName.toLowerCase().includes(term) ||
+        m.email.toLowerCase().includes(term) ||
+        m.memberId.toLowerCase().includes(term) ||
+        (m.phoneNumber && m.phoneNumber.includes(term))
+      );
+    }
+
+    if (this.roleFilter !== 'all') {
+      filtered = filtered.filter(m => m.role === this.roleFilter);
+    }
+
+    if (this.kycStatusFilter !== 'all') {
+      filtered = filtered.filter(m => m.kycStatus === this.kycStatusFilter);
+    }
+
+    if (this.sortBy === 'newest') {
+      filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else if (this.sortBy === 'oldest') {
+      filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    } else if (this.sortBy === 'name') {
+      filtered.sort((a, b) => a.fullName.localeCompare(b.fullName));
+    } else if (this.sortBy === 'claims') {
+      filtered.sort((a, b) => (b.claimsCount || 0) - (a.claimsCount || 0));
+    }
+
+    this.filteredMembers = filtered;
+    this.currentPage = 1;
+  }
+
+  get paginatedMembers(): Member[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredMembers.slice(start, start + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredMembers.length / this.pageSize);
+  }
+
+  onFilterChange() {
     this.applyFilters();
   }
 
-  previousPage() {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.cdr.detectChanges();
-    }
+  onPageSizeChange() {
+    this.currentPage = 1;
   }
 
-  nextPage() {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.cdr.detectChanges();
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
     }
   }
 
   getPageNumbers(): number[] {
     const pages: number[] = [];
-    const maxPagesToShow = 5;
-    let startPage = Math.max(1, this.currentPage - Math.floor(maxPagesToShow / 2));
-    let endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
-
-    if (endPage - startPage < maxPagesToShow - 1) {
-      startPage = Math.max(1, endPage - maxPagesToShow + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
+    const maxPages = Math.min(5, this.totalPages);
+    let start = Math.max(1, this.currentPage - 2);
+    let end = Math.min(this.totalPages, start + maxPages - 1);
+    if (end - start + 1 < maxPages) start = Math.max(1, end - maxPages + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
     return pages;
   }
 
-  viewMemberDetails(member: Member) {
-    this.selectedMember = member;
-    this.showMemberModal = true;
-  }
-
-  closeModal() {
-    this.showMemberModal = false;
-    this.selectedMember = null;
-  }
-
-  getInitials(name: string): string {
-    if (!name) return 'U';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  getKycStatusClass(status: string): string {
+    switch (status) {
+      case 'Verified': return 'verified';
+      case 'Rejected': return 'rejected';
+      default: return 'pending';
+    }
   }
 
   getRoleBadgeClass(role: string): string {
-    if (role === 'Admin') return 'admin';
-    if (role === 'ClaimsProcessor') return 'processor';
-    return 'member';
-  }
-
-  getKycBadgeClass(status: string): string {
-    if (status === 'Verified') return 'verified';
-    if (status === 'Rejected') return 'rejected';
-    return 'pending';
+    switch (role) {
+      case 'Admin': return 'admin';
+      case 'ClaimsProcessor': return 'processor';
+      default: return 'member';
+    }
   }
 
   formatCurrency(amount: number): string {
@@ -253,20 +296,292 @@ export class AdminMembersComponent implements OnInit, OnDestroy {
     }).format(amount);
   }
 
+  formatDate(dateString: string | null | undefined): string {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  }
+
+  getInitials(name: string): string {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  }
+
+  // Member Detail Modal
+  viewMemberDetails(member: Member) {
+    this.selectedMember = member;
+    this.activeTab = 'profile';
+    this.loadMemberClaims(member.memberId);
+    this.showDetailModal = true;
+  }
+
+  closeDetailModal() {
+    this.showDetailModal = false;
+    this.selectedMember = null;
+    this.memberClaims = [];
+  }
+
+  setActiveTab(tab: 'profile' | 'claims' | 'documents') {
+    this.activeTab = tab;
+  }
+
+  // Document Modal
+  openDocumentModal(doc: KycDocument, event: Event) {
+    event.stopPropagation();
+    this.selectedDocument = doc;
+
+    let fullUrl = doc.fileUrl;
+    if (fullUrl.startsWith('/uploads/')) {
+      fullUrl = `${environment.uploadBaseUrl}${fullUrl}`;
+    } else if (!fullUrl.startsWith('http')) {
+      fullUrl = `${environment.uploadBaseUrl}/${fullUrl}`;
+    }
+
+    this.documentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(fullUrl);
+
+    const fileExt = doc.fileName?.split('.').pop()?.toLowerCase() || '';
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+      this.documentFileType = 'image';
+    } else if (fileExt === 'pdf') {
+      this.documentFileType = 'pdf';
+    } else {
+      this.documentFileType = 'other';
+    }
+
+    this.showDocumentModal = true;
+  }
+
+  closeDocumentModal() {
+    this.showDocumentModal = false;
+    this.selectedDocument = null;
+    this.documentUrl = null;
+  }
+
+  downloadDocument() {
+    if (this.selectedDocument?.fileUrl) {
+      let downloadUrl = this.selectedDocument.fileUrl;
+      if (downloadUrl.startsWith('/uploads/')) {
+        downloadUrl = `${environment.uploadBaseUrl}${downloadUrl}`;
+      } else if (!downloadUrl.startsWith('http')) {
+        downloadUrl = `${environment.uploadBaseUrl}/${downloadUrl}`;
+      }
+      window.open(downloadUrl, '_blank');
+    }
+  }
+
+  // Change Role
+  openRoleModal(member: Member, event: Event) {
+    event.stopPropagation();
+    this.selectedMember = member;
+    this.selectedRole = member.role;
+    this.showRoleModal = true;
+  }
+
+  closeRoleModal() {
+    this.showRoleModal = false;
+    this.selectedMember = null;
+  }
+
+  confirmRoleChange() {
+    if (!this.selectedMember || !this.selectedRole) return;
+    this.processingId = this.selectedMember.memberId;
+
+    this.http.put(`${environment.apiBaseUrl}/admin/members/${this.selectedMember.memberId}/role`, {
+      role: this.selectedRole
+    }).subscribe({
+      next: () => {
+        this.processingId = null;
+        this.closeRoleModal();
+        this.loadMembers();
+      },
+      error: (err) => {
+        console.error('Failed to change role:', err);
+        alert('Failed to change role. Please try again.');
+        this.processingId = null;
+      }
+    });
+  }
+
+  // Suspend/Activate Member
+  toggleMemberStatus(member: Member, event: Event) {
+    event.stopPropagation();
+    const action = member.status === 1 ? 'suspend' : 'activate';
+    if (confirm(`Are you sure you want to ${action} ${member.fullName}?`)) {
+      this.processingId = member.memberId;
+      this.http.post(`${environment.apiBaseUrl}/admin/members/${member.memberId}/${action}`, {}).subscribe({
+        next: () => {
+          this.processingId = null;
+          this.loadMembers();
+        },
+        error: (err) => {
+          console.error(`Failed to ${action} member:`, err);
+          alert(`Failed to ${action} member. Please try again.`);
+          this.processingId = null;
+        }
+      });
+    }
+  }
+
+  // Approve KYC
+  approveKyc(member: Member, event: Event) {
+    event.stopPropagation();
+    if (confirm(`Approve KYC for ${member.fullName}?`)) {
+      this.processingId = member.memberId;
+      this.http.post(`${environment.apiBaseUrl}/admin/kyc/${member.memberId}/approve`, {}).subscribe({
+        next: () => {
+          this.processingId = null;
+          this.loadMembers();
+        },
+        error: (err) => {
+          console.error('Failed to approve KYC:', err);
+          alert('Failed to approve KYC. Please try again.');
+          this.processingId = null;
+        }
+      });
+    }
+  }
+
+  // Reject KYC
+  openRejectKycModal(member: Member, event: Event) {
+    event.stopPropagation();
+    this.memberToReject = member;
+    this.rejectReason = '';
+    this.showRejectKycModal = true;
+  }
+
+  closeRejectKycModal() {
+    this.showRejectKycModal = false;
+    this.memberToReject = null;
+    this.rejectReason = '';
+  }
+
+  confirmRejectKyc() {
+    if (!this.memberToReject || !this.rejectReason.trim()) {
+      alert('Please provide a rejection reason.');
+      return;
+    }
+
+    this.processingId = this.memberToReject.memberId;
+    this.http.post(`${environment.apiBaseUrl}/admin/kyc/${this.memberToReject.memberId}/reject`, {
+      reason: this.rejectReason
+    }).subscribe({
+      next: () => {
+        this.processingId = null;
+        this.closeRejectKycModal();
+        this.loadMembers();
+      },
+      error: (err) => {
+        console.error('Failed to reject KYC:', err);
+        alert('Failed to reject KYC. Please try again.');
+        this.processingId = null;
+      }
+    });
+  }
+
+  // Assign Plan
+  openAssignPlanModal(member: Member, event: Event) {
+    event.stopPropagation();
+    this.selectedMember = member;
+    this.selectedPlanId = member.activePlanId || '';
+    this.showAssignPlanModal = true;
+  }
+
+  closeAssignPlanModal() {
+    this.showAssignPlanModal = false;
+    this.selectedMember = null;
+    this.selectedPlanId = '';
+  }
+
+  confirmAssignPlan() {
+    if (!this.selectedMember || !this.selectedPlanId) return;
+    this.assignPlanProcessing = true;
+
+    this.http.post(`${environment.apiBaseUrl}/admin/members/${this.selectedMember.memberId}/assign-plan`, {
+      planId: this.selectedPlanId
+    }).subscribe({
+      next: () => {
+        this.assignPlanProcessing = false;
+        this.closeAssignPlanModal();
+        this.loadMembers();
+      },
+      error: (err) => {
+        console.error('Failed to assign plan:', err);
+        alert('Failed to assign plan. Please try again.');
+        this.assignPlanProcessing = false;
+      }
+    });
+  }
+
+  // Bulk Actions
+  toggleSelectAll(event: Event) {
+    const checkbox = event.target as HTMLInputElement;
+    if (checkbox.checked) {
+      this.paginatedMembers.forEach(m => this.selectedMembers.add(m.memberId));
+    } else {
+      this.selectedMembers.clear();
+    }
+    this.showBulkActions = this.selectedMembers.size > 0;
+  }
+
+  toggleSelectMember(memberId: string, event: Event) {
+    const checkbox = event.target as HTMLInputElement;
+    if (checkbox.checked) {
+      this.selectedMembers.add(memberId);
+    } else {
+      this.selectedMembers.delete(memberId);
+    }
+    this.showBulkActions = this.selectedMembers.size > 0;
+  }
+
+  isSelected(memberId: string): boolean {
+    return this.selectedMembers.has(memberId);
+  }
+
+  bulkApproveKyc() {
+    const count = this.selectedMembers.size;
+    if (confirm(`Approve KYC for ${count} selected member(s)?`)) {
+      this.processingId = 'bulk';
+      this.http.post(`${environment.apiBaseUrl}/admin/kyc/bulk-approve`, {
+        memberIds: Array.from(this.selectedMembers)
+      }).subscribe({
+        next: () => {
+          this.processingId = null;
+          this.selectedMembers.clear();
+          this.showBulkActions = false;
+          this.loadMembers();
+        },
+        error: (err) => {
+          console.error('Failed to bulk approve KYC:', err);
+          alert('Failed to bulk approve KYC. Please try again.');
+          this.processingId = null;
+        }
+      });
+    }
+  }
+
   exportToCSV() {
-    const headers = ['Full Name', 'Email', 'Phone', 'Role', 'KYC Status', 'Active Plan', 'Claims Count', 'Member Since'];
-    const rows = this.filteredAndSortedMembers.map(m => [
-      m.fullName, m.email, m.contactNumber || 'N/A', m.role, m.kycStatus,
-      m.activePlan?.name || 'No Plan', m.claimsCount, new Date(m.createdAt).toLocaleDateString()
+    const headers = ['Full Name', 'Email', 'Phone', 'Role', 'KYC Status', 'Active Plan', 'Claims', 'Joined Date'];
+    const rows = this.filteredMembers.map(m => [
+      `"${m.fullName}"`,
+      `"${m.email}"`,
+      `"${m.phoneNumber || 'N/A'}"`,
+      m.role,
+      m.kycStatus,
+      m.activePlanName || 'None',
+      m.claimsCount || 0,
+      this.formatDate(m.createdAt)
     ]);
 
-    const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
+    const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `members_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `members_export_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
-    URL.revokeObjectURL(url);
+    window.URL.revokeObjectURL(url);
   }
 }

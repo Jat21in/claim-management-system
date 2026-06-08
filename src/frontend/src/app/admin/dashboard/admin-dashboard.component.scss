@@ -415,3 +415,40 @@
         height: 250px;
     }
 }
+
+.metric-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    svg {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+
+/* Individual enterprise gradients */
+
+.claims-icon {
+    color: #2563eb;
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.12);
+}
+
+.amount-icon {
+    color: #059669;
+    box-shadow: 0 10px 25px rgba(5, 150, 105, 0.12);
+}
+
+.weekly-icon {
+    color: #7c3aed;
+    box-shadow: 0 10px 25px rgba(124, 58, 237, 0.12);
+}
+
+.success-icon {
+    color: #d97706;
+    box-shadow: 0 10px 25px rgba(245, 158, 11, 0.12);
+}

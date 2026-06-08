@@ -1,105 +1,98 @@
-import { Component, OnInit, inject, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { environment } from '../../../environments/environment';
-import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
+import { FilterByStatusPipe } from './filter-by-status.pipe';
 
-interface Claim {
+export interface Claim {
   claimId: string;
-  memberName: string;
   memberId: string;
+  memberName: string;
+  memberEmail: string;
   claimDate: string;
   amount: number;
-  description: string;
   status: string;
+  description: string;
   aiConfidenceScore?: number;
   aiDecision?: string;
   aiReasoning?: string;
   medicalReportFileName?: string;
+  medicalReportPath?: string;
+  isPreAuthorization?: boolean;
+  hospitalName?: string;
+  admissionDate?: string;
+  doctorName?: string;
+  diagnosis?: string;
+  estimatedAmount?: number;
   processedAt?: string;
   processedBy?: string;
-}
-
-interface ClaimStats {
-  total: number;
-  pending: number;
-  approved: number;
-  rejected: number;
-  pendingAI: number;
-  paid: number;
-  totalAmount: number;
-  avgProcessingTime: string;
+  rejectionReason?: string;
+  // Payment fields
+  paymentMode?: string;
+  paymentReferenceNumber?: string;
+  treatmentType?: string;
 }
 
 @Component({
   selector: 'app-admin-claims',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FilterByStatusPipe],
   templateUrl: './admin-claims.component.html',
-  styleUrls: ['./admin-claims.component.scss'],
-  animations: [
-    trigger('fadeIn', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(10px)' }),
-        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ]),
-    trigger('staggerList', [
-      transition('* => *', [
-        query(':enter', [
-          style({ opacity: 0, transform: 'translateX(-20px)' }),
-          stagger('50ms', [
-            animate('300ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
-          ])
-        ], { optional: true })
-      ])
-    ])
-  ]
+  styleUrls: ['./admin-claims.component.scss']
 })
 export class AdminClaimsComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
-  private cdr = inject(ChangeDetectorRef);
+  private sanitizer = inject(DomSanitizer);
 
-  loading = true;
-  error: string | null = null;
+  // Claims data
   allClaims: Claim[] = [];
   filteredClaims: Claim[] = [];
-  selectedClaim: Claim | null = null;
-  showDetailModal = false;
-  showRejectModal = false;
-  rejectionReason = '';
-  processingId: string | null = null;
-
-  // Filters
-  searchTerm = '';
-  statusFilter = 'all';
-  dateFilter = 'all';
-  sortBy = 'newest';
-
-  // Pagination
-  currentPage = 1;
-  pageSize = 15;
-
-  // Stats
-  stats: ClaimStats = {
+  stats = {
     total: 0,
+    totalAmount: 0,
     pending: 0,
+    pendingAI: 0,
+    preAuth: 0,
     approved: 0,
     rejected: 0,
-    pendingAI: 0,
     paid: 0,
-    totalAmount: 0,
     avgProcessingTime: '0'
   };
 
-  private refreshInterval: any;
+  // Filters
+  statusFilter = 'all';
+  searchTerm = '';
+  dateFilter = 'all';
+  sortBy = 'newest';
+  itemsPerPage = 10;
+  currentPage = 1;
 
-  // Status options for filter
+  // UI State
+  isLoading = true;
+  errorMessage = '';
+  selectedClaim: Claim | null = null;
+  showDetailModal = false;
+  showDocumentModal = false;
+  selectedDocumentClaim: Claim | null = null;
+  documentUrl: SafeResourceUrl | null = null;
+  documentFileName = '';
+  documentFileType = '';
+
+  // Action state
+  isProcessing = false;
+  processingId: string | null = null;
+  showRejectModal = false;
+  rejectionReason = '';
+  claimToReject: Claim | null = null;
+
+  // Options
   statusOptions = [
     { value: 'all', label: 'All Claims', icon: '📋' },
-    { value: 'Pending', label: 'Pending Review', icon: '⏳' },
-    { value: 'PendingAI', label: 'AI Processing', icon: '🤖' },
+    { value: 'Submitted', label: 'Submitted', icon: '📝' },
+    { value: 'Pending', label: 'Pending', icon: '⏳' },
+    { value: 'PreAuth', label: 'Pre-Authorization', icon: '🏥' },
     { value: 'Approved', label: 'Approved', icon: '✅' },
     { value: 'Rejected', label: 'Rejected', icon: '❌' },
     { value: 'Paid', label: 'Paid', icon: '💰' }
@@ -109,31 +102,108 @@ export class AdminClaimsComponent implements OnInit, OnDestroy {
     { value: 'all', label: 'All Time' },
     { value: 'today', label: 'Today' },
     { value: 'week', label: 'Last 7 Days' },
-    { value: 'month', label: 'Last 30 Days' },
-    { value: 'quarter', label: 'Last 90 Days' }
+    { value: 'month', label: 'Last 30 Days' }
   ];
+
+  itemsPerPageOptions = [5, 10, 25, 50];
+
+  // Computed
+  get totalPages(): number {
+    return Math.ceil(this.filteredClaims.length / this.itemsPerPage);
+  }
+
+  get paginatedClaims(): Claim[] {
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    return this.filteredClaims.slice(start, start + this.itemsPerPage);
+  }
+
+  get startIndex(): number {
+    return (this.currentPage - 1) * this.itemsPerPage + 1;
+  }
+
+  get endIndex(): number {
+    return Math.min(this.currentPage * this.itemsPerPage, this.filteredClaims.length);
+  }
 
   ngOnInit() {
     this.loadClaims();
-    this.refreshInterval = setInterval(() => this.loadClaims(), 60000); // Auto-refresh every minute
+    // Auto refresh every 30 seconds
+    const interval = setInterval(() => this.loadClaims(), 30000);
+    this.ngOnDestroy = () => clearInterval(interval);
   }
 
-  ngOnDestroy() {
-    if (this.refreshInterval) clearInterval(this.refreshInterval);
+  ngOnDestroy() {}
+
+  loadClaims() {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.http.get<any[]>(`${environment.apiBaseUrl}/admin/claims/all`).subscribe({
+      next: (claims) => {
+        this.allClaims = claims.map(c => ({
+          claimId: c.claimId,
+          memberId: c.memberId,
+          memberName: c.memberName || 'Unknown',
+          memberEmail: c.memberEmail || '',
+          claimDate: c.claimDate,
+          amount: c.amount || c.claimAmount || 0,
+          status: c.status,
+          description: c.description || '',
+          aiConfidenceScore: c.aiConfidenceScore,
+          aiDecision: c.aiDecision,
+          aiReasoning: c.aiReasoning,
+          medicalReportFileName: c.medicalReportFileName,
+          medicalReportPath: c.medicalReportPath,
+          isPreAuthorization: c.isPreAuthorization,
+          hospitalName: c.hospitalName,
+          admissionDate: c.admissionDate,
+          doctorName: c.doctorName,
+          diagnosis: c.diagnosis,
+          estimatedAmount: c.estimatedAmount,
+          paymentMode: c.paymentMode,
+          paymentReferenceNumber: c.paymentReferenceNumber,
+          treatmentType: c.treatmentType
+        }));
+        this.calculateStats();
+        this.applyFilters();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Failed to load claims:', error);
+        this.errorMessage = 'Failed to load claims. Please try again.';
+        this.isLoading = false;
+      }
+    });
   }
 
-  get filteredAndSortedClaims(): Claim[] {
+  calculateStats() {
+    const totalAmount = this.allClaims.reduce((sum, c) => sum + (c.amount || 0), 0);
+    const pending = this.allClaims.filter(c => c.status === 'Pending').length;
+    const pendingAI = this.allClaims.filter(c => c.status === 'PendingAI').length;
+    const preAuth = this.allClaims.filter(c => c.status === 'PreAuth').length;
+    const approved = this.allClaims.filter(c => c.status === 'Approved').length;
+    const rejected = this.allClaims.filter(c => c.status === 'Rejected').length;
+    const paid = this.allClaims.filter(c => c.status === 'Paid').length;
+
+    // Calculate average processing time for approved claims
+    // This would need backend support, using mock for now
+    const avgTime = '2.5 days';
+
+    this.stats = {
+      total: this.allClaims.length,
+      totalAmount,
+      pending,
+      pendingAI,
+      preAuth,
+      approved,
+      rejected,
+      paid,
+      avgProcessingTime: avgTime
+    };
+  }
+
+  applyFilters() {
     let filtered = [...this.allClaims];
-
-    // Search filter
-    if (this.searchTerm) {
-      const term = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(c =>
-        c.memberName.toLowerCase().includes(term) ||
-        c.claimId.toLowerCase().includes(term) ||
-        (c.description && c.description.toLowerCase().includes(term))
-      );
-    }
 
     // Status filter
     if (this.statusFilter !== 'all') {
@@ -145,180 +215,140 @@ export class AdminClaimsComponent implements OnInit, OnDestroy {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-      if (this.dateFilter === 'today') {
-        filtered = filtered.filter(c => new Date(c.claimDate) >= today);
-      } else if (this.dateFilter === 'week') {
-        const weekAgo = new Date(now.setDate(now.getDate() - 7));
-        filtered = filtered.filter(c => new Date(c.claimDate) >= weekAgo);
-      } else if (this.dateFilter === 'month') {
-        const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
-        filtered = filtered.filter(c => new Date(c.claimDate) >= monthAgo);
-      } else if (this.dateFilter === 'quarter') {
-        const quarterAgo = new Date(now.setMonth(now.getMonth() - 3));
-        filtered = filtered.filter(c => new Date(c.claimDate) >= quarterAgo);
-      }
+      filtered = filtered.filter(c => {
+        const claimDate = new Date(c.claimDate);
+        if (this.dateFilter === 'today') {
+          return claimDate >= today;
+        } else if (this.dateFilter === 'week') {
+          const weekAgo = new Date(today);
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          return claimDate >= weekAgo;
+        } else if (this.dateFilter === 'month') {
+          const monthAgo = new Date(today);
+          monthAgo.setDate(monthAgo.getDate() - 30);
+          return claimDate >= monthAgo;
+        }
+        return true;
+      });
+    }
+
+    // Search filter
+    if (this.searchTerm.trim()) {
+      const term = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(c =>
+        c.memberName?.toLowerCase().includes(term) ||
+        c.memberEmail?.toLowerCase().includes(term) ||
+        c.claimId?.toLowerCase().includes(term) ||
+        c.description?.toLowerCase().includes(term)
+      );
     }
 
     // Sorting
-    if (this.sortBy === 'newest') {
-      filtered.sort((a, b) => new Date(b.claimDate).getTime() - new Date(a.claimDate).getTime());
-    } else if (this.sortBy === 'oldest') {
-      filtered.sort((a, b) => new Date(a.claimDate).getTime() - new Date(b.claimDate).getTime());
-    } else if (this.sortBy === 'amount-high') {
-      filtered.sort((a, b) => b.amount - a.amount);
-    } else if (this.sortBy === 'amount-low') {
-      filtered.sort((a, b) => a.amount - b.amount);
-    } else if (this.sortBy === 'member') {
-      filtered.sort((a, b) => a.memberName.localeCompare(b.memberName));
-    }
-
-    return filtered;
-  }
-
-  get paginatedClaims(): Claim[] {
-    const start = (this.currentPage - 1) * this.pageSize;
-    return this.filteredAndSortedClaims.slice(start, start + this.pageSize);
-  }
-
-  get totalPages(): number {
-    return Math.ceil(this.filteredAndSortedClaims.length / this.pageSize);
-  }
-
-  getDisplayedEnd(): number {
-    return Math.min(this.currentPage * this.pageSize, this.filteredAndSortedClaims.length);
-  }
-
-  loadClaims() {
-    this.loading = true;
-    this.error = null;
-
-    console.log('Fetching claims from:', `${environment.apiBaseUrl}/admin/claims/all`);
-
-    this.http.get(`${environment.apiBaseUrl}/admin/claims/all`).subscribe({
-        next: (res: any) => {
-            console.log('Raw API response:', res);
-
-            // Handle different response structures
-            let claimsArray = res;
-            if (res && res.data) claimsArray = res.data;
-            if (res && res.$values) claimsArray = res.$values;
-
-            // If response is an object with items property
-            if (res && res.items && Array.isArray(res.items)) {
-                claimsArray = res.items;
-            }
-
-            if (!claimsArray || !Array.isArray(claimsArray)) {
-                console.warn('API response is not an array:', claimsArray);
-                this.error = 'Unexpected API response format';
-                this.loading = false;
-                this.cdr.detectChanges();
-                return;
-            }
-
-            console.log(`Received ${claimsArray.length} claims from API`);
-
-            this.allClaims = claimsArray.map((c: any) => ({
-                claimId: c.claimId || c.ClaimId,
-                memberName: c.memberName || c.MemberName || c.member?.fullName || 'Unknown',
-                memberId: c.memberId || c.MemberId,
-                claimDate: c.claimDate || c.ClaimDate,
-                amount: (c.amount || c.Amount || c.claimAmount?.amount || 0),
-                description: c.description || c.Description || 'No description',
-                status: c.status || c.Status || 'Submitted',
-                aiConfidenceScore: c.aiConfidenceScore || c.AiConfidenceScore,
-                aiDecision: c.aiDecision || c.AiDecision,
-                aiReasoning: c.aiReasoning || c.AiReasoning,
-                medicalReportFileName: c.medicalReportFileName,
-                processedAt: c.processedAt,
-                processedBy: c.processedBy
-            }));
-
-            console.log(`Mapped ${this.allClaims.length} claims:`, this.allClaims);
-
-            this.calculateStats();
-            this.applyFilters();
-            this.loading = false;
-            this.cdr.detectChanges();
-        },
-        error: (err) => {
-            console.error('Failed to load claims:', err);
-            this.error = `Failed to load claims: ${err.message || err.statusText || 'Unknown error'}`;
-            this.loading = false;
-            this.cdr.detectChanges();
-        }
+    filtered.sort((a, b) => {
+      switch (this.sortBy) {
+        case 'newest':
+          return new Date(b.claimDate).getTime() - new Date(a.claimDate).getTime();
+        case 'oldest':
+          return new Date(a.claimDate).getTime() - new Date(b.claimDate).getTime();
+        case 'amount-high':
+          return (b.amount || 0) - (a.amount || 0);
+        case 'amount-low':
+          return (a.amount || 0) - (b.amount || 0);
+        case 'member':
+          return (a.memberName || '').localeCompare(b.memberName || '');
+        default:
+          return 0;
+      }
     });
-}
 
-
-  calculateStats() {
-    this.stats = {
-      total: this.allClaims.length,
-      pending: this.allClaims.filter(c => c.status === 'Submitted' || c.status === 'Pending').length,
-      approved: this.allClaims.filter(c => c.status === 'Approved').length,
-      rejected: this.allClaims.filter(c => c.status === 'Rejected').length,
-      pendingAI: this.allClaims.filter(c => c.status === 'PendingAI').length,
-      paid: this.allClaims.filter(c => c.status === 'Paid').length,
-      totalAmount: this.allClaims.reduce((sum, c) => sum + c.amount, 0),
-      avgProcessingTime: this.calculateAvgProcessingTime()
-    };
-  }
-
-  calculateAvgProcessingTime(): string {
-    const processedClaims = this.allClaims.filter(c => c.processedAt);
-    if (processedClaims.length === 0) return '0 days';
-
-    const totalHours = processedClaims.reduce((sum, c) => {
-      const submitted = new Date(c.claimDate);
-      const processed = new Date(c.processedAt!);
-      return sum + (processed.getTime() - submitted.getTime()) / (1000 * 60 * 60);
-    }, 0);
-
-    const avgHours = totalHours / processedClaims.length;
-    if (avgHours < 24) return `${Math.round(avgHours)} hours`;
-    return `${(avgHours / 24).toFixed(1)} days`;
-  }
-
-  applyFilters() {
+    this.filteredClaims = filtered;
     this.currentPage = 1;
-    this.cdr.detectChanges();
+  }
+
+  onStatusFilterChange() {
+    this.applyFilters();
+  }
+
+  onSearchChange() {
+    this.applyFilters();
+  }
+
+  onDateFilterChange() {
+    this.applyFilters();
+  }
+
+  onSortChange() {
+    this.applyFilters();
+  }
+
+  onItemsPerPageChange() {
+    this.currentPage = 1;
   }
 
   clearFilters() {
-    this.searchTerm = '';
     this.statusFilter = 'all';
+    this.searchTerm = '';
     this.dateFilter = 'all';
     this.sortBy = 'newest';
     this.applyFilters();
   }
 
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const total = this.totalPages;
+    const current = this.currentPage;
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (current > 3) pages.push(-1);
+      for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+        pages.push(i);
+      }
+      if (current < total - 2) pages.push(-1);
+      pages.push(total);
+    }
+    return pages;
+  }
+
   getStatusBadgeClass(status: string): string {
-    switch(status) {
+    switch (status) {
+      case 'Submitted': return 'submitted';
+      case 'Pending': return 'pending';
+      case 'PendingAI': return 'ai';
+      case 'PreAuth': return 'preauth';
       case 'Approved': return 'approved';
       case 'Rejected': return 'rejected';
-      case 'PendingAI': return 'ai';
       case 'Paid': return 'paid';
       default: return 'pending';
     }
   }
 
-  getStatusIcon(status: string): string {
-    switch(status) {
-      case 'Approved': return '✅';
-      case 'Rejected': return '❌';
-      case 'PendingAI': return '🤖';
-      case 'Paid': return '💰';
-      default: return '⏳';
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'PendingAI': return 'AI Review';
+      case 'PreAuth': return 'Pre-Authorization';
+      default: return status;
     }
   }
 
-  getStatusLabel(status: string): string {
-    switch(status) {
-      case 'Approved': return 'Approved';
-      case 'Rejected': return 'Rejected';
-      case 'PendingAI': return 'AI Processing';
-      case 'Paid': return 'Payment Processed';
-      default: return 'Pending Review';
+  getStatusIcon(status: string): string {
+    switch (status) {
+      case 'Submitted': return '📝';
+      case 'Pending': return '⏳';
+      case 'PendingAI': return '🤖';
+      case 'PreAuth': return '🏥';
+      case 'Approved': return '✅';
+      case 'Rejected': return '❌';
+      case 'Paid': return '💰';
+      default: return '📋';
     }
   }
 
@@ -332,79 +362,155 @@ export class AdminClaimsComponent implements OnInit, OnDestroy {
     this.selectedClaim = null;
   }
 
-  approveClaim(claimId: string) {
-    if (!confirm('Are you sure you want to approve this claim?')) return;
+  viewDocument(claim: Claim, event: Event) {
+    event.stopPropagation();
+    console.log('🔍 viewDocument() called');
+    console.log('📋 Claim object:', claim);
+    this.selectedDocumentClaim = claim;
 
+    if (claim.medicalReportPath) {
+        console.log('📄 medicalReportPath found:', claim.medicalReportPath);
+
+        let fullUrl = claim.medicalReportPath;
+
+        // Case 1: Already has full URL with /uploads/
+        if (fullUrl.includes('/uploads/')) {
+            // Make sure it starts with the base URL
+            if (fullUrl.startsWith('/uploads/')) {
+                fullUrl = `${environment.uploadBaseUrl}${fullUrl}`;
+            }
+            console.log('✅ Case 1 - URL with /uploads/:', fullUrl);
+        }
+        // Case 2: Just filename (old format) - construct the correct path
+        else if (!fullUrl.includes('/') && !fullUrl.includes('\\')) {
+            // Old format: just filename like "1889c08b-906b-4915-ba53-32dcb918acca_20260528194504_medical_report_test.pdf"
+            // Construct using claimId folder
+            const claimId = claim.claimId.toLowerCase();
+            fullUrl = `${environment.uploadBaseUrl}/uploads/ClaimDocuments/${claimId}/${fullUrl}`;
+            console.log('✅ Case 2 - Old filename format, constructed URL:', fullUrl);
+        }
+        // Case 3: Relative path without /uploads/
+        else if (!fullUrl.startsWith('http')) {
+            fullUrl = `${environment.uploadBaseUrl}/${fullUrl}`;
+            console.log('✅ Case 3 - Relative path:', fullUrl);
+        }
+
+        console.log('🎯 Final Document URL:', fullUrl);
+        console.log('📛 File name:', claim.medicalReportFileName);
+
+        this.documentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(fullUrl);
+        this.documentFileName = claim.medicalReportFileName || 'Medical Report';
+
+        const fileExt = claim.medicalReportFileName?.split('.').pop()?.toLowerCase() || '';
+
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+            this.documentFileType = 'image';
+        } else if (fileExt === 'pdf') {
+            this.documentFileType = 'pdf';
+        } else {
+            this.documentFileType = 'other';
+        }
+
+        this.showDocumentModal = true;
+    } else {
+        console.warn('⚠️ No medicalReportPath in claim object');
+        alert('No document attached to this claim.');
+    }
+}
+
+
+  closeDocumentModal() {
+    this.showDocumentModal = false;
+    this.selectedDocumentClaim = null;
+    this.documentUrl = null;
+  }
+
+  downloadDocument() {
+    if (this.selectedDocumentClaim?.medicalReportPath) {
+        let downloadUrl = this.selectedDocumentClaim.medicalReportPath;
+
+        // Same URL construction logic as viewDocument
+        if (downloadUrl.includes('/uploads/')) {
+            if (downloadUrl.startsWith('/uploads/')) {
+                downloadUrl = `${environment.uploadBaseUrl}${downloadUrl}`;
+            }
+        }
+        else if (!downloadUrl.includes('/') && !downloadUrl.includes('\\')) {
+            const claimId = this.selectedDocumentClaim.claimId.toLowerCase();
+            downloadUrl = `${environment.uploadBaseUrl}/uploads/ClaimDocuments/${claimId}/${downloadUrl}`;
+        }
+        else if (!downloadUrl.startsWith('http')) {
+            downloadUrl = `${environment.uploadBaseUrl}/${downloadUrl}`;
+        }
+
+        window.open(downloadUrl, '_blank');
+    }
+}
+
+
+  approveClaim(claimId: string) {
+    if (this.isProcessing) return;
+    this.isProcessing = true;
     this.processingId = claimId;
-    this.http.post(`${environment.apiBaseUrl}/admin/claims/${claimId}/approve`, {
-      comments: "Approved by admin"
-    }).subscribe({
+
+    const claim = this.allClaims.find(c => c.claimId === claimId);
+    const endpoint = claim?.isPreAuthorization
+      ? `${environment.apiBaseUrl}/admin/claims/${claimId}/approve-pre-auth`
+      : `${environment.apiBaseUrl}/admin/claims/${claimId}/approve`;
+
+    this.http.post(endpoint, {}).subscribe({
       next: () => {
         this.loadClaims();
+        this.isProcessing = false;
         this.processingId = null;
         this.closeModal();
       },
-      error: (err) => {
-        console.error('Failed to approve claim:', err);
-        alert('Failed to approve claim');
+      error: (error) => {
+        console.error('Failed to approve claim:', error);
+        alert('Failed to approve claim. Please try again.');
+        this.isProcessing = false;
         this.processingId = null;
       }
     });
   }
 
-  openRejectModal(claim: Claim) {
-    this.selectedClaim = claim;
+  openRejectModal(claim: Claim, event?: Event) {
+    if (event) event.stopPropagation();
+    this.claimToReject = claim;
     this.rejectionReason = '';
     this.showRejectModal = true;
+    this.closeModal();
+  }
+
+  closeRejectModal() {
+    this.showRejectModal = false;
+    this.claimToReject = null;
+    this.rejectionReason = '';
   }
 
   confirmReject() {
-    if (!this.selectedClaim || !this.rejectionReason) {
-      alert('Please provide a rejection reason');
+    if (!this.rejectionReason.trim()) {
+      alert('Please provide a rejection reason.');
       return;
     }
 
-    this.processingId = this.selectedClaim.claimId;
-    this.http.post(`${environment.apiBaseUrl}/admin/claims/${this.selectedClaim.claimId}/reject`, {
+    if (this.isProcessing) return;
+    this.isProcessing = true;
+
+    this.http.post(`${environment.apiBaseUrl}/admin/claims/${this.claimToReject?.claimId}/reject`, {
       reason: this.rejectionReason
     }).subscribe({
       next: () => {
         this.loadClaims();
-        this.processingId = null;
-        this.showRejectModal = false;
-        this.selectedClaim = null;
-        this.rejectionReason = '';
+        this.closeRejectModal();
+        this.isProcessing = false;
       },
-      error: (err) => {
-        console.error('Failed to reject claim:', err);
-        alert('Failed to reject claim');
-        this.processingId = null;
+      error: (error) => {
+        console.error('Failed to reject claim:', error);
+        alert('Failed to reject claim. Please try again.');
+        this.isProcessing = false;
       }
     });
-  }
-
-  previousPage() {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.cdr.detectChanges();
-    }
-  }
-
-  nextPage() {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.cdr.detectChanges();
-    }
-  }
-
-  getPageNumbers(): number[] {
-    const pages: number[] = [];
-    const maxPages = Math.min(5, this.totalPages);
-    let start = Math.max(1, this.currentPage - 2);
-    let end = Math.min(this.totalPages, start + maxPages - 1);
-    if (end - start + 1 < maxPages) start = Math.max(1, end - maxPages + 1);
-    for (let i = start; i <= end; i++) pages.push(i);
-    return pages;
   }
 
   formatCurrency(amount: number): string {
@@ -416,20 +522,45 @@ export class AdminClaimsComponent implements OnInit, OnDestroy {
     }).format(amount);
   }
 
+  formatDate(dateString: string): string {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  }
+
+  formatDateTime(dateString: string): string {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
   exportToCSV() {
-    const headers = ['Claim ID', 'Member Name', 'Claim Date', 'Amount', 'Status', 'Description', 'Processed Date'];
-    const rows = this.filteredAndSortedClaims.map(c => [
-      c.claimId, c.memberName, new Date(c.claimDate).toLocaleDateString(),
-      c.amount, c.status, c.description || '', c.processedAt ? new Date(c.processedAt).toLocaleDateString() : 'Pending'
+    const headers = ['Claim ID', 'Member Name', 'Member Email', 'Claim Date', 'Amount', 'Status', 'Description'];
+    const rows = this.filteredClaims.map(c => [
+      c.claimId,
+      c.memberName,
+      c.memberEmail,
+      this.formatDate(c.claimDate),
+      c.amount,
+      c.status,
+      c.description
     ]);
 
-    const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
+    const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `claims_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `claims-export-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
-    URL.revokeObjectURL(url);
+    window.URL.revokeObjectURL(url);
   }
 }

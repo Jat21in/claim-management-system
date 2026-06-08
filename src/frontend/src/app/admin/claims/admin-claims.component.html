@@ -1,5 +1,5 @@
-<div class="claims-container" @fadeIn>
-    <!-- Header Section -->
+<div class="claims-container">
+    <!-- Header -->
     <div class="page-header">
         <div>
             <h1 class="page-title">Claims Management</h1>
@@ -23,9 +23,9 @@
             <div class="stat-total-amount">{{ formatCurrency(stats.totalAmount) }}</div>
         </div>
         <div class="stat-card pending">
-            <div class="stat-value">{{ stats.pending + stats.pendingAI }}</div>
+            <div class="stat-value">{{ stats.pending + stats.pendingAI + stats.preAuth }}</div>
             <div class="stat-label">Pending Review</div>
-            <div class="stat-sub">AI: {{ stats.pendingAI }}</div>
+            <div class="stat-sub">Pre-Auth: {{ stats.preAuth }} | AI: {{ stats.pendingAI }}</div>
         </div>
         <div class="stat-card approved">
             <div class="stat-value">{{ stats.approved }}</div>
@@ -35,20 +35,22 @@
             <div class="stat-value">{{ stats.rejected }}</div>
             <div class="stat-label">Rejected</div>
         </div>
-        <div class="stat-card time">
-            <div class="stat-value">{{ stats.avgProcessingTime }}</div>
-            <div class="stat-label">Avg Processing Time</div>
+        <div class="stat-card paid">
+            <div class="stat-value">{{ stats.paid }}</div>
+            <div class="stat-label">Paid</div>
         </div>
     </div>
 
     <!-- Status Filter Tabs -->
     <div class="status-tabs">
-        <button *ngFor="let option of statusOptions" class="status-tab" [class.active]="statusFilter === option.value" (click)="statusFilter = option.value; applyFilters()">
-      <span class="tab-icon">{{ option.icon }}</span>
+        <button *ngFor="let option of statusOptions" class="status-tab" [class.active]="statusFilter === option.value" (click)="statusFilter = option.value; onStatusFilterChange()">
+      <!-- <span class="tab-icon">{{ option.icon }}</span> -->
       <span class="tab-label">{{ option.label }}</span>
       <span class="tab-count" *ngIf="option.value !== 'all'">
-        {{ option.value === 'Pending' ? stats.pending :
-           option.value === 'PendingAI' ? stats.pendingAI :
+        {{ option.value === 'Submitted' ? (allClaims | filterByStatus:'Submitted').length :
+           option.value === 'Pending' ? (allClaims | filterByStatus:'Pending').length :
+           option.value === 'PendingAI' ? (allClaims | filterByStatus:'PendingAI').length :
+           option.value === 'PreAuth' ? (allClaims | filterByStatus:'PreAuth').length :
            option.value === 'Approved' ? stats.approved :
            option.value === 'Rejected' ? stats.rejected :
            option.value === 'Paid' ? stats.paid : 0 }}
@@ -64,14 +66,14 @@
           <circle cx="11" cy="11" r="8"/>
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-                <input type="text" [(ngModel)]="searchTerm" (input)="applyFilters()" placeholder="Search by member name, claim ID, or description..." class="search-input">
+                <input type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()" placeholder="Search by member name, claim ID, or description..." class="search-input">
             </div>
 
-            <select [(ngModel)]="dateFilter" (change)="applyFilters()" class="filter-select">
+            <select [(ngModel)]="dateFilter" (change)="onDateFilterChange()" class="filter-select">
         <option *ngFor="let opt of dateOptions" [value]="opt.value">{{ opt.label }}</option>
       </select>
 
-            <select [(ngModel)]="sortBy" (change)="applyFilters()" class="filter-select">
+            <select [(ngModel)]="sortBy" (change)="onSortChange()" class="filter-select">
         <option value="newest">Newest First</option>
         <option value="oldest">Oldest First</option>
         <option value="amount-high">Amount (High to Low)</option>
@@ -79,240 +81,347 @@
         <option value="member">Member Name</option>
       </select>
 
-            <button class="btn-clear" (click)="clearFilters()" *ngIf="searchTerm || statusFilter !== 'all' || dateFilter !== 'all'">
+            <select [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()" class="filter-select">
+        <option *ngFor="let opt of itemsPerPageOptions" [value]="opt">{{ opt }} per page</option>
+      </select>
+
+            <button class="btn-clear" (click)="clearFilters()" *ngIf="statusFilter !== 'all' || searchTerm || dateFilter !== 'all'">
         Clear Filters
       </button>
         </div>
     </div>
 
-    <div *ngIf="error" class="error-message">
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="error-message">
         <svg class="error-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <span class="error-text">{{ error }}</span>
-        <button class="btn-retry" (click)="loadClaims()">Retry</button>
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+        <span>{{ errorMessage }}</span>
+        <button (click)="loadClaims()">Retry</button>
     </div>
 
-    < <!-- Claims Table -->
-        <div *ngIf="!loading && filteredAndSortedClaims.length> 0" class="table-container" @staggerList>
-            <table class="claims-table">
-                <thead>
-                    <tr>
-                        <th>Claim ID</th>
-                        <th>Member</th>
-                        <th>Date</th>
-                        <th>Amount</th>
-                        <th>Description</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let claim of paginatedClaims" class="claim-row" (click)="viewClaimDetails(claim)">
-                        <td class="claim-id-cell">
-                            <span class="claim-id">{{ claim.claimId | slice:0:8 }}...</span>
-                        </td>
-                        <td class="member-cell">
-                            <div class="member-name">{{ claim.memberName }}</div>
-                            <div class="member-id">{{ claim.memberId | slice:0:8 }}...</div>
-                        </td>
-                        <td class="date-cell">
-                            <div class="claim-date">{{ claim.claimDate | date:'MMM d, yyyy' }}</div>
-                            <div class="claim-time">{{ claim.claimDate | date:'h:mm a' }}</div>
-                        </td>
-                        <td class="amount-cell">
-                            <span class="claim-amount">{{ formatCurrency(claim.amount) }}</span>
-                        </td>
-                        <td class="description-cell">
-                            <span class="claim-desc">{{ (claim.description || '') | slice:0:60 }}{{ (claim.description || '').length > 60 ? '...' : '' }}</span>
-                            <span class="ai-badge" *ngIf="claim.aiConfidenceScore">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading claims...</p>
+    </div>
+
+    <!-- Claims Table -->
+    <div *ngIf="!isLoading && filteredClaims.length > 0" class="table-container">
+        <table class="claims-table">
+            <thead>
+                <tr>
+                    <th>Claim ID</th>
+                    <th>Member</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Document</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let claim of paginatedClaims" class="claim-row" (click)="viewClaimDetails(claim)">
+                    <td class="claim-id-cell">
+                        <span class="claim-id">{{ claim.claimId | slice:0:8 }}...</span>
+                    </td>
+                    <td class="member-cell">
+                        <div class="member-name">{{ claim.memberName }}</div>
+                        <div class="member-id">{{ claim.memberId | slice:0:8 }}...</div>
+                    </td>
+                    <td class="date-cell">
+                        <div class="claim-date">{{ claim.claimDate | date:'MMM d, yyyy' }}</div>
+                        <div class="claim-time">{{ claim.claimDate | date:'h:mm a' }}</div>
+                    </td>
+                    <td class="amount-cell">
+                        <span class="claim-amount">{{ formatCurrency(claim.amount) }}</span>
+                    </td>
+                    <td class="description-cell">
+                        <span class="claim-desc">{{ (claim.description || '') | slice:0:60 }}{{ (claim.description || '').length > 60 ? '...' : '' }}</span>
+                        <span class="ai-badge" *ngIf="claim.aiConfidenceScore">
               🤖 AI: {{ claim.aiConfidenceScore }}%
             </span>
-                        </td>
-                        <td class="status-cell">
-                            <span class="status-badge" [class]="getStatusBadgeClass(claim.status)">
+                        <span class="preauth-badge" *ngIf="claim.isPreAuthorization">
+              🏥 Pre-Auth
+            </span>
+                    </td>
+                    <td class="status-cell">
+                        <span class="status-badge" [class]="getStatusBadgeClass(claim.status)">
               <span class="status-icon">{{ getStatusIcon(claim.status) }}</span> {{ getStatusLabel(claim.status) }}
-                            </span>
-                        </td>
-                        <td class="actions-cell" (click)="$event.stopPropagation()">
-                            <div *ngIf="claim.status === 'Submitted' || claim.status === 'PendingAI'" class="action-buttons">
-                                <button class="btn-approve" (click)="approveClaim(claim.claimId)" [disabled]="processingId === claim.claimId">
-                {{ processingId === claim.claimId ? '...' : 'Approve' }}
+                        </span>
+                    </td>
+                    <td class="document-cell" (click)="$event.stopPropagation()">
+                        <button *ngIf="claim.medicalReportFileName" class="btn-view-doc" (click)="viewDocument(claim, $event)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              View
+            </button>
+                        <span *ngIf="!claim.medicalReportFileName" class="no-doc">No doc</span>
+                    </td>
+                    <td class="actions-cell" (click)="$event.stopPropagation()">
+                        <div class="action-buttons">
+                            <button class="btn-approve" (click)="approveClaim(claim.claimId)" [disabled]="isProcessing && processingId === claim.claimId">
+                {{ isProcessing && processingId === claim.claimId ? '...' : 'Approve' }}
               </button>
-                                <button class="btn-reject" (click)="openRejectModal(claim)" [disabled]="processingId === claim.claimId">
+                            <button class="btn-reject" (click)="openRejectModal(claim, $event)" [disabled]="isProcessing && processingId === claim.claimId">
                 Reject
               </button>
-                            </div>
-                            <div *ngIf="claim.status !== 'Submitted' && claim.status !== 'PendingAI'" class="processed-badge">
-                                <span class="processed-label">{{ claim.status }}</span>
-                                <span class="processed-date" *ngIf="claim.processedAt">{{ claim.processedAt | date:'MMM d' }}</span>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-        <!-- Empty State -->
-        <div *ngIf="!loading && filteredAndSortedClaims.length === 0" class="empty-state">
-            <div class="empty-icon">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && filteredClaims.length === 0" class="empty-state">
+        <div class="empty-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
         <polyline points="22 4 12 14.01 9 11.01"/>
       </svg>
-            </div>
-            <h3>No claims found</h3>
-            <p>Try adjusting your filters or search criteria</p>
         </div>
+        <h3>No claims found</h3>
+        <p>Try adjusting your filters or search criteria</p>
+    </div>
 
-        <!-- Pagination -->
-        <div class="pagination" *ngIf="totalPages > 1">
-            <div class="pagination-info">
-                Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ getDisplayedEnd() }} of {{ filteredAndSortedClaims.length }} claims
-            </div>
-            <div class="pagination-controls">
-                <button (click)="previousPage()" [disabled]="currentPage === 1" class="page-btn">
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1">
+        <div class="pagination-info">
+            Showing {{ startIndex }} to {{ endIndex }} of {{ filteredClaims.length }} claims
+        </div>
+        <div class="pagination-controls">
+            <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" class="page-btn prev">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
         Previous
       </button>
-                <span class="page-numbers">
-        <button *ngFor="let page of getPageNumbers()"
-                (click)="currentPage = page"
-                class="page-number"
-                [class.active]="page === currentPage">
-          {{ page }}
-        </button>
-      </span>
-                <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="page-btn">
+            <div class="page-numbers">
+                <ng-container *ngFor="let page of getPageNumbers()">
+                    <button *ngIf="page !== -1" (click)="goToPage(page)" class="page-number" [class.active]="page === currentPage">
+            {{ page }}
+          </button>
+                    <span *ngIf="page === -1" class="page-dots">...</span>
+                </ng-container>
+            </div>
+            <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" class="page-btn next">
         Next
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <polyline points="9 18 15 12 9 6"/>
         </svg>
       </button>
-            </div>
         </div>
+    </div>
 
-        <!-- Claim Detail Modal -->
-        <div class="modal-overlay" *ngIf="showDetailModal" (click)="closeModal()">
-            <div class="modal-content modal-large" (click)="$event.stopPropagation()">
-                <div class="modal-header">
-                    <div class="modal-title">
-                        <div class="modal-icon">📋</div>
-                        <div>
-                            <h3>Claim Details</h3>
-                            <p>{{ selectedClaim?.claimId }}</p>
-                        </div>
+    <!-- Claim Detail Modal -->
+    <div class="modal-overlay" *ngIf="showDetailModal" (click)="closeModal()">
+        <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <div class="modal-icon">📋</div>
+                    <div>
+                        <h3>Claim Details</h3>
+                        <p>{{ selectedClaim?.claimId }}</p>
                     </div>
-                    <button class="modal-close" (click)="closeModal()">×</button>
                 </div>
-                <div class="modal-body">
-                    <div class="detail-grid">
-                        <div class="detail-section">
-                            <h4>Claim Information</h4>
-                            <div class="detail-row">
-                                <span class="detail-label">Claim ID</span>
-                                <span class="detail-value">{{ selectedClaim?.claimId }}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">Claim Date</span>
-                                <span class="detail-value">{{ selectedClaim?.claimDate | date:'medium' }}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">Claim Amount</span>
-                                <span class="detail-value amount">{{ formatCurrency(selectedClaim?.amount || 0) }}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">Status</span>
-                                <span class="detail-value">
+                <button class="modal-close" (click)="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-grid">
+                    <!-- Claim Information -->
+                    <div class="detail-section">
+                        <h4>Claim Information</h4>
+                        <div class="detail-row">
+                            <span class="detail-label">Claim ID</span>
+                            <span class="detail-value">{{ selectedClaim?.claimId }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Claim Date</span>
+                            <span class="detail-value">{{ formatDateTime(selectedClaim?.claimDate || '') }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Claim Amount</span>
+                            <span class="detail-value amount">{{ formatCurrency(selectedClaim?.amount || 0) }}</span>
+                        </div>
+                        <div class="detail-row" *ngIf="selectedClaim?.estimatedAmount">
+                            <span class="detail-label">Estimated Amount</span>
+                            <span class="detail-value">{{ formatCurrency(selectedClaim?.estimatedAmount || 0) }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Status</span>
+                            <span class="detail-value">
                 <span class="status-badge" [class]="getStatusBadgeClass(selectedClaim?.status || '')">
                   {{ getStatusLabel(selectedClaim?.status || '') }}
                 </span>
-                                </span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">Description</span>
-                                <span class="detail-value">{{ selectedClaim?.description || 'No description provided' }}</span>
-                            </div>
+                            </span>
                         </div>
-
-                        <div class="detail-section">
-                            <h4>Member Information</h4>
-                            <div class="detail-row">
-                                <span class="detail-label">Member Name</span>
-                                <span class="detail-value">{{ selectedClaim?.memberName }}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">Member ID</span>
-                                <span class="detail-value">{{ selectedClaim?.memberId }}</span>
-                            </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Description</span>
+                            <span class="detail-value">{{ selectedClaim?.description || 'No description provided' }}</span>
                         </div>
+                        <div class="detail-row" *ngIf="selectedClaim?.treatmentType">
+                            <span class="detail-label">Treatment Type</span>
+                            <span class="detail-value">{{ selectedClaim?.treatmentType }}</span>
+                        </div>
+                    </div>
 
-                        <div class="detail-section" *ngIf="selectedClaim?.aiConfidenceScore">
-                            <h4>AI Verification Results</h4>
-                            <div class="detail-row">
-                                <span class="detail-label">Confidence Score</span>
-                                <span class="detail-value">
+                    <!-- Member Information -->
+                    <div class="detail-section">
+                        <h4>Member Information</h4>
+                        <div class="detail-row">
+                            <span class="detail-label">Member Name</span>
+                            <span class="detail-value">{{ selectedClaim?.memberName }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Member Email</span>
+                            <span class="detail-value">{{ selectedClaim?.memberEmail }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Member ID</span>
+                            <span class="detail-value">{{ selectedClaim?.memberId }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Pre-Authorization Information -->
+                    <div class="detail-section" *ngIf="selectedClaim?.isPreAuthorization">
+                        <h4>Pre-Authorization Details</h4>
+                        <div class="detail-row">
+                            <span class="detail-label">Hospital</span>
+                            <span class="detail-value">{{ selectedClaim?.hospitalName || 'N/A' }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Admission Date</span>
+                            <span class="detail-value">{{ formatDate(selectedClaim?.admissionDate || '') }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Doctor</span>
+                            <span class="detail-value">{{ selectedClaim?.doctorName || 'N/A' }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Diagnosis</span>
+                            <span class="detail-value">{{ selectedClaim?.diagnosis || 'N/A' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Information -->
+                    <div class="detail-section" *ngIf="selectedClaim?.paymentReferenceNumber">
+                        <h4>Payment Information</h4>
+                        <div class="detail-row">
+                            <span class="detail-label">Payment Mode</span>
+                            <span class="detail-value">{{ selectedClaim?.paymentMode || 'N/A' }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Reference Number</span>
+                            <span class="detail-value">{{ selectedClaim?.paymentReferenceNumber || 'N/A' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- AI Verification -->
+                    <div class="detail-section" *ngIf="selectedClaim?.aiConfidenceScore">
+                        <h4>AI Verification Results</h4>
+                        <div class="detail-row">
+                            <span class="detail-label">Confidence Score</span>
+                            <span class="detail-value">
                 <div class="confidence-bar">
                   <div class="confidence-fill" [style.width.%]="selectedClaim?.aiConfidenceScore || 0"></div>
                 </div>
                 <span>{{ selectedClaim?.aiConfidenceScore }}%</span>
-                                </span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">AI Decision</span>
-                                <span class="detail-value">{{ selectedClaim?.aiDecision || 'N/A' }}</span>
-                            </div>
-                            <div class="detail-row" *ngIf="selectedClaim?.aiReasoning">
-                                <span class="detail-label">AI Reasoning</span>
-                                <span class="detail-value">{{ selectedClaim?.aiReasoning }}</span>
-                            </div>
+                            </span>
                         </div>
-
-                        <div class="detail-section" *ngIf="selectedClaim?.medicalReportFileName">
-                            <h4>Medical Report</h4>
-                            <div class="detail-row">
-                                <span class="detail-label">File Name</span>
-                                <span class="detail-value">{{ selectedClaim?.medicalReportFileName }}</span>
-                            </div>
+                        <div class="detail-row">
+                            <span class="detail-label">AI Decision</span>
+                            <span class="detail-value">{{ selectedClaim?.aiDecision || 'N/A' }}</span>
+                        </div>
+                        <div class="detail-row" *ngIf="selectedClaim?.aiReasoning">
+                            <span class="detail-label">AI Reasoning</span>
+                            <span class="detail-value">{{ selectedClaim?.aiReasoning }}</span>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-secondary" (click)="closeModal()">Close</button>
-                    <div *ngIf="selectedClaim?.status === 'Submitted' || selectedClaim?.status === 'PendingAI'">
-                        <button class="btn-reject" (click)="openRejectModal(selectedClaim!)">Reject</button>
-                        <button class="btn-approve" (click)="approveClaim(selectedClaim!.claimId)">Approve Claim</button>
+
+                    <!-- Medical Report -->
+                    <div class="detail-section" *ngIf="selectedClaim?.medicalReportFileName">
+                        <h4>Medical Report</h4>
+                        <div class="detail-row">
+                            <span class="detail-label">File Name</span>
+                            <span class="detail-value">
+                {{ selectedClaim?.medicalReportFileName }}
+                <button class="btn-view-doc" (click)="viewDocument(selectedClaim!, $event)">View Document</button>
+              </span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Rejection Modal -->
-        <div class="modal-overlay" *ngIf="showRejectModal" (click)="showRejectModal = false">
-            <div class="modal-content" (click)="$event.stopPropagation()">
-                <div class="modal-header">
-                    <h3>Reject Claim</h3>
-                    <button class="modal-close" (click)="showRejectModal = false">×</button>
-                </div>
-                <div class="modal-body">
-                    <p>Please provide a reason for rejecting this claim:</p>
-                    <textarea [(ngModel)]="rejectionReason" placeholder="Enter rejection reason..." class="rejection-textarea" rows="4">
-        </textarea>
-                    <div class="quick-reasons">
-                        <button (click)="rejectionReason = 'Insufficient documentation provided'">Insufficient documentation</button>
-                        <button (click)="rejectionReason = 'Claim exceeds coverage limit'">Exceeds coverage limit</button>
-                        <button (click)="rejectionReason = 'Treatment not covered under policy'">Treatment not covered</button>
-                        <button (click)="rejectionReason = 'Policy was inactive at time of claim'">Policy inactive</button>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-secondary" (click)="showRejectModal = false">Cancel</button>
-                    <button class="btn-reject" (click)="confirmReject()" [disabled]="!rejectionReason">Confirm Rejection</button>
+            <div class="modal-footer">
+                <button class="btn-secondary" (click)="closeModal()">Close</button>
+                <div *ngIf="selectedClaim?.status !== 'Approved' && selectedClaim?.status !== 'Rejected' && selectedClaim?.status !== 'Paid'">
+                    <button class="btn-reject" (click)="openRejectModal(selectedClaim!)">Reject</button>
+                    <button class="btn-approve" (click)="approveClaim(selectedClaim!.claimId)">Approve Claim</button>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Document Modal -->
+    <div class="modal-overlay" *ngIf="showDocumentModal" (click)="closeDocumentModal()">
+        <div class="modal-content document-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <div class="modal-icon">📄</div>
+                    <div>
+                        <h3>Medical Report</h3>
+                        <p>{{ documentFileName }}</p>
+                    </div>
+                </div>
+                <button class="modal-close" (click)="closeDocumentModal()">×</button>
+            </div>
+            <div class="modal-body document-body">
+                <div *ngIf="documentFileType === 'pdf'" class="pdf-viewer">
+                    <iframe [src]="documentUrl" width="100%" height="500" frameborder="0"></iframe>
+                </div>
+                <div *ngIf="documentFileType === 'image'" class="image-viewer">
+                    <img [src]="documentUrl" alt="Medical Report" class="document-image">
+                </div>
+                <div *ngIf="documentFileType === 'other'" class="other-viewer">
+                    <div class="file-icon">📄</div>
+                    <p>Preview not available for this file type.</p>
+                    <button class="btn-download" (click)="downloadDocument()">Download File</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" (click)="closeDocumentModal()">Close</button>
+                <button class="btn-download" (click)="downloadDocument()">Download</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejection Modal -->
+    <div class="modal-overlay" *ngIf="showRejectModal" (click)="closeRejectModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Reject Claim</h3>
+                <button class="modal-close" (click)="closeRejectModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Please provide a reason for rejecting this claim:</p>
+                <textarea [(ngModel)]="rejectionReason" placeholder="Enter rejection reason..." class="rejection-textarea" rows="4"></textarea>
+                <div class="quick-reasons">
+                    <button (click)="rejectionReason = 'Insufficient documentation provided'">Insufficient documentation</button>
+                    <button (click)="rejectionReason = 'Claim exceeds coverage limit'">Exceeds coverage limit</button>
+                    <button (click)="rejectionReason = 'Treatment not covered under policy'">Treatment not covered</button>
+                    <button (click)="rejectionReason = 'Policy was inactive at time of claim'">Policy inactive</button>
+                    <button (click)="rejectionReason = 'Fraudulent claim detected'">Fraudulent claim</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" (click)="closeRejectModal()">Cancel</button>
+                <button class="btn-reject" (click)="confirmReject()" [disabled]="!rejectionReason.trim()">Confirm Rejection</button>
+            </div>
+        </div>
+    </div>
 </div>
