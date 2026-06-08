@@ -49,8 +49,10 @@ public sealed class FileStorageService : IFileStorageService
             await fileStream.CopyToAsync(fileStreamOutput, cancellationToken);
         }
 
+        // ✅ Return URL that frontend can use directly
         return $"/uploads/ClaimDocuments/{claimId}/{safeFileName}";
     }
+
 
     public Task<bool> DeleteFileAsync(string fileUrl, CancellationToken cancellationToken)
     {
@@ -77,9 +79,34 @@ public sealed class FileStorageService : IFileStorageService
     {
         if (string.IsNullOrEmpty(filePath)) return null;
 
-        var fullPath = Path.Combine(_uploadFolder, filePath);
-        if (!File.Exists(fullPath)) return null;
+        // Handle both relative and absolute paths
+        string fullPath;
 
+        if (filePath.StartsWith("/uploads/"))
+        {
+            // Remove leading /uploads/ and combine with _uploadPath
+            var relativePath = filePath.Substring(9); // Remove "/uploads/"
+            fullPath = Path.Combine(_uploadPath, relativePath);
+        }
+        else if (filePath.StartsWith("uploads/"))
+        {
+            fullPath = Path.Combine(_uploadPath, filePath.Substring(8));
+        }
+        else if (filePath.Contains("_"))
+        {
+            // Old format - just filename, try to find it
+            var allFiles = Directory.GetFiles(_uploadPath, "*", SearchOption.AllDirectories);
+            var matchingFile = allFiles.FirstOrDefault(f => f.EndsWith(filePath));
+            if (matchingFile == null) return null;
+            fullPath = matchingFile;
+        }
+        else
+        {
+            fullPath = Path.Combine(_uploadPath, filePath);
+        }
+
+        if (!File.Exists(fullPath)) return null;
         return File.ReadAllBytes(fullPath);
     }
+
 }

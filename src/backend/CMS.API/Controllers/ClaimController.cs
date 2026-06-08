@@ -57,9 +57,21 @@ public sealed class ClaimsController : ControllerBase
             AiReasoning = c.AiReasoning,
             HasMedicalReport = !string.IsNullOrEmpty(c.MedicalReportPath),
             MedicalReportFileName = c.MedicalReportFileName,
-            MedicalReportContentType = c.MedicalReportContentType
+            MedicalReportContentType = c.MedicalReportContentType,
+            // ✅ ADD THESE
+            MedicalReportPath = c.MedicalReportPath,
+            IsPreAuthorization = c.IsPreAuthorization,
+            HospitalName = c.HospitalName,
+            AdmissionDate = c.AdmissionDate,
+            DoctorName = c.DoctorName,
+            Diagnosis = c.Diagnosis,
+            EstimatedAmount = c.ClaimAmount.Amount,
+            PaymentMode = c.PaymentMode,
+            PaymentReferenceNumber = c.PaymentReferenceNumber,
+            TreatmentType = c.TreatmentType
         }));
     }
+
 
     [HttpPost]
     [Consumes("multipart/form-data")]

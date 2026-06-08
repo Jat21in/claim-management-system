@@ -78,22 +78,43 @@ public sealed class AdminClaimsController : ControllerBase
         try
         {
             var allClaims = await _claimRepository.GetAllAsync(HttpContext.RequestAborted);
+            var members = await _memberRepository.GetAllAsync(HttpContext.RequestAborted);
+            var memberDict = members.ToDictionary(m => m.MemberId, m => new { m.FullName, m.Email });
 
             Console.WriteLine($"Retrieved {allClaims.Count()} claims from database");
 
             var result = allClaims.Select(c => new
             {
                 claimId = c.ClaimId,
-                memberName = c.Member?.FullName ?? "Unknown",
                 memberId = c.MemberId,
-                claimDate = c.ClaimDate,
+                memberName = memberDict.ContainsKey(c.MemberId) ? memberDict[c.MemberId].FullName : "Unknown",
+                memberEmail = memberDict.ContainsKey(c.MemberId) ? memberDict[c.MemberId].Email : "",
+                claimDate = c.ClaimDate.ToDateTime(TimeOnly.MinValue),
                 amount = c.ClaimAmount.Amount,
                 description = c.Description,
                 status = c.Status.ToString(),
                 aiConfidenceScore = c.AiConfidenceScore,
                 aiDecision = c.AiDecision,
                 aiReasoning = c.AiReasoning,
+                // ✅ MEDICAL REPORT FIELDS - CRITICAL
                 medicalReportFileName = c.MedicalReportFileName,
+                medicalReportPath = c.MedicalReportPath,
+                medicalReportSize = c.MedicalReportSize,
+                medicalReportContentType = c.MedicalReportContentType,
+                hasMedicalReport = !string.IsNullOrEmpty(c.MedicalReportPath),
+                // ✅ PRE-AUTHORIZATION FIELDS
+                isPreAuthorization = c.IsPreAuthorization,
+                hospitalName = c.HospitalName,
+                admissionDate = c.AdmissionDate,
+                doctorName = c.DoctorName,
+                diagnosis = c.Diagnosis,
+                estimatedAmount = c.IsPreAuthorization ? c.ClaimAmount.Amount : (decimal?)null,
+                // ✅ PAYMENT FIELDS
+                paymentMode = c.PaymentMode,
+                paymentReferenceNumber = c.PaymentReferenceNumber,
+                treatmentType = c.TreatmentType,
+                paymentDate = c.PaymentDate,
+                // ✅ AUDIT FIELDS
                 createdAt = c.CreatedAt,
                 updatedAt = c.UpdatedAt
             });
