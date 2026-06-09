@@ -106,7 +106,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     { path: 'dashboard', label: 'Dashboard', icon: 'dashboard', active: false },
     { path: 'kyc', label: 'KYC Verification', icon: 'verified', active: false },
     { path: 'claims', label: 'Claims Management', icon: 'claim', active: false },
-    { path: 'members', label: 'Member Directory', icon: 'members', active: false }
+    { path: 'members', label: 'Member Directory', icon: 'members', active: false },
+    { path: 'hangfire', label: 'Job Monitor', icon: 'jobs', active: false }
   ];
 
   ngOnInit() {

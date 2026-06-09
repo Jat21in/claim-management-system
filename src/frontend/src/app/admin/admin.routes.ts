@@ -5,6 +5,7 @@ import { AdminClaimsComponent } from './claims/admin-claims.component';
 import { AdminMembersComponent } from './members/admin-members.component';
 import { AdminKycComponent } from './kyc/admin-kyc.component'; // ✅ ADD THIS
 import { adminGuard } from './gaurds/admin.guard';
+import { HangfireMonitoringComponent } from './hangfire/hangfire-monitoring.component';
 
 export const ADMIN_ROUTES: Routes = [
   {
@@ -17,6 +18,7 @@ export const ADMIN_ROUTES: Routes = [
       { path: 'claims', component: AdminClaimsComponent },
       { path: 'members', component: AdminMembersComponent },
       { path: 'kyc', component: AdminKycComponent }, // ✅ ADD THIS
+      { path: 'hangfire', component: HangfireMonitoringComponent }
     ]
   }
 ];
