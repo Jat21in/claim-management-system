@@ -51,6 +51,7 @@
     "@angular/cli": "^21.1.5",
     "@angular/compiler-cli": "^21.1.0",
     "@eslint/js": "^10.0.1",
+    "@types/chart.js": "^2.9.41",
     "@types/three": "^0.184.1",
     "angular-eslint": "21.3.1",
     "autoprefixer": "^10.5.0",

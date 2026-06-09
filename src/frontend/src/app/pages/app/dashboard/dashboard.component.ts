@@ -242,7 +242,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
             mode: 'index',
             intersect: false,
             callbacks: {
-              label: (context) => {
+              label: (context: any) => {
                 let value = context.raw as number;
                 if (this.chartType === 'amount') {
                   return `₹${value.toLocaleString()}`;
@@ -298,7 +298,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (context) => {
+              label: (context: any) => {
                 const label = context.label || '';
                 const value = context.raw as number;
                 return `${label}: ${value}%`;
