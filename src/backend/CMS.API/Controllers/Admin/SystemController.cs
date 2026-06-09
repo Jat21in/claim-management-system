@@ -228,100 +228,103 @@ public class SystemController : ControllerBase
         try
         {
             var connectionString = _configuration.GetConnectionString("CmsDatabase");
-            var recurringJobs = new List<object>();
+            var lastRuns = new Dictionary<string, string>();
 
             using (var connection = new SqlConnection(connectionString))
             {
                 await connection.OpenAsync();
 
-                // Get all recurring job entries
+                // Query to get last execution times from the Job table
                 var sql = @"
                 SELECT 
-                    [Key],
-                    Value
-                FROM HangFire.Hash 
-                WHERE [Key] LIKE 'recurring-job:%'
-                ORDER BY [Key]";
+                    j.Id,
+                    j.CreatedAt,
+                    j.InvocationData
+                FROM HangFire.Job j
+                ORDER BY j.CreatedAt DESC";
 
                 using (var command = new SqlCommand(sql, connection))
                 using (var reader = await command.ExecuteReaderAsync())
                 {
-                    var jobs = new Dictionary<string, Dictionary<string, string>>();
-
                     while (await reader.ReadAsync())
                     {
-                        var key = reader.GetString(0);
-                        var value = reader.GetString(1);
+                        var id = reader.GetInt64(0);
+                        var createdAt = reader.GetDateTime(1);
+                        var invocationData = reader.GetString(2);
 
-                        // Extract job name (everything after 'recurring-job:')
-                        var jobName = key.Replace("recurring-job:", "");
-
-                        // Determine what field this is based on the value
-                        if (!jobs.ContainsKey(jobName))
-                            jobs[jobName] = new Dictionary<string, string>();
-
-                        // Parse based on value pattern
-                        if (value.Contains("Cron") && !value.Contains("{"))
+                        // Match jobs based on method names in InvocationData
+                        if (invocationData.Contains("SendGracePeriodRemindersAsync") && !lastRuns.ContainsKey("send-grace-reminders"))
                         {
-                            // Check if it's a cron expression (like "0 1 * * *")
-                            if (value.Contains("*"))
-                                jobs[jobName]["Cron"] = value;
-                            else if (value.Contains("T") && value.Contains("Z"))
-                                jobs[jobName]["NextExecution"] = value;
-                            else if (value.Contains("CreatedAt") || value.Contains("LastExecution"))
-                            {
-                                // This is a JSON object containing job details
-                                // Don't store as field, it's the job data
-                            }
-                            else
-                                jobs[jobName]["Other"] = value;
+                            lastRuns["send-grace-reminders"] = createdAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss");
                         }
-                        else if (value == "default")
-                            jobs[jobName]["Queue"] = value;
-                        else if (value == "UTC")
-                            jobs[jobName]["TimeZone"] = value;
-                        else if (value == "2")
-                            jobs[jobName]["Version"] = value;
-                        else if (value.StartsWith("{"))
+                        else if (invocationData.Contains("CheckAndUpdateOverduePaymentsAsync") && !lastRuns.ContainsKey("check-overdue-payments"))
                         {
-                            // This is the job invocation data - extract method name
-                            try
-                            {
-                                var methodStart = value.IndexOf("\"Method\":\"") + 10;
-                                var methodEnd = value.IndexOf("\"", methodStart);
-                                if (methodStart > 10 && methodEnd > methodStart)
-                                    jobs[jobName]["Method"] = value.Substring(methodStart, methodEnd - methodStart);
-                            }
-                            catch { }
+                            lastRuns["check-overdue-payments"] = createdAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss");
                         }
-                    }
-
-                    // Build the response
-                    foreach (var job in jobs)
-                    {
-                        // Determine schedule from Cron or from the data
-                        string cron = "N/A";
-                        if (job.Value.ContainsKey("Cron"))
-                            cron = job.Value["Cron"];
-                        else if (job.Key.Contains("lapsed"))
-                            cron = "0 1 * * *";
-                        else if (job.Key.Contains("overdue"))
-                            cron = "0 0 * * *";
-                        else if (job.Key.Contains("grace"))
-                            cron = "0 9 * * *";
-
-                        recurringJobs.Add(new
+                        else if (invocationData.Contains("CheckOverduePaymentsAndLapsePoliciesAsync") && !lastRuns.ContainsKey("check-lapsed-policies"))
                         {
-                            name = job.Key,
-                            cron = cron,
-                            nextExecution = job.Value.ContainsKey("NextExecution") ? job.Value["NextExecution"] : "Not scheduled",
-                            lastExecution = job.Value.ContainsKey("LastExecution") ? job.Value["LastExecution"] : "Never",
-                            enabled = true,
-                            method = job.Value.ContainsKey("Method") ? job.Value["Method"] : "Unknown",
-                            queue = job.Value.ContainsKey("Queue") ? job.Value["Queue"] : "default"
-                        });
+                            lastRuns["check-lapsed-policies"] = createdAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss");
+                        }
                     }
                 }
+            }
+
+            // Calculate next run times
+            var now = DateTime.Now;
+            var tomorrow = now.AddDays(1);
+
+            var jobs = new[]
+            {
+            new
+            {
+                name = "check-lapsed-policies",
+                cron = "0 1 * * *",
+                schedule = "01:00 AM",
+                nextRun = new DateTime(tomorrow.Year, tomorrow.Month, tomorrow.Day, 1, 0, 0)
+            },
+            new
+            {
+                name = "check-overdue-payments",
+                cron = "0 0 * * *",
+                schedule = "12:00 AM",
+                nextRun = new DateTime(tomorrow.Year, tomorrow.Month, tomorrow.Day, 0, 0, 0)
+            },
+            new
+            {
+                name = "send-grace-reminders",
+                cron = "0 9 * * *",
+                schedule = "09:00 AM",
+                nextRun = new DateTime(tomorrow.Year, tomorrow.Month, tomorrow.Day, 9, 0, 0)
+            }
+        };
+
+            var recurringJobs = new List<object>();
+
+            foreach (var job in jobs)
+            {
+                // Check if job has run today (if last run is today, next run is tomorrow)
+                var nextRunTime = job.nextRun;
+                var lastRun = lastRuns.ContainsKey(job.name) ? lastRuns[job.name] : "Never";
+
+                // If last run was today and it's after the scheduled time, next run is tomorrow
+                if (lastRun != "Never")
+                {
+                    var lastRunDate = DateTime.ParseExact(lastRun, "dd/MM/yyyy HH:mm:ss", null);
+                    if (lastRunDate.Date == DateTime.Today && lastRunDate.Hour >= job.nextRun.Hour)
+                    {
+                        nextRunTime = job.nextRun.AddDays(1);
+                    }
+                }
+
+                recurringJobs.Add(new
+                {
+                    name = job.name,
+                    cron = job.cron,
+                    lastExecution = lastRun,
+                    nextExecution = nextRunTime.ToString("dd/MM/yyyy HH:mm:ss"),
+                    enabled = true,
+                    schedule = job.schedule
+                });
             }
 
             return Ok(new { success = true, recurringJobs });
@@ -329,6 +332,43 @@ public class SystemController : ControllerBase
         catch (Exception ex)
         {
             return BadRequest(new { error = ex.Message, stackTrace = ex.StackTrace });
+        }
+    }
+
+    // Helper method to convert UTC to local time
+    private string ConvertToLocalTime(string utcDateTime)
+    {
+        if (string.IsNullOrEmpty(utcDateTime) || utcDateTime == "Never" || utcDateTime == "Not scheduled")
+            return utcDateTime;
+
+        try
+        {
+            var utc = DateTime.Parse(utcDateTime);
+            var local = utc.ToLocalTime();
+            return local.ToString("dd/MM/yyyy HH:mm:ss");
+        }
+        catch
+        {
+            return utcDateTime;
+        }
+    }
+
+    // Helper method to calculate next run from cron expression
+    private string GetNextRunFromCron(string cron)
+    {
+        var now = DateTime.Now;
+        var tomorrow = now.AddDays(1);
+
+        switch (cron)
+        {
+            case "0 0 * * *": // Daily at midnight
+                return new DateTime(tomorrow.Year, tomorrow.Month, tomorrow.Day, 0, 0, 0).ToString("dd/MM/yyyy HH:mm:ss");
+            case "0 1 * * *": // Daily at 1 AM
+                return new DateTime(tomorrow.Year, tomorrow.Month, tomorrow.Day, 1, 0, 0).ToString("dd/MM/yyyy HH:mm:ss");
+            case "0 9 * * *": // Daily at 9 AM
+                return new DateTime(tomorrow.Year, tomorrow.Month, tomorrow.Day, 9, 0, 0).ToString("dd/MM/yyyy HH:mm:ss");
+            default:
+                return "Not scheduled";
         }
     }
 
