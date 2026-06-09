@@ -4,7 +4,9 @@ import {
   AfterViewInit,
   ElementRef,
   ViewChild,
-  inject
+  inject,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef
 } from '@angular/core';
 
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -77,6 +79,7 @@ interface PlanDetail {
   imports: [CommonModule, RouterLink, CurrencyPipe, PremiumCalculatorComponent, FooterComponent],
   templateUrl: './plan-details.component.html',
   styleUrls: ['./plan-details.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     trigger('fadeIn', [
       transition(':enter', [
@@ -144,6 +147,7 @@ export class PlanDetailComponent implements OnInit, AfterViewInit {
   private router = inject(Router);
   private planService = inject(PlanService);
   private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
 
   @ViewChild('claimsChart') claimsChartRef!: ElementRef;
   @ViewChild('satisfactionChart') satisfactionChartRef!: ElementRef;
@@ -396,6 +400,7 @@ export class PlanDetailComponent implements OnInit, AfterViewInit {
       this.error = 'Invalid plan ID';
       this.errorMessage = 'Invalid plan ID';
       this.isLoading = false;
+      this.cdr.markForCheck();
       return;
     }
 
@@ -408,6 +413,7 @@ export class PlanDetailComponent implements OnInit, AfterViewInit {
         this.isLoading = false;
 
         setTimeout(() => this.initCharts(), 300);
+        this.cdr.markForCheck();
       },
 
       error: (err) => {
@@ -420,6 +426,7 @@ export class PlanDetailComponent implements OnInit, AfterViewInit {
           'Failed to load plan details';
 
         this.isLoading = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -747,6 +754,7 @@ export class PlanDetailComponent implements OnInit, AfterViewInit {
       'premiumHealthFactors',
       JSON.stringify(event.factors)
     );
+    this.cdr.markForCheck();
   }
 
   navigateToRegister() {
