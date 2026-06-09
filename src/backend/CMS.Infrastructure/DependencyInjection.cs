@@ -1,13 +1,14 @@
 ﻿using CMS.Application.Interfaces.Repositories;
+using CMS.Application.Interfaces.Security;
+using CMS.Application.Interfaces.Services;
+using CMS.Application.Services;
 using CMS.Infrastructure.Data;
 using CMS.Infrastructure.Repositories;
+using CMS.Infrastructure.Security;
+using CMS.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using CMS.Application.Interfaces.Security;
-using CMS.Infrastructure.Security;
-using CMS.Application.Interfaces.Services;
-using CMS.Infrastructure.Services;
 
 namespace CMS.Infrastructure;
 
@@ -51,6 +52,8 @@ public static class DependencyInjection
 
         // NEW SERVICES FOR PHASE 1
         services.AddScoped<IFileStorageService, FileStorageService>();
+
+        services.AddScoped<IEmailService, EmailService>();
 
         return services;
     }

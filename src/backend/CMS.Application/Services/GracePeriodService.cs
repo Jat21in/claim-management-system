@@ -174,22 +174,77 @@ public sealed class GracePeriodService : IGracePeriodService
 
     public async Task SendGracePeriodRemindersAsync(CancellationToken cancellationToken)
     {
+        _logger.LogInformation("=== SendGracePeriodRemindersAsync STARTED ===");
+
         var pendingPayments = await _paymentRepository.GetPendingPaymentsAsync(cancellationToken);
+
+        _logger.LogInformation($"Found {pendingPayments.Count()} pending payments");
 
         foreach (var payment in pendingPayments)
         {
-            var daysUntilDue = (payment.DueDate - DateTime.UtcNow).Days;
-
-            if (daysUntilDue == 7 || daysUntilDue == 3 || daysUntilDue == 1)
+            var policy = payment.Policy;
+            if (policy == null || policy.Member == null)
             {
-                await _emailService.SendPremiumReminderEmailAsync(
-                    payment.Policy.Member.Email,
-                    payment.Policy.Member.FullName,
-                    payment.Policy.PolicyNumber,
-                    payment.Amount,
-                    payment.DueDate,
-                    cancellationToken);
+                _logger.LogWarning($"Payment {payment.PaymentId} has no policy or member");
+                continue;
+            }
+
+            var daysUntilDue = (payment.DueDate - DateTime.UtcNow).Days;
+            var isOverdue = daysUntilDue < 0;
+            var daysOverdue = isOverdue ? Math.Abs(daysUntilDue) : 0;
+
+            _logger.LogInformation($"Payment {payment.Policy?.PolicyNumber}: DueDate={payment.DueDate:yyyy-MM-dd}, DaysUntilDue={daysUntilDue}, IsOverdue={isOverdue}");
+
+            // ✅ FIX: Send email for OVERDUE payments (ANY days overdue)
+            if (isOverdue)
+            {
+                _logger.LogInformation($"🔴 SENDING OVERDUE reminder to {policy.Member.Email} for policy {policy.PolicyNumber}, {daysOverdue} days overdue");
+
+                try
+                {
+                    await _emailService.SendPremiumReminderEmailAsync(
+                        policy.Member.Email,
+                        policy.Member.FullName,
+                        policy.PolicyNumber,
+                        payment.Amount,
+                        payment.DueDate,
+                        cancellationToken);
+
+                    _logger.LogInformation($"✅ Email sent successfully to {policy.Member.Email}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"❌ Failed to send email: {ex.Message}");
+                }
+            }
+            // For upcoming payments (7, 3, 1 days before due)
+            else if (daysUntilDue == 7 || daysUntilDue == 3 || daysUntilDue == 1)
+            {
+                _logger.LogInformation($"Sending UPCOMING reminder to {policy.Member.Email} for policy {policy.PolicyNumber}, due in {daysUntilDue} days");
+
+                try
+                {
+                    await _emailService.SendPremiumReminderEmailAsync(
+                        policy.Member.Email,
+                        policy.Member.FullName,
+                        policy.PolicyNumber,
+                        payment.Amount,
+                        payment.DueDate,
+                        cancellationToken);
+
+                    _logger.LogInformation($"✅ Email sent successfully to {policy.Member.Email}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"❌ Failed to send email: {ex.Message}");
+                }
+            }
+            else
+            {
+                _logger.LogInformation($"No reminder needed for {policy.PolicyNumber} (DaysUntilDue: {daysUntilDue})");
             }
         }
+
+        _logger.LogInformation("=== SendGracePeriodRemindersAsync COMPLETED ===");
     }
 }

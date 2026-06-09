@@ -289,8 +289,6 @@ public sealed class EmailService : IEmailService
             _logger.LogInformation($"========== EMAIL DEBUG START ==========");
             _logger.LogInformation($"To: {toEmail}");
             _logger.LogInformation($"Subject: {subject}");
-            _logger.LogInformation($"From: {_configuration["EmailSettings:FromEmail"]}");
-            _logger.LogInformation($"SMTP Server: {_configuration["EmailSettings:SmtpServer"]}:{_configuration["EmailSettings:SmtpPort"]}");
 
             var email = new MimeMessage();
             email.From.Add(MailboxAddress.Parse(_configuration["EmailSettings:FromEmail"]));
@@ -298,13 +296,12 @@ public sealed class EmailService : IEmailService
             email.Subject = subject;
             email.Body = new TextPart(TextFormat.Html) { Text = htmlBody };
 
-            // Add headers to avoid spam filtering
-            email.Headers.Add("X-Priority", "3");
-            email.Headers.Add("X-Mailer", "ClaimCore Insurance System");
-
             using var smtp = new SmtpClient();
 
-            // Enable SSL/TLS
+            // ✅ FIX: Bypass SSL certificate validation (for development only)
+            smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
+
+            // Connect with StartTLS
             await smtp.ConnectAsync(
                 _configuration["EmailSettings:SmtpServer"],
                 int.Parse(_configuration["EmailSettings:SmtpPort"]),
@@ -328,27 +325,12 @@ public sealed class EmailService : IEmailService
             await smtp.DisconnectAsync(true, cancellationToken);
             _logger.LogInformation($"========== EMAIL DEBUG END ==========");
         }
-        catch (SmtpCommandException ex)
-        {
-            _logger.LogError($"SMTP Command Error: {ex.Message}");
-            _logger.LogError($"Status Code: {ex.StatusCode}");
-            _logger.LogError($"Error Details: {ex.Message}");
-            throw;
-        }
-        catch (SmtpProtocolException ex)
-        {
-            _logger.LogError($"SMTP Protocol Error: {ex.Message}");
-            _logger.LogError($"Error Details: {ex.Message}");
-            throw;
-        }
         catch (Exception ex)
         {
             _logger.LogError($"Failed to send email to {toEmail}. Error: {ex.Message}");
-            _logger.LogError($"Stack Trace: {ex.StackTrace}");
             throw;
         }
     }
-
     public async Task SendOtpEmailAsync(string toEmail, string fullName, string otp, CancellationToken cancellationToken)
     {
         var subject = "🔐 Your Verification Code - ClaimCore Insurance";

@@ -7,6 +7,7 @@ using CMS.Infrastructure.Data;
 using CMS.Infrastructure.Data.Seed;
 
 using Hangfire;
+using Hangfire.Dashboard;
 using Hangfire.SqlServer;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -16,6 +17,8 @@ using Microsoft.IdentityModel.Tokens;
 
 using System.Net;
 using System.Text;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -130,9 +133,6 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
-// ✅ Hangfire Dashboard
-app.UseHangfireDashboard("/hangfire");
-
 // ✅ Recurring Background Jobs
 
 RecurringJob.AddOrUpdate<IGracePeriodService>(
@@ -151,5 +151,7 @@ RecurringJob.AddOrUpdate<IPaymentService>(
     Cron.Daily(1));
 
 app.MapControllers();
+
+
 
 app.Run();

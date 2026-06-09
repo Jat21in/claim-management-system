@@ -31,20 +31,55 @@ public sealed class PaymentRepository : IPaymentRepository
 
     public async Task<IEnumerable<PremiumPayment>> GetPendingPaymentsAsync(CancellationToken cancellationToken)
     {
-        return await _context.Set<PremiumPayment>()
-            .Where(p => p.Status == PaymentStatus.Pending)
+        Console.WriteLine("=== GetPendingPaymentsAsync CALLED ===");
+
+        var payments = await _context.Set<PremiumPayment>()
             .Include(p => p.Policy)
-            .ThenInclude(policy => policy!.Member)
+                .ThenInclude(policy => policy!.Member)
+            .Where(p => p.Status == PaymentStatus.Pending)
             .ToListAsync(cancellationToken);
+
+        Console.WriteLine($"Found {payments.Count} pending payments total");
+
+        // Also check if any payments are overdue
+        var overdueCount = payments.Count(p => p.DueDate < DateTime.UtcNow);
+        Console.WriteLine($"Of these, {overdueCount} are overdue (DueDate < now)");
+
+        foreach (var p in payments)
+        {
+            Console.WriteLine($"Payment: {p.PaymentId}");
+            Console.WriteLine($"  - DueDate: {p.DueDate:yyyy-MM-dd}");
+            Console.WriteLine($"  - IsOverdue: {p.DueDate < DateTime.UtcNow}");
+            Console.WriteLine($"  - PolicyId: {p.PolicyId}");
+            Console.WriteLine($"  - PolicyNumber: {p.Policy?.PolicyNumber ?? "NULL"}");
+            Console.WriteLine($"  - MemberEmail: {p.Policy?.Member?.Email ?? "NULL"}");
+            Console.WriteLine($"  - PolicyStatus: {p.Policy?.Status}");
+        }
+
+        return payments;
     }
 
     public async Task<IEnumerable<PremiumPayment>> GetOverduePaymentsAsync(CancellationToken cancellationToken)
     {
         var overdueDate = DateTime.UtcNow.AddDays(-30);
-        return await _context.Set<PremiumPayment>()
+
+        Console.WriteLine($"=== GetOverduePaymentsAsync CALLED ===");
+        Console.WriteLine($"Looking for payments with DueDate < {overdueDate:yyyy-MM-dd}");
+
+        var payments = await _context.Set<PremiumPayment>()
             .Where(p => p.Status == PaymentStatus.Pending && p.DueDate < overdueDate)
             .Include(p => p.Policy)
+                .ThenInclude(policy => policy!.Member)
             .ToListAsync(cancellationToken);
+
+        Console.WriteLine($"Found {payments.Count} overdue payments (30+ days)");
+
+        foreach (var p in payments)
+        {
+            Console.WriteLine($"  - Payment: {p.PaymentId}, Policy: {p.Policy?.PolicyNumber}, DueDate: {p.DueDate:yyyy-MM-dd}");
+        }
+
+        return payments;
     }
 
     public async Task AddAsync(PremiumPayment payment, CancellationToken cancellationToken)
