@@ -76,38 +76,63 @@ public sealed class GracePeriodService : IGracePeriodService
     public async Task<PolicyLapseResult> ProcessPolicyLapseAsync(Guid policyId, CancellationToken cancellationToken)
     {
         var result = new PolicyLapseResult();
-        var policy = await _policyRepository.GetByIdAsync(policyId, cancellationToken);
 
-        if (policy == null || policy.Status == PolicyStatus.Lapsed)
+        try
         {
-            result.Message = "Policy not found or already lapsed";
-            return result;
+            var policy = await _policyRepository.GetByIdAsync(policyId, cancellationToken);
+
+            if (policy == null)
+            {
+                result.Message = "Policy not found";
+                _logger.LogWarning($"Policy {policyId} not found for lapse processing");
+                return result;
+            }
+
+            if (policy.Status == PolicyStatus.Lapsed)
+            {
+                result.Message = "Policy already lapsed";
+                _logger.LogInformation($"Policy {policy.PolicyNumber} is already lapsed");
+                return result;
+            }
+
+            // ✅ FIX: Get overdue payments with null check
+            var allPayments = await _paymentRepository.GetByPolicyIdAsync(policyId, cancellationToken);
+            var overduePayments = allPayments?.Where(p => p.Status == PaymentStatus.Pending && p.DueDate < DateTime.UtcNow).ToList() ?? new List<PremiumPayment>();
+
+            var totalOutstanding = overduePayments.Sum(p => p.Amount);
+            var daysOverdue = overduePayments.Any() ? (DateTime.UtcNow - overduePayments.Min(p => p.DueDate)).Days : 0;
+
+            result.IsLapsed = true;
+            result.LapsedDate = DateTime.UtcNow;
+            result.OutstandingAmount = totalOutstanding;
+            result.DaysOverdue = daysOverdue;
+            result.Message = $"Policy lapsed due to non-payment for {daysOverdue} days";
+
+            policy.Lapse();
+            await _policyRepository.UpdateAsync(policy, cancellationToken);
+
+            // ✅ FIX: Send email only if Member exists
+            if (policy.Member != null && !string.IsNullOrEmpty(policy.Member.Email))
+            {
+                await _emailService.SendPolicyLapsedEmailAsync(
+                    policy.Member.Email,
+                    policy.Member.FullName ?? "Valued Customer",
+                    policy.PolicyNumber,
+                    totalOutstanding,
+                    cancellationToken);
+            }
+            else
+            {
+                _logger.LogWarning($"Cannot send lapse email for policy {policy.PolicyNumber}: Member or email is null");
+            }
+
+            _logger.LogWarning("Policy {PolicyNumber} lapsed on {Date}", policy.PolicyNumber, DateTime.UtcNow);
         }
-
-        var overduePayments = (await _paymentRepository.GetByPolicyIdAsync(policyId, cancellationToken))
-            .Where(p => p.Status == PaymentStatus.Pending && p.DueDate < DateTime.UtcNow);
-
-        var totalOutstanding = overduePayments.Sum(p => p.Amount);
-        var daysOverdue = (DateTime.UtcNow - overduePayments.Min(p => p.DueDate)).Days;
-
-        result.IsLapsed = true;
-        result.LapsedDate = DateTime.UtcNow;
-        result.OutstandingAmount = totalOutstanding;
-        result.DaysOverdue = daysOverdue;
-        result.Message = $"Policy lapsed due to non-payment for {daysOverdue} days";
-
-        policy.Lapse();
-        await _policyRepository.UpdateAsync(policy, cancellationToken);
-
-        // Send lapse notification
-        await _emailService.SendPolicyLapsedEmailAsync(
-            policy.Member.Email,
-            policy.Member.FullName,
-            policy.PolicyNumber,
-            totalOutstanding,
-            cancellationToken);
-
-        _logger.LogWarning("Policy {PolicyNumber} lapsed on {Date}", policy.PolicyNumber, DateTime.UtcNow);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error processing policy lapse for {policyId}");
+            result.Message = $"Error: {ex.Message}";
+        }
 
         return result;
     }
@@ -174,75 +199,83 @@ public sealed class GracePeriodService : IGracePeriodService
 
     public async Task SendGracePeriodRemindersAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("=== SendGracePeriodRemindersAsync STARTED ===");
-
-        var pendingPayments = await _paymentRepository.GetPendingPaymentsAsync(cancellationToken);
-
-        _logger.LogInformation($"Found {pendingPayments.Count()} pending payments");
-
-        foreach (var payment in pendingPayments)
+        try
         {
-            var policy = payment.Policy;
-            if (policy == null || policy.Member == null)
+            _logger.LogInformation("=== SendGracePeriodRemindersAsync STARTED ===");
+
+            var pendingPayments = await _paymentRepository.GetPendingPaymentsAsync(cancellationToken);
+
+            _logger.LogInformation($"Found {pendingPayments?.Count() ?? 0} pending payments");
+
+            if (pendingPayments == null) return;
+
+            foreach (var payment in pendingPayments)
             {
-                _logger.LogWarning($"Payment {payment.PaymentId} has no policy or member");
-                continue;
-            }
-
-            var daysUntilDue = (payment.DueDate - DateTime.UtcNow).Days;
-            var isOverdue = daysUntilDue < 0;
-            var daysOverdue = isOverdue ? Math.Abs(daysUntilDue) : 0;
-
-            _logger.LogInformation($"Payment {payment.Policy?.PolicyNumber}: DueDate={payment.DueDate:yyyy-MM-dd}, DaysUntilDue={daysUntilDue}, IsOverdue={isOverdue}");
-
-            // ✅ FIX: Send email for OVERDUE payments (ANY days overdue)
-            if (isOverdue)
-            {
-                _logger.LogInformation($"🔴 SENDING OVERDUE reminder to {policy.Member.Email} for policy {policy.PolicyNumber}, {daysOverdue} days overdue");
-
-                try
+                if (payment == null || payment.Policy == null || payment.Policy.Member == null)
                 {
-                    await _emailService.SendPremiumReminderEmailAsync(
-                        policy.Member.Email,
-                        policy.Member.FullName,
-                        policy.PolicyNumber,
-                        payment.Amount,
-                        payment.DueDate,
-                        cancellationToken);
-
-                    _logger.LogInformation($"✅ Email sent successfully to {policy.Member.Email}");
+                    _logger.LogWarning($"Skipping payment with null policy or member: {payment?.PaymentId}");
+                    continue;
                 }
-                catch (Exception ex)
+
+                var daysUntilDue = (payment.DueDate - DateTime.UtcNow).Days;
+                var isOverdue = daysUntilDue < 0;
+                var daysOverdue = isOverdue ? Math.Abs(daysUntilDue) : 0;
+
+                _logger.LogInformation($"Payment {payment.Policy.PolicyNumber}: DueDate={payment.DueDate:yyyy-MM-dd}, DaysUntilDue={daysUntilDue}, IsOverdue={isOverdue}");
+
+                // Send email for OVERDUE payments
+                if (isOverdue)
                 {
-                    _logger.LogError($"❌ Failed to send email: {ex.Message}");
+                    _logger.LogInformation($"🔴 SENDING OVERDUE reminder to {payment.Policy.Member.Email} for policy {payment.Policy.PolicyNumber}, {daysOverdue} days overdue");
+
+                    try
+                    {
+                        await _emailService.SendPremiumReminderEmailAsync(
+                            payment.Policy.Member.Email,
+                            payment.Policy.Member.FullName ?? "Valued Customer",
+                            payment.Policy.PolicyNumber,
+                            payment.Amount,
+                            payment.DueDate,
+                            cancellationToken);
+
+                        _logger.LogInformation($"✅ Email sent successfully to {payment.Policy.Member.Email}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"❌ Failed to send email: {ex.Message}");
+                    }
+                }
+                // For upcoming payments (7, 3, 1 days before due)
+                else if (daysUntilDue == 7 || daysUntilDue == 3 || daysUntilDue == 1)
+                {
+                    _logger.LogInformation($"Sending UPCOMING reminder to {payment.Policy.Member.Email} for policy {payment.Policy.PolicyNumber}, due in {daysUntilDue} days");
+
+                    try
+                    {
+                        await _emailService.SendPremiumReminderEmailAsync(
+                            payment.Policy.Member.Email,
+                            payment.Policy.Member.FullName ?? "Valued Customer",
+                            payment.Policy.PolicyNumber,
+                            payment.Amount,
+                            payment.DueDate,
+                            cancellationToken);
+
+                        _logger.LogInformation($"✅ Email sent successfully to {payment.Policy.Member.Email}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"❌ Failed to send email: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation($"No reminder needed for {payment.Policy.PolicyNumber} (DaysUntilDue: {daysUntilDue})");
                 }
             }
-            // For upcoming payments (7, 3, 1 days before due)
-            else if (daysUntilDue == 7 || daysUntilDue == 3 || daysUntilDue == 1)
-            {
-                _logger.LogInformation($"Sending UPCOMING reminder to {policy.Member.Email} for policy {policy.PolicyNumber}, due in {daysUntilDue} days");
-
-                try
-                {
-                    await _emailService.SendPremiumReminderEmailAsync(
-                        policy.Member.Email,
-                        policy.Member.FullName,
-                        policy.PolicyNumber,
-                        payment.Amount,
-                        payment.DueDate,
-                        cancellationToken);
-
-                    _logger.LogInformation($"✅ Email sent successfully to {policy.Member.Email}");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError($"❌ Failed to send email: {ex.Message}");
-                }
-            }
-            else
-            {
-                _logger.LogInformation($"No reminder needed for {policy.PolicyNumber} (DaysUntilDue: {daysUntilDue})");
-            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in SendGracePeriodRemindersAsync");
         }
 
         _logger.LogInformation("=== SendGracePeriodRemindersAsync COMPLETED ===");

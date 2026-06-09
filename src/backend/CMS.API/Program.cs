@@ -18,8 +18,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Net;
 using System.Text;
 
-
-
 var builder = WebApplication.CreateBuilder(args);
 
 // JWT Authentication
@@ -90,6 +88,9 @@ builder.Services.AddHangfire(config =>
 
 builder.Services.AddHangfireServer();
 
+// ✅ Add IRecurringJobManager registration
+builder.Services.AddSingleton<IRecurringJobManager, RecurringJobManager>();
+
 // ✅ File Upload Limits
 builder.Services.Configure<FormOptions>(options =>
 {
@@ -133,25 +134,35 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
-// ✅ Recurring Background Jobs
+// ✅ Register recurring jobs using IRecurringJobManager (not static RecurringJob)
+using (var scope = app.Services.CreateScope())
+{
+    var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    var gracePeriodService = scope.ServiceProvider.GetRequiredService<IGracePeriodService>();
+    var paymentService = scope.ServiceProvider.GetRequiredService<IPaymentService>();
 
-RecurringJob.AddOrUpdate<IGracePeriodService>(
-    "check-overdue-payments",
-    service => service.CheckAndUpdateOverduePaymentsAsync(CancellationToken.None),
-    Cron.Daily);
+    // Clear existing jobs first (prevents duplicates on restart)
+    recurringJobManager.RemoveIfExists("check-overdue-payments");
+    recurringJobManager.RemoveIfExists("send-grace-reminders");
+    recurringJobManager.RemoveIfExists("check-lapsed-policies");
 
-RecurringJob.AddOrUpdate<IGracePeriodService>(
-    "send-grace-reminders",
-    service => service.SendGracePeriodRemindersAsync(CancellationToken.None),
-    Cron.Daily(9));
+    // Add recurring jobs
+    recurringJobManager.AddOrUpdate(
+        "check-overdue-payments",
+        () => gracePeriodService.CheckAndUpdateOverduePaymentsAsync(CancellationToken.None),
+        Cron.Daily);
 
-RecurringJob.AddOrUpdate<IPaymentService>(
-    "check-lapsed-policies",
-    service => service.CheckOverduePaymentsAndLapsePoliciesAsync(CancellationToken.None),
-    Cron.Daily(1));
+    recurringJobManager.AddOrUpdate(
+        "send-grace-reminders",
+        () => gracePeriodService.SendGracePeriodRemindersAsync(CancellationToken.None),
+        Cron.Daily(9));
+
+    recurringJobManager.AddOrUpdate(
+        "check-lapsed-policies",
+        () => paymentService.CheckOverduePaymentsAndLapsePoliciesAsync(CancellationToken.None),
+        Cron.Daily(1));
+}
 
 app.MapControllers();
-
-
 
 app.Run();
