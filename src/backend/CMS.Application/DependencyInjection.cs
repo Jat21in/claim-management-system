@@ -1,6 +1,9 @@
 ﻿using CMS.Application.Interfaces.Services;
 using CMS.Application.Services;
+using CMS.Application.Interfaces.Repositories;
 using Microsoft.Extensions.DependencyInjection;
+using CMS.Application.Interfaces.Repositories;
+using CMS.Application.Interfaces.Services;
 
 namespace CMS.Application;
 
@@ -22,7 +25,9 @@ public static class DependencyInjection
         services.AddScoped<IPremiumCalculatorService, PremiumCalculatorService>();
 
         services.AddScoped<IGracePeriodService, GracePeriodService>();
+        services.AddScoped<IPdfGenerationService, PdfGenerationService>();
 
+        services.AddScoped<IPdfGenerationService, PdfGenerationService>();
 
         return services;
     }

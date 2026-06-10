@@ -34,4 +34,9 @@ public sealed class PlanRepository : IPlanRepository
             
             .ToListAsync(cancellationToken);
     }
+    public async Task UpdateAsync(Plan plan, CancellationToken cancellationToken)
+    {
+        _dbContext.Plans.Update(plan);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
 }

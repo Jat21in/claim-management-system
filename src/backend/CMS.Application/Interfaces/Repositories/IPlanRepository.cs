@@ -9,4 +9,5 @@ public interface IPlanRepository
     Task<List<Plan>> GetActivePlansAsync(CancellationToken cancellationToken);
 
     Task AddAsync(Plan plan, CancellationToken cancellationToken);
+    Task UpdateAsync(Plan plan, CancellationToken cancellationToken);
 }

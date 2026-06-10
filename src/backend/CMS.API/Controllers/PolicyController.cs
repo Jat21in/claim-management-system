@@ -1,12 +1,13 @@
 ﻿using CMS.Application.DTOs.Policy;
 using CMS.Application.Interfaces.Repositories;
+using CMS.Application.Interfaces.Repositories;
 using CMS.Application.Interfaces.Services;
 using CMS.Application.Services;
 using CMS.Domain.Enums;
+using CMS.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using CMS.Application.Interfaces.Repositories;
 
 namespace CMS.API.Controllers;
 
@@ -18,16 +19,26 @@ public sealed class PolicyController : ControllerBase
     private readonly IPolicyService _policyService;
     private readonly IPolicyRepository _policyRepository;
     private readonly IGracePeriodService _gracePeriodService;
+    private readonly IMemberRepository _memberRepository;
+    private readonly IPlanRepository _planRepository;
+    private readonly IPdfGenerationService _pdfGenerationService;
 
     public PolicyController(
     IPolicyService policyService,
     IPolicyRepository policyRepository,
-    IGracePeriodService gracePeriodService)
+    IGracePeriodService gracePeriodService,
+    IMemberRepository memberRepository,
+    IPlanRepository planRepository,
+    IPdfGenerationService pdfGenerationService)
     {
         _policyService = policyService;
         _policyRepository = policyRepository;
         _gracePeriodService = gracePeriodService;
+        _memberRepository = memberRepository;
+        _planRepository = planRepository;
+        _pdfGenerationService = pdfGenerationService;
     }
+
 
     [HttpPost("create-from-plan/{planId:guid}")]
     public async Task<IActionResult> CreatePolicyFromPlan(Guid planId)
@@ -139,6 +150,27 @@ public sealed class PolicyController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{policyId:guid}/certificate")]
+    [Authorize]
+    public async Task<IActionResult> DownloadPolicyCertificate(Guid policyId)
+    {
+        var memberId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var isAdmin = User.IsInRole("Admin") || User.IsInRole("ClaimsProcessor");
+
+        var policy = await _policyRepository.GetByIdAsync(policyId, HttpContext.RequestAborted);
+        if (policy == null)
+            return NotFound(new { error = "Policy not found" });
+
+        if (!isAdmin && policy.MemberId != memberId)
+            return Forbid();
+
+        var member = await _memberRepository.GetByIdAsync(policy.MemberId, HttpContext.RequestAborted);
+        var plan = await _planRepository.GetByIdAsync(policy.PlanId, HttpContext.RequestAborted);
+
+        var pdfBytes = await _pdfGenerationService.GeneratePolicyCertificateAsync(policy, member!, plan!, HttpContext.RequestAborted);
+
+        return File(pdfBytes, "application/pdf", $"Policy_Certificate_{policy.PolicyNumber}.pdf");
+    }
     public class ReinstatePolicyRequest
     {
         public bool WithMedicalUnderwriting { get; set; } = false;

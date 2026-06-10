@@ -52,7 +52,7 @@ public static class DependencyInjection
 
         // NEW SERVICES FOR PHASE 1
         services.AddScoped<IFileStorageService, FileStorageService>();
-
+        services.AddScoped<IPdfGenerationService, PdfGenerationService>();
         services.AddScoped<IEmailService, EmailService>();
 
         return services;

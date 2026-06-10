@@ -41,4 +41,56 @@ public sealed class NetworkHospital
         CashlessLimit = cashlessLimit;
         IsActive = true;
     }
+    public void UpdateContact(string contactNumber, string email)
+    {
+        ContactNumber = contactNumber;
+        Email = email;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateConsultationFee(decimal fee)
+    {
+        ConsultationFee = fee;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetSpecializations(string[] specializations)
+    {
+        Specializations = specializations;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetRoomRates(Dictionary<string, decimal> rates)
+    {
+        RoomRates = rates;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateDetails(
+        string hospitalName,
+        string registrationNumber,
+        string address,
+        string city,
+        string state,
+        string pinCode,
+        decimal cashlessLimit)
+    {
+        HospitalName = hospitalName;
+        RegistrationNumber = registrationNumber;
+        Address = address;
+        City = city;
+        State = state;
+        PinCode = pinCode;
+        CashlessLimit = cashlessLimit;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    // Add to existing NetworkHospital class
+    public DateTime? UpdatedAt { get; private set; }
 }

@@ -1,5 +1,6 @@
 ﻿using CMS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace CMS.Infrastructure.Data.Seed;
 
@@ -7,7 +8,7 @@ public static class PlanSeeder
 {
     public static async Task SeedAsync(CmsDbContext context)
     {
-        //  Prevent duplicate seeding
+        // Prevent duplicate seeding
         if (await context.Plans.AnyAsync())
             return;
 
@@ -30,11 +31,11 @@ public static class PlanSeeder
                 ]
                 """,
                 isFeatured: false,
-                basePremiumAnnual: 1500m,
+                basePremiumAnnual: 25000m,  // Fixed: Was 1500m
                 dependentLoadingPercentage: 15m,
-                maxDependentsAllowed: 3,
+                maxDependentsAllowed: 2,
                 maxNomineesAllowed: 2,
-                requiredKycDocuments: new[] { "Aadhaar", "PAN", "PassportPhoto" }
+                requiredKycDocumentsJson: JsonSerializer.Serialize(new[] { "Aadhaar", "PAN" })
             ),
 
             new Plan(
@@ -55,11 +56,11 @@ public static class PlanSeeder
                 ]
                 """,
                 isFeatured: true,
-                basePremiumAnnual: 3750m,
-                dependentLoadingPercentage: 20m,
-                maxDependentsAllowed: 4,
-                maxNomineesAllowed: 3,
-                requiredKycDocuments: new[] { "Aadhaar", "PAN", "PassportPhoto" }
+                basePremiumAnnual: 65000m,  // Fixed: Was 3750m
+                dependentLoadingPercentage: 25m,
+                maxDependentsAllowed: 5,
+                maxNomineesAllowed: 4,
+                requiredKycDocumentsJson: JsonSerializer.Serialize(new[] { "Aadhaar", "PAN", "PassportPhoto" })
             ),
 
             new Plan(
@@ -81,11 +82,34 @@ public static class PlanSeeder
                 ]
                 """,
                 isFeatured: true,
-                basePremiumAnnual: 5000m,
-                dependentLoadingPercentage: 25m,
+                basePremiumAnnual: 85000m,  // Fixed: Was 5000m
+                dependentLoadingPercentage: 20m,
                 maxDependentsAllowed: 6,
-                maxNomineesAllowed: 4,
-                requiredKycDocuments: new[] { "Aadhaar", "PAN", "PassportPhoto" }
+                maxNomineesAllowed: 5,
+                requiredKycDocumentsJson: JsonSerializer.Serialize(new[] { "Aadhaar", "PAN", "PassportPhoto" })
+            ),
+
+            // ✅ Add Health Pro Plus plan (missing from seeder)
+            new Plan(
+                code: "HEALTH_PRO_2026",
+                name: "Health Pro Plus",
+                description: "Comprehensive health coverage with maternity and OPD benefits",
+                insuredAmount: 500000m,
+                durationInMonths: 12,
+                featuresJson: """
+                [
+                  "Unlimited Doctor Consultations",
+                  "Maternity Coverage",
+                  "Preventive Health Checkups",
+                  "No Claim Bonus"
+                ]
+                """,
+                isFeatured: true,
+                basePremiumAnnual: 45000m,
+                dependentLoadingPercentage: 25m,
+                maxDependentsAllowed: 4,
+                maxNomineesAllowed: 3,
+                requiredKycDocumentsJson: JsonSerializer.Serialize(new[] { "Aadhaar", "PAN", "PassportPhoto" })
             )
         };
 

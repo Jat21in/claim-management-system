@@ -21,20 +21,27 @@ public sealed class ClaimsController : ControllerBase
     private readonly IFileStorageService _fileStorageService;
     private readonly IPolicyRepository _policyRepository;
     private readonly CmsDbContext _dbContext;
+    private readonly IMemberRepository _memberRepository;
+    private readonly IPdfGenerationService _pdfGenerationService;
 
     public ClaimsController(
     IClaimService claimService,
     IClaimRepository claimRepository,
     IFileStorageService fileStorageService,
     IPolicyRepository policyRepository,
-    CmsDbContext dbContext)
+    CmsDbContext dbContext,
+    IMemberRepository memberRepository,
+    IPdfGenerationService pdfGenerationService)
     {
         _claimService = claimService;
         _claimRepository = claimRepository;
         _fileStorageService = fileStorageService;
         _policyRepository = policyRepository;
         _dbContext = dbContext;
+        _memberRepository = memberRepository;
+        _pdfGenerationService = pdfGenerationService;
     }
+
 
     [HttpGet]
     public async Task<IActionResult> GetMyClaims()
@@ -264,6 +271,31 @@ public sealed class ClaimsController : ControllerBase
             amount = claim.ClaimAmount.Amount,
             message = $"Claim payment of ₹{claim.ClaimAmount.Amount:N0} has been processed successfully. Amount will be credited within 2-3 business days."
         });
+    }
+
+    [HttpGet("{claimId:guid}/settlement-letter")]
+    [Authorize]
+    public async Task<IActionResult> DownloadClaimSettlementLetter(Guid claimId)
+    {
+        var memberId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var isAdmin = User.IsInRole("Admin") || User.IsInRole("ClaimsProcessor");
+
+        var claim = await _claimRepository.GetByIdAsync(claimId, HttpContext.RequestAborted);
+        if (claim == null)
+            return NotFound(new { error = "Claim not found" });
+
+        if (!isAdmin && claim.MemberId != memberId)
+            return Forbid();
+
+        if (claim.Status != ClaimStatus.Paid && claim.Status != ClaimStatus.Approved)
+            return BadRequest(new { error = "Settlement letter is only available for approved/paid claims" });
+
+        var policy = await _policyRepository.GetByIdAsync(claim.PlanId, HttpContext.RequestAborted);
+        var member = await _memberRepository.GetByIdAsync(claim.MemberId, HttpContext.RequestAborted);
+
+        var pdfBytes = await _pdfGenerationService.GenerateClaimSettlementLetterAsync(claim, member!, policy!, HttpContext.RequestAborted);
+
+        return File(pdfBytes, "application/pdf", $"Claim_Settlement_{claim.ClaimId.ToString().Substring(0, 8)}.pdf");
     }
 
     private string GeneratePaymentReference(string paymentMode)

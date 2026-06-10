@@ -1,8 +1,11 @@
-﻿namespace CMS.Domain.Entities;
+﻿using System.Text.Json;
+
+namespace CMS.Domain.Entities;
 
 public sealed class Plan
 {
     public Guid PlanId { get; private set; } = Guid.NewGuid();
+    public DateTime UpdatedAt { get; private set; }
 
     public string Code { get; private set; } = null!;
     public string Name { get; private set; } = null!;
@@ -21,25 +24,30 @@ public sealed class Plan
     public decimal BasePremiumAnnual { get; private set; }
     public decimal DependentLoadingPercentage { get; private set; }
 
-    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
-    public Dictionary<string, decimal> FrequencyDiscounts { get; private set; } = new();
-
     public int MaxDependentsAllowed { get; private set; }
     public int MaxNomineesAllowed { get; private set; }
-    public string[] RequiredKycDocuments { get; private set; } = null!;
 
-    // ✅ NEW: Premium Rating Configuration
+    public string RequiredKycDocumentsJson { get; private set; } = null!;
+
+    // Premium Rating Configuration
     private readonly List<RatingFactor> _ratingFactors = new();
 
     public IReadOnlyCollection<RatingFactor> RatingFactors
         => _ratingFactors.AsReadOnly();
 
-    public decimal AgeLoadingPercentage { get; private set; } // 0-50%
-    public decimal SmokerLoadingPercentage { get; private set; } // 0-30%
-    public decimal PreExistingConditionLoading { get; private set; } // 0-40%
-    public decimal LocationRiskMultiplier { get; private set; } // 0.5 - 2.0
+    public decimal AgeLoadingPercentage { get; private set; }
+    public decimal SmokerLoadingPercentage { get; private set; }
+    public decimal PreExistingConditionLoading { get; private set; }
+    public decimal LocationRiskMultiplier { get; private set; }
     public bool IsFamilyFloater { get; private set; }
     public decimal CorporateDiscountPercentage { get; private set; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string[] RequiredKycDocuments
+    {
+        get => JsonSerializer.Deserialize<string[]>(RequiredKycDocumentsJson) ?? Array.Empty<string>();
+        private set => RequiredKycDocumentsJson = JsonSerializer.Serialize(value);
+    }
 
     public Plan(
         string code,
@@ -53,7 +61,7 @@ public sealed class Plan
         decimal dependentLoadingPercentage,
         int maxDependentsAllowed,
         int maxNomineesAllowed,
-        string[] requiredKycDocuments)
+        string requiredKycDocumentsJson)
     {
         Code = code;
         Name = name;
@@ -62,21 +70,11 @@ public sealed class Plan
         DurationInMonths = durationInMonths;
         FeaturesJson = featuresJson;
         IsFeatured = isFeatured;
-
         BasePremiumAnnual = basePremiumAnnual;
         DependentLoadingPercentage = dependentLoadingPercentage;
-
         MaxDependentsAllowed = maxDependentsAllowed;
         MaxNomineesAllowed = maxNomineesAllowed;
-        RequiredKycDocuments = requiredKycDocuments;
-
-        // ✅ Default premium configuration
-        AgeLoadingPercentage = 10m;
-        SmokerLoadingPercentage = 15m;
-        PreExistingConditionLoading = 20m;
-        LocationRiskMultiplier = 1.0m;
-        IsFamilyFloater = false;
-        CorporateDiscountPercentage = 0m;
+        RequiredKycDocumentsJson = requiredKycDocumentsJson;
 
         StartDate = DateTime.UtcNow;
         EndDate = StartDate.AddMonths(durationInMonths);
@@ -92,20 +90,15 @@ public sealed class Plan
         decimal newInsuredAmount)
     {
         if (newEndDate <= EndDate)
-            throw new InvalidOperationException(
-                "New end date must be after current end date."
-            );
+            throw new InvalidOperationException("New end date must be after current end date.");
 
         if (newInsuredAmount <= 0)
-            throw new ArgumentException(
-                "Insured amount must be greater than zero."
-            );
+            throw new ArgumentException("Insured amount must be greater than zero.");
 
         EndDate = newEndDate;
         InsuredAmount = newInsuredAmount;
     }
 
-    // ✅ NEW: Premium Loading Calculator
     public decimal CalculateTotalLoading(
         int age,
         bool isSmoker,
@@ -114,36 +107,22 @@ public sealed class Plan
     {
         decimal total = 0;
 
-        // Age loading
         if (age >= 40 && age < 50)
-        {
             total += AgeLoadingPercentage * 0.5m;
-        }
         else if (age >= 50 && age < 60)
-        {
             total += AgeLoadingPercentage;
-        }
         else if (age >= 60)
-        {
             total += AgeLoadingPercentage * 1.5m;
-        }
 
-        // Smoker loading
         if (isSmoker)
-        {
             total += SmokerLoadingPercentage;
-        }
 
-        // Pre-existing disease loading
         if (hasPreExistingCondition)
-        {
             total += PreExistingConditionLoading;
-        }
 
         return total;
     }
 
-    // ✅ OPTIONAL: Update premium configuration
     public void ConfigurePremiumFactors(
         decimal ageLoadingPercentage,
         decimal smokerLoadingPercentage,
@@ -160,5 +139,53 @@ public sealed class Plan
         CorporateDiscountPercentage = corporateDiscountPercentage;
     }
 
-    public void Deactivate() => IsActive = false;
+    public void UpdateDetails(
+        string name,
+        string description,
+        decimal insuredAmount,
+        int durationInMonths,
+        string featuresJson,
+        bool isFeatured,
+        decimal basePremiumAnnual,
+        decimal dependentLoadingPercentage,
+        int maxDependentsAllowed,
+        int maxNomineesAllowed,
+        string[] requiredKycDocuments,
+        decimal ageLoadingPercentage,
+        decimal corporateDiscountPercentage,
+        bool isFamilyFloater,
+        decimal locationRiskMultiplier,
+        decimal preExistingConditionLoading,
+        decimal smokerLoadingPercentage)
+    {
+        Name = name;
+        Description = description;
+        InsuredAmount = insuredAmount;
+        DurationInMonths = durationInMonths;
+        FeaturesJson = featuresJson;
+        IsFeatured = isFeatured;
+        BasePremiumAnnual = basePremiumAnnual;
+        DependentLoadingPercentage = dependentLoadingPercentage;
+        MaxDependentsAllowed = maxDependentsAllowed;
+        MaxNomineesAllowed = maxNomineesAllowed;
+
+        RequiredKycDocuments = requiredKycDocuments;
+
+        AgeLoadingPercentage = ageLoadingPercentage;
+        CorporateDiscountPercentage = corporateDiscountPercentage;
+        IsFamilyFloater = isFamilyFloater;
+        LocationRiskMultiplier = locationRiskMultiplier;
+        PreExistingConditionLoading = preExistingConditionLoading;
+        SmokerLoadingPercentage = smokerLoadingPercentage;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
+
+// ✅ Keep ONLY the RatingFactor class here (in its own file is fine too)
+// But REMOVE the duplicate at the bottom of this file
