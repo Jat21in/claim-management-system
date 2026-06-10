@@ -421,24 +421,25 @@ debugPolicyInfo() {
   // PDF Download Methods - FIXED with correct IDs
   downloadPolicyCertificate() {
     if (!this.policyId) {
-      console.error('No policy ID available. PolicyId:', this.policyId);
-      alert('Policy ID not available. Please contact support.');
-      return;
+        console.error('No policy ID available. PolicyId:', this.policyId);
+        alert('Policy ID not available. Please contact support.');
+        return;
     }
     
-    console.log('Downloading policy certificate for policy ID:', this.policyId);
+    console.log('Downloading policy certificate for Policy ID:', this.policyId);
+    console.log('Expected Policy ID (from database): 0a4cbb5a-c67e-4d01-b5e4-3de5ea094236');
     
     this.pdfService.downloadPolicyCertificate(this.policyId).subscribe({
-      next: (blob) => {
-        const fileName = `Policy_Certificate_${this.policyNumber || this.policyId.slice(0, 8)}.pdf`;
-        this.pdfService.saveAs(blob, fileName);
-      },
-      error: (err) => {
-        console.error('Download failed:', err);
-        alert('Failed to download policy certificate. Please try again later.');
-      }
+        next: (blob) => {
+            const fileName = `Policy_Certificate_${this.policyNumber || this.policyId.slice(0, 8)}.pdf`;
+            this.pdfService.saveAs(blob, fileName);
+        },
+        error: (err) => {
+            console.error('Download failed:', err);
+            alert('Failed to download policy certificate. Please try again.');
+        }
     });
-  }
+}
 
   downloadGstInvoice() {
     // Get the most recent completed payment ID from localStorage or from the API
@@ -503,83 +504,111 @@ debugPolicyInfo() {
     const nominees$ = of([]);
 
     forkJoin({
-      member: member$,
-      claims: claims$,
-      dependents: dependents$,
-      nominees: nominees$
+        member: member$,
+        claims: claims$,
+        dependents: dependents$,
+        nominees: nominees$
     }).subscribe({
-      next: (result) => {
-        console.log('✅ Dashboard data loaded');
-        console.log('Member data:', result.member);
+        next: (result) => {
+            console.log('✅ Dashboard data loaded');
+            console.log('Member data:', result.member);
 
-        this.memberName = result.member?.fullName || 'User';
-        this.activePlan = result.member?.activePlan;
-        
-        // ✅ FIX: Get policy ID from active plan
-        if (this.activePlan) {
-          this.policyId = this.activePlan.id || '';
-          this.policyNumber = this.activePlan.policyNumber || this.activePlan.id?.slice(0, 8) || '';
-          console.log('Policy ID set to:', this.policyId);
-          console.log('Policy Number:', this.policyNumber);
-          this.debugPolicyInfo(); // Add this line
+            this.memberName = result.member?.fullName || 'User';
+            this.activePlan = result.member?.activePlan;
+            
+            // ✅ CRITICAL FIX: Use activePolicyId from backend, NOT activePlan.id
+            const memberAny = result.member as any;
+            this.policyId = memberAny?.activePolicyId || this.activePlan?.id || '';
+            this.policyNumber = memberAny?.activePolicyNumber || this.activePlan?.id?.slice(0, 8) || '';
+            
+            console.log('✅ Active Policy ID (use this for certificate):', this.policyId);
+            console.log('✅ Active Policy Number:', this.policyNumber);
+            console.log('⚠️ Active Plan ID (DO NOT use for certificate):', this.activePlan?.id);
+            
+            // Store for GST invoice
+            if (this.policyId) {
+                localStorage.setItem('activePolicyId', this.policyId);
+            }
+
+            const claims = result.claims as any[];
+            this.recentClaims = claims?.slice(0, 5).map((c: any) => ({
+                id: c.claimId,
+                date: c.claimDate,
+                claimDate: c.claimDate,
+                amount: c.amount,
+                status: c.status,
+                description: c.description,
+                aiConfidenceScore: c.aiConfidenceScore
+            })) || [];
+
+            this.totalClaims = claims?.length || 0;
+            this.approvedClaims = claims?.filter(c => c.status === 'Approved' || c.status === 'Paid').length || 0;
+            this.pendingClaims = claims?.filter(c => c.status === 'Submitted' || c.status === 'Pending').length || 0;
+            this.rejectedClaims = claims?.filter(c => c.status === 'Rejected').length || 0;
+
+            this.approvalRate = this.totalClaims > 0 
+                ? Math.round((this.approvedClaims / this.totalClaims) * 100) 
+                : 0;
+
+            this.approvedPercent = this.totalClaims > 0 
+                ? Math.round((this.approvedClaims / this.totalClaims) * 100) 
+                : 0;
+            this.pendingPercent = this.totalClaims > 0 
+                ? Math.round((this.pendingClaims / this.totalClaims) * 100) 
+                : 0;
+            this.rejectedPercent = this.totalClaims > 0 
+                ? Math.round((this.rejectedClaims / this.totalClaims) * 100) 
+                : 0;
+
+            if (this.activePlan) {
+                this.totalClaimedAmount = claims?.reduce((sum, c) => 
+                    (c.status === 'Approved' || c.status === 'Paid') ? sum + c.amount : sum, 0) || 0;
+
+                this.coverageUtilization = Math.min(100, Math.round(
+                    (this.totalClaimedAmount / this.activePlan.insuredAmount) * 100
+                ));
+
+                const endDate = new Date(this.activePlan.endDate);
+                this.daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)));
+            }
+
+            this.generateAIInsights();
+            this.loadPremiumPaymentStatus();
+            this.loadLastPaymentId();
+            this.cdr.markForCheck();
+
+            setTimeout(() => {
+                this.initCharts();
+            }, 100);
+        },
+        error: (err) => {
+            console.error('❌ Dashboard data error:', err);
+            this.generateFallbackData();
+            this.cdr.markForCheck();
+            
+            setTimeout(() => {
+                this.initCharts();
+            }, 100);
         }
-
-        const claims = result.claims as any[];
-        this.recentClaims = claims?.slice(0, 5).map((c: any) => ({
-          id: c.claimId,
-          date: c.claimDate,
-          claimDate: c.claimDate,
-          amount: c.amount,
-          status: c.status,
-          description: c.description,
-          aiConfidenceScore: c.aiConfidenceScore
-        })) || [];
-
-        this.totalClaims = claims?.length || 0;
-        this.approvedClaims = claims?.filter(c => c.status === 'Approved' || c.status === 'Paid').length || 0;
-        this.pendingClaims = claims?.filter(c => c.status === 'Submitted' || c.status === 'Pending').length || 0;
-        this.rejectedClaims = claims?.filter(c => c.status === 'Rejected').length || 0;
-
-        this.approvalRate = this.totalClaims > 0 
-          ? Math.round((this.approvedClaims / this.totalClaims) * 100) 
-          : 0;
-
-        this.approvedPercent = this.totalClaims > 0 
-          ? Math.round((this.approvedClaims / this.totalClaims) * 100) 
-          : 0;
-        this.pendingPercent = this.totalClaims > 0 
-          ? Math.round((this.pendingClaims / this.totalClaims) * 100) 
-          : 0;
-        this.rejectedPercent = this.totalClaims > 0 
-          ? Math.round((this.rejectedClaims / this.totalClaims) * 100) 
-          : 0;
-
-        if (this.activePlan) {
-          this.totalClaimedAmount = claims?.reduce((sum, c) => 
-            (c.status === 'Approved' || c.status === 'Paid') ? sum + c.amount : sum, 0) || 0;
-
-          this.coverageUtilization = Math.min(100, Math.round(
-            (this.totalClaimedAmount / this.activePlan.insuredAmount) * 100
-          ));
-
-          const endDate = new Date(this.activePlan.endDate);
-          this.daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)));
-        }
-
-        this.generateAIInsights();
-        this.loadPremiumPaymentStatus();
-        this.cdr.markForCheck();
-
-        this.initCharts();
-      },
-      error: (err) => {
-        console.error('❌ Dashboard data error:', err);
-        this.generateFallbackData();
-        this.cdr.markForCheck();
-        this.initCharts();
-      }
     });
-  }
+}
+
+// Add this method
+private loadLastPaymentId(): void {
+    this.pdfService.getRecentPayments().subscribe({
+        next: (payments) => {
+            console.log('Recent payments:', payments);
+            const completedPayment = payments?.find(p => p.status === 'Completed');
+            if (completedPayment?.paymentId) {
+                localStorage.setItem('lastPaymentId', completedPayment.paymentId);
+                console.log('Last payment ID stored:', completedPayment.paymentId);
+            }
+        },
+        error: (err) => {
+            console.error('Failed to fetch recent payments:', err);
+        }
+    });
+}
 
   private loadPremiumPaymentStatus(): void {
     this.memberService.getEnhancedDashboard().subscribe({

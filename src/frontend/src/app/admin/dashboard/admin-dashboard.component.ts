@@ -172,15 +172,18 @@ export class AdminDashboardComponent implements OnInit, OnDestroy, AfterViewInit
 
   loadRecentDocuments() {
     this.http.get(`${environment.apiBaseUrl}/admin/dashboard/recent-documents`).subscribe({
-      next: (docs: any) => {
-        this.recentDocuments = docs.slice(0, 5);
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Failed to load recent documents:', err);
-      }
+        next: (docs: any) => {
+            this.recentDocuments = docs || [];
+            this.cdr.detectChanges();
+        },
+        error: (err) => {
+            console.error('Failed to load recent documents:', err);
+            // Set empty array instead of breaking
+            this.recentDocuments = [];
+            this.cdr.detectChanges();
+        }
     });
-  }
+}
 
   viewDocument(doc: RecentDocument) {
     this.selectedDocument = doc;

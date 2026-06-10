@@ -14,6 +14,8 @@ export interface MemberDashboardResponse {
     startDate: string;
     endDate: string;
   } | null;
+  activePolicyId?: string;      // ✅ Add this
+  activePolicyNumber?: string;   // ✅ Add this
 }
 
 // NEW: Policy Summary from new system
