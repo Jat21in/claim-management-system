@@ -3,6 +3,7 @@ using CMS.Application.DTOs.Plan;
 using CMS.Application.Interfaces.Repositories;
 using CMS.Application.Interfaces.Services;
 using CMS.Domain.Entities;
+using CMS.Domain.Enums;
 using CMS.Domain.ValueObjects;
 
 namespace CMS.Application.Services;
@@ -11,13 +12,16 @@ public sealed class MemberService : IMemberService
 {
     private readonly IMemberRepository _memberRepository;
     private readonly IPlanRepository _planRepository;
+    private readonly IPolicyRepository _policyRepository; // ✅ FIXED: Use IPolicyRepository, not IPlanRepository
 
     public MemberService(
         IMemberRepository memberRepository,
-        IPlanRepository planRepository)
+        IPlanRepository planRepository,
+        IPolicyRepository policyRepository) // ✅ FIXED: Correct type
     {
         _memberRepository = memberRepository;
         _planRepository = planRepository;
+        _policyRepository = policyRepository; // ✅ FIXED
     }
 
     public async Task<Guid> RegisterMemberAsync(
@@ -81,9 +85,9 @@ public sealed class MemberService : IMemberService
     }
 
     public async Task UpdateActivePlanAsync(
-    Guid memberId,
-    UpdatePlanRequest request,
-    CancellationToken cancellationToken)
+        Guid memberId,
+        UpdatePlanRequest request,
+        CancellationToken cancellationToken)
     {
         var member = await _memberRepository
             .GetByIdWithActivePlanAsync(memberId, cancellationToken)
@@ -92,7 +96,6 @@ public sealed class MemberService : IMemberService
         if (member.ActivePlan is null)
             throw new InvalidOperationException("No active plan found.");
 
-        // Additional validations
         if (request.EndDate <= DateTime.UtcNow)
             throw new InvalidOperationException("End date must be in the future.");
 
@@ -109,30 +112,49 @@ public sealed class MemberService : IMemberService
         await _memberRepository.UpdateAsync(member, cancellationToken);
     }
 
-
-    public async Task<MemberDashboardResponse> GetMyDashboardAsync(
-        Guid memberId,
-        CancellationToken cancellationToken)
+    public async Task<MemberDashboardResponse> GetMyDashboardAsync(Guid memberId, CancellationToken cancellationToken)
     {
-        var member = await _memberRepository
-            .GetByIdWithActivePlanAsync(memberId, cancellationToken)
-            ?? throw new InvalidOperationException("Member not found.");
+        var member = await _memberRepository.GetByIdWithActivePlanAsync(memberId, cancellationToken);
+        if (member == null)
+            throw new InvalidOperationException("Member not found");
 
-        if (member.ActivePlan is null)
-            throw new InvalidOperationException("No active plan assigned.");
+        // ✅ Get the active policy for this member (where status = Active)
+        Policy? activePolicy = null;
+
+        try
+        {
+            activePolicy = await _policyRepository.GetByMemberIdAsync(memberId, cancellationToken);
+        }
+        catch
+        {
+            // If GetByMemberIdAsync fails, try to find manually
+            var allPolicies = await _policyRepository.GetAllAsync(cancellationToken);
+            activePolicy = allPolicies
+                .FirstOrDefault(p => p.MemberId == memberId && p.Status == PolicyStatus.Active);
+        }
+
+        // If still no active policy found, check for any policy
+        if (activePolicy == null)
+        {
+            var allPolicies = await _policyRepository.GetAllAsync(cancellationToken);
+            activePolicy = allPolicies
+                .FirstOrDefault(p => p.MemberId == memberId);
+        }
 
         return new MemberDashboardResponse
         {
             FullName = member.FullName,
             Email = member.Email,
-            ActivePlan = new ActivePlanDto
+            ActivePlan = member.ActivePlan != null ? new ActivePlanDto
             {
                 Id = member.ActivePlan.PlanId,
                 Name = member.ActivePlan.Name,
                 InsuredAmount = member.ActivePlan.InsuredAmount,
                 StartDate = member.ActivePlan.StartDate,
                 EndDate = member.ActivePlan.EndDate
-            }
+            } : null,
+            ActivePolicyId = activePolicy?.PolicyId,
+            ActivePolicyNumber = activePolicy?.PolicyNumber
         };
     }
 }

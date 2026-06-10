@@ -4,8 +4,11 @@ public sealed class MemberDashboardResponse
 {
     public string FullName { get; init; } = null!;
     public string Email { get; init; } = null!;
-
     public ActivePlanDto? ActivePlan { get; init; }
+
+    // ✅ ADD THESE - The actual Policy ID from Policies table
+    public Guid? ActivePolicyId { get; init; }
+    public string? ActivePolicyNumber { get; init; }
 }
 
 public sealed class ActivePlanDto
