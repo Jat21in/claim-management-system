@@ -3,7 +3,7 @@ import { RouterOutlet, RouterLink, Router, NavigationEnd } from '@angular/router
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
-import { AdminService } from '../services/admin.service';
+import { AdminService, SearchResult } from '../services/admin.service';
 import { trigger, transition, style, animate, query, stagger, keyframes } from '@angular/animations';
 import { filter, Subscription } from 'rxjs';
 
@@ -13,6 +13,15 @@ interface NavItem {
   icon: string;
   badge?: number;
   active: boolean;
+}
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+  type: 'kyc' | 'claim' | 'payment' | 'system';
 }
 
 @Component({
@@ -93,9 +102,15 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   pendingTasks = 0;
   notificationCount = 0;
 
+  // Search
   searchQuery = '';
   showSearchResults = false;
-  searchResults: any[] = [];
+  searchResults: SearchResult[] = [];
+
+  // Notifications
+  showNotifications = false;
+  notifications: Notification[] = [];
+  unreadNotifications = 0;
 
   private timeInterval: any;
   private statsInterval: any;
@@ -107,6 +122,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     { path: 'kyc', label: 'KYC Verification', icon: 'verified', active: false },
     { path: 'claims', label: 'Claims Management', icon: 'claim', active: false },
     { path: 'members', label: 'Member Directory', icon: 'members', active: false },
+    { path: 'plans', label: 'Plan Management', icon: 'plans', active: false },
+    { path: 'hospitals', label: 'Network Hospitals', icon: 'hospitals', active: false },
     { path: 'hangfire', label: 'Job Monitor', icon: 'jobs', active: false }
   ];
 
@@ -118,12 +135,14 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.loadAdminProfile();
     this.updateActiveNav();
     this.startRealTimeStats();
+    this.loadNotifications();
 
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
       this.updateActiveNav();
       this.closeSearch();
+      this.closeNotifications();
     });
   }
 
@@ -152,7 +171,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   private startRealTimeStats() {
     this.loadStats();
-    this.statsInterval = setInterval(() => this.loadStats(), 30000); // refresh every 30s
+    this.statsInterval = setInterval(() => this.loadStats(), 30000);
   }
 
   private loadStats() {
@@ -163,7 +182,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
         this.pendingTasks = stats.pendingTasks;
         this.notificationCount = stats.pendingKyc + stats.pendingClaims;
 
-        // Update nav item badges
         const kycNav = this.navItems.find(n => n.path === 'kyc');
         if (kycNav) kycNav.badge = this.pendingKycCount;
 
@@ -199,6 +217,18 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     if (user?.email) this.adminEmail = user.email;
     if (user?.['role']) this.adminRole = user['role'];
     this.adminAvatar = this.getInitials(this.adminName);
+    this.cdr.markForCheck();
+  }
+
+  private loadNotifications() {
+    // In production, fetch from API
+    this.notifications = [
+      { id: '1', title: 'New KYC Submission', message: 'John Doe submitted KYC documents for verification', time: '5 minutes ago', read: false, type: 'kyc' },
+      { id: '2', title: 'Claim Approved', message: 'Claim #POL-20260606-77D64B5C has been approved', time: '1 hour ago', read: false, type: 'claim' },
+      { id: '3', title: 'Payment Received', message: 'Premium payment of ₹46,728 received successfully', time: '2 hours ago', read: true, type: 'payment' },
+      { id: '4', title: 'New Member Registration', message: 'Ansh Kumar has registered as a new member', time: '3 hours ago', read: false, type: 'system' }
+    ];
+    this.unreadNotifications = this.notifications.filter(n => !n.read).length;
     this.cdr.markForCheck();
   }
 
@@ -244,7 +274,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  // Global Search
+  // Search Methods
   onSearchInput() {
     if (this.searchQuery.length < 2) {
       this.showSearchResults = false;
@@ -258,7 +288,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
         this.showSearchResults = true;
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err) => {
+        console.error('Search failed:', err);
         this.showSearchResults = false;
         this.cdr.markForCheck();
       }
@@ -271,16 +302,41 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  // Notification Methods
+  toggleNotifications() {
+    this.showNotifications = !this.showNotifications;
+    if (this.showNotifications) {
+      this.userMenuOpen = false;
+    }
+    this.cdr.markForCheck();
+  }
+
+  closeNotifications() {
+    this.showNotifications = false;
+    this.cdr.markForCheck();
+  }
+
+  markNotificationsAsRead() {
+    this.notifications.forEach(n => n.read = true);
+    this.unreadNotifications = 0;
+    this.cdr.markForCheck();
+  }
+
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
     let changed = false;
+    
     if (!target.closest('.user-menu') && this.userMenuOpen) {
       this.userMenuOpen = false;
       changed = true;
     }
     if (!target.closest('.search-container') && this.showSearchResults) {
       this.showSearchResults = false;
+      changed = true;
+    }
+    if (!target.closest('.notification-container') && this.showNotifications) {
+      this.showNotifications = false;
       changed = true;
     }
     if (changed) {

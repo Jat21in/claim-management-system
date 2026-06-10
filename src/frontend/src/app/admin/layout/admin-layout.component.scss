@@ -1,6 +1,7 @@
 // ============================================
 // ENTERPRISE ADMIN LAYOUT - PROFESSIONAL EDITION
 // ============================================
+
 // Design System Variables
 $bg-dark: #0A0F1A;
 $bg-surface: #111827;
@@ -20,6 +21,7 @@ $danger-dark: #DC2626;
 $transition-fast: 150ms;
 $transition-base: 250ms;
 $transition-slow: 350ms;
+
 // Mixins
 @mixin glass-effect {
     background: rgba(17, 24, 39, 0.8);
@@ -27,33 +29,14 @@ $transition-slow: 350ms;
     border: 1px solid $border-color;
 }
 
-@mixin gradient-border {
-    position: relative;
-    &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: linear-gradient(135deg, $accent-primary, $accent-secondary);
-        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        pointer-events: none;
-    }
-}
-
 // Main Shell
 .admin-shell {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    height: 100vh;
     background: $bg-dark;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 // ============================================
@@ -65,12 +48,8 @@ $transition-slow: 350ms;
     position: sticky;
     top: 0;
     z-index: 100;
+    flex-shrink: 0;
     transition: all $transition-base ease;
-    &.sidebar-collapsed {
-        .header-container {
-            padding-left: 88px;
-        }
-    }
 }
 
 .header-container {
@@ -100,13 +79,13 @@ $transition-slow: 350ms;
     align-items: center;
     justify-content: center;
     transition: all $transition-fast;
+    
     &:hover {
         background: $bg-surface-light;
         color: $accent-primary;
     }
 }
 
-// Sidebar toggle stays visible in header
 .sidebar-toggle {
     background: transparent;
     border: none;
@@ -118,13 +97,13 @@ $transition-slow: 350ms;
     justify-content: center;
     flex-shrink: 0;
     transition: all $transition-fast;
+    
     &:hover {
         background: $bg-surface-light;
         color: $accent-primary;
     }
 }
 
-// Ensure logo text hides properly when sidebar collapsed
 .logo {
     display: flex;
     align-items: center;
@@ -142,7 +121,8 @@ $transition-slow: 350ms;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0; // <-- important: icon never shrinks
+    flex-shrink: 0;
+    
     svg {
         color: $bg-dark;
     }
@@ -154,9 +134,11 @@ $transition-slow: 350ms;
     color: $text-primary;
     transition: opacity $transition-base, width $transition-base;
     white-space: nowrap;
+    
     .highlight {
         color: $accent-primary;
     }
+    
     &.collapsed {
         opacity: 0;
         width: 0;
@@ -165,14 +147,13 @@ $transition-slow: 350ms;
     }
 }
 
-// Header Actions
 .header-actions {
     display: flex;
     align-items: center;
     gap: 20px;
 }
 
-// Search container
+// Search Container
 .search-container {
     position: relative;
 }
@@ -185,6 +166,7 @@ $transition-slow: 350ms;
     border: 1px solid $border-color;
     border-radius: 8px;
     padding: 6px 12px;
+    
     svg {
         color: $text-tertiary;
     }
@@ -196,9 +178,11 @@ $transition-slow: 350ms;
     color: $text-primary;
     font-size: 0.875rem;
     width: 220px;
+    
     &::placeholder {
         color: $text-tertiary;
     }
+    
     &:focus {
         outline: none;
     }
@@ -208,37 +192,53 @@ $transition-slow: 350ms;
     position: absolute;
     top: 100%;
     right: 0;
-    width: 320px;
+    width: 360px;
     background: $bg-surface;
     border: 1px solid $border-color;
     border-radius: 8px;
     margin-top: 8px;
     z-index: 100;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    max-height: 400px;
+    overflow-y: auto;
+    
     .search-result-item {
         padding: 10px 12px;
         border-bottom: 1px solid $border-color;
+        
         a {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            display: block;
             text-decoration: none;
-            color: $text-primary;
+            
             .result-type {
                 font-size: 10px;
                 background: $bg-surface-light;
                 padding: 2px 6px;
                 border-radius: 4px;
                 color: $accent-primary;
+                display: inline-block;
+                margin-bottom: 4px;
             }
+            
             .result-title {
                 font-size: 13px;
+                font-weight: 500;
+                color: $text-primary;
+                display: block;
+            }
+            
+            .result-subtitle {
+                font-size: 11px;
+                color: $text-tertiary;
+                display: block;
             }
         }
+        
         &:hover {
             background: $bg-surface-light;
         }
     }
+    
     .no-results {
         padding: 12px;
         text-align: center;
@@ -247,17 +247,25 @@ $transition-slow: 350ms;
     }
 }
 
+// Notification Container
+.notification-container {
+    position: relative;
+}
+
 .notification-btn {
     position: relative;
     cursor: pointer;
     padding: 8px;
     border-radius: 8px;
     transition: all $transition-fast;
+    
     svg {
         color: $text-secondary;
     }
+    
     &:hover {
         background: $bg-surface-light;
+        
         svg {
             color: $accent-primary;
         }
@@ -278,16 +286,159 @@ $transition-slow: 350ms;
     text-align: center;
 }
 
+.notification-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 380px;
+    background: $bg-surface;
+    border: 1px solid $border-color;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    z-index: 101;
+    margin-top: 8px;
+    overflow: hidden;
+    
+    .dropdown-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid $border-color;
+        
+        span {
+            font-weight: 600;
+            color: $text-primary;
+            font-size: 14px;
+        }
+        
+        .mark-all-read {
+            background: none;
+            border: none;
+            color: $accent-primary;
+            font-size: 11px;
+            cursor: pointer;
+            
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+}
+
+.notification-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid $border-color;
+    transition: background 0.2s;
+    
+    &:hover {
+        background: $bg-surface-light;
+    }
+    
+    &.unread {
+        background: rgba($accent-primary, 0.05);
+        
+        .notification-title {
+            color: $accent-primary;
+        }
+    }
+}
+
+.notification-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    
+    &.kyc {
+        background: rgba($accent-primary, 0.15);
+        svg { stroke: $accent-primary; }
+    }
+    
+    &.claim {
+        background: rgba($success, 0.15);
+        svg { stroke: $success; }
+    }
+    
+    &.payment {
+        background: rgba($warning, 0.15);
+        svg { stroke: $warning; }
+    }
+    
+    &.system {
+        background: rgba($accent-secondary, 0.15);
+        svg { stroke: $accent-secondary; }
+    }
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: $text-primary;
+    margin-bottom: 2px;
+}
+
+.notification-message {
+    font-size: 12px;
+    color: $text-secondary;
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+
+.notification-time {
+    font-size: 10px;
+    color: $text-tertiary;
+}
+
+.no-notifications {
+    padding: 32px;
+    text-align: center;
+    color: $text-tertiary;
+    font-size: 13px;
+}
+
+.dropdown-footer {
+    padding: 10px 16px;
+    border-top: 1px solid $border-color;
+    text-align: center;
+    
+    a {
+        color: $accent-primary;
+        text-decoration: none;
+        font-size: 12px;
+        
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
 .datetime-display {
     text-align: right;
     border-right: 1px solid $border-color;
     padding-right: 20px;
+    
     .time {
         font-size: 0.875rem;
         font-weight: 600;
         color: $text-primary;
         font-family: monospace;
     }
+    
     .date {
         font-size: 0.75rem;
         color: $text-tertiary;
@@ -303,6 +454,7 @@ $transition-slow: 350ms;
     border-radius: 40px;
     transition: all $transition-fast;
     position: relative;
+    
     &:hover {
         background: $bg-surface-light;
     }
@@ -324,11 +476,13 @@ $transition-slow: 350ms;
 .user-info {
     display: flex;
     flex-direction: column;
+    
     .user-name {
         font-size: 0.875rem;
         font-weight: 500;
         color: $text-primary;
     }
+    
     .user-role {
         font-size: 0.7rem;
         color: $text-tertiary;
@@ -403,18 +557,23 @@ $transition-slow: 350ms;
     color: $text-secondary;
     text-decoration: none;
     transition: all $transition-fast;
+    
     svg {
         color: $text-tertiary;
     }
+    
     &:hover {
         background: $bg-surface-light;
         color: $accent-primary;
+        
         svg {
             color: $accent-primary;
         }
     }
+    
     &.logout {
         color: $danger;
+        
         &:hover {
             background: rgba($danger, 0.1);
             color: $danger;
@@ -440,31 +599,39 @@ $transition-slow: 350ms;
     transition: all $transition-base ease;
     overflow-y: auto;
     overflow-x: hidden;
+    
     &::-webkit-scrollbar {
         width: 4px;
     }
+    
     &::-webkit-scrollbar-track {
         background: $bg-surface;
     }
+    
     &::-webkit-scrollbar-thumb {
         background: $border-color;
         border-radius: 4px;
+        
         &:hover {
             background: $border-color-light;
         }
     }
+    
     &.collapsed {
         width: 72px;
+        
         .nav-label {
             opacity: 0;
             width: 0;
             visibility: hidden;
         }
+        
         .nav-badge {
             position: absolute;
             top: -4px;
             right: -4px;
         }
+        
         .tasks-progress {
             opacity: 0;
             visibility: hidden;
@@ -472,10 +639,12 @@ $transition-slow: 350ms;
             padding: 0;
             margin: 0;
         }
+        
         .logout-btn span {
             display: none;
         }
     }
+    
     &.mobile-open {
         transform: translateX(0);
     }
@@ -490,6 +659,7 @@ $transition-slow: 350ms;
     background: rgba(0, 0, 0, 0.7);
     z-index: 89;
     display: none;
+    
     @media (max-width: 1024px) {
         display: block;
     }
@@ -514,20 +684,25 @@ $transition-slow: 350ms;
     font-size: 0.875rem;
     font-weight: 500;
     position: relative;
+    
     &:hover {
         background: $bg-surface-light;
         color: $text-primary;
         transform: translateX(4px);
+        
         .nav-icon svg {
             color: $accent-primary;
         }
     }
+    
     &.active {
         background: linear-gradient(135deg, rgba($accent-primary, 0.1), rgba($accent-secondary, 0.05));
         color: $accent-primary;
+        
         .nav-icon svg {
             color: $accent-primary;
         }
+        
         &::before {
             content: '';
             position: absolute;
@@ -549,6 +724,7 @@ $transition-slow: 350ms;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    
     svg {
         color: $text-tertiary;
         transition: all $transition-fast;
@@ -582,25 +758,30 @@ $transition-slow: 350ms;
     border-radius: 12px;
     margin-bottom: 20px;
     transition: all $transition-base;
+    
     .tasks-label {
         display: flex;
         justify-content: space-between;
         font-size: 0.75rem;
         margin-bottom: 8px;
+        
         span:first-child {
             color: $text-tertiary;
         }
+        
         span:last-child {
             color: $accent-primary;
             font-weight: 600;
         }
     }
+    
     .progress-bar {
         height: 4px;
         background: $border-color;
         border-radius: 4px;
         overflow: hidden;
     }
+    
     .progress-fill {
         height: 100%;
         background: linear-gradient(90deg, $accent-primary, $accent-secondary);
@@ -623,10 +804,12 @@ $transition-slow: 350ms;
     font-size: 0.875rem;
     font-weight: 500;
     transition: all $transition-fast;
+    
     svg {
         flex-shrink: 0;
         color: $danger;
     }
+    
     &:hover {
         background: rgba($danger, 0.1);
         transform: translateX(4px);
@@ -636,11 +819,20 @@ $transition-slow: 350ms;
 // ============================================
 // MAIN CONTENT
 // ============================================
+.admin-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
 .admin-main {
     flex: 1;
+    overflow-y: auto;
     margin-left: 260px;
     transition: margin-left $transition-base ease;
-    min-height: calc(100vh - 64px - 60px);
+    height: calc(100vh - 64px);
+    
     &.sidebar-collapsed {
         margin-left: 72px;
     }
@@ -658,9 +850,11 @@ $transition-slow: 350ms;
 .admin-footer {
     border-top: 1px solid $border-color;
     background: $bg-surface;
-    padding: 16px 24px;
+    padding: 12px 24px;
     margin-left: 260px;
     transition: margin-left $transition-base ease;
+    flex-shrink: 0;
+    
     &.sidebar-collapsed {
         margin-left: 72px;
     }
@@ -681,10 +875,12 @@ $transition-slow: 350ms;
 .footer-links {
     display: flex;
     gap: 24px;
+    
     a {
         color: $text-tertiary;
         text-decoration: none;
         transition: color $transition-fast;
+        
         &:hover {
             color: $accent-primary;
         }
@@ -694,33 +890,44 @@ $transition-slow: 350ms;
 // ============================================
 // RESPONSIVE DESIGN
 // ============================================
-// Fix for mobile
 @media (max-width: 1024px) {
     .admin-sidebar {
         transform: translateX(-100%);
+        
         &.mobile-open {
             transform: translateX(0);
         }
     }
+    
     .admin-main,
     .admin-footer {
         margin-left: 0 !important;
     }
+    
     .header-container {
         padding-left: 16px !important;
         padding-right: 16px;
     }
+    
     .datetime-display {
         display: none;
     }
+    
     .search-input {
         width: 150px;
     }
+    
     .search-results {
-        width: 280px;
+        width: 320px;
         right: auto;
         left: 0;
     }
+    
+    .notification-dropdown {
+        width: 340px;
+        right: -80px;
+    }
+    
     .content-wrapper {
         padding: 16px;
     }
@@ -730,12 +937,20 @@ $transition-slow: 350ms;
     .user-info {
         display: none;
     }
-    .notification-btn {
+    
+    .datetime-display {
         display: none;
     }
+    
     .search-bar {
         display: none;
     }
+    
+    .notification-dropdown {
+        width: 320px;
+        right: -100px;
+    }
+    
     .content-wrapper {
         padding: 12px;
     }

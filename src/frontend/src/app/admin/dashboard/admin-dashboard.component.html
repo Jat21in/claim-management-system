@@ -3,7 +3,7 @@
     <div class="welcome-section" @fadeInUp>
         <div class="welcome-content">
             <div class="greeting">
-                <span class="greeting-icon">👋</span>
+                <span class="greeting-icon">📊</span>
                 <div>
                     <h1 class="greeting-title">Analytics Dashboard</h1>
                     <p class="greeting-subtitle">Real-time insights and performance metrics</p>
@@ -33,15 +33,15 @@
         <div class="kpi-card">
             <div class="kpi-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
             </div>
             <div class="kpi-info">
                 <span class="kpi-value">{{ stats.totalMembers }}</span>
-                <span class="kpi-label">Total Members </span>
+                <span class="kpi-label">Total Members</span>
                 <span class="kpi-trend positive">Active</span>
             </div>
         </div>
@@ -49,13 +49,13 @@
         <div class="kpi-card">
             <div class="kpi-icon pending">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
-        </svg>
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
             </div>
             <div class="kpi-info">
                 <span class="kpi-value">{{ stats.pendingClaims }}</span>
-                <span class="kpi-label">Pending Claims </span>
+                <span class="kpi-label">Pending Claims</span>
                 <span class="kpi-trend neutral">{{ pendingPercentage }}% of total</span>
             </div>
         </div>
@@ -63,13 +63,13 @@
         <div class="kpi-card">
             <div class="kpi-icon approved">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-          <polyline points="22 4 12 14.01 9 11.01"/>
-        </svg>
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
             </div>
             <div class="kpi-info">
                 <span class="kpi-value">{{ stats.approvedClaims }}</span>
-                <span class="kpi-label">Approved Claims </span>
+                <span class="kpi-label">Approved Claims</span>
                 <span class="kpi-trend positive">{{ approvalRate }}% rate</span>
             </div>
         </div>
@@ -77,14 +77,14 @@
         <div class="kpi-card">
             <div class="kpi-icon rejected">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
             </div>
             <div class="kpi-info">
                 <span class="kpi-value">{{ stats.rejectedClaims }}</span>
-                <span class="kpi-label">Rejected Claims </span>
+                <span class="kpi-label">Rejected Claims</span>
                 <span class="kpi-trend negative">{{ rejectedPercentage }}% rate</span>
             </div>
         </div>
@@ -165,20 +165,17 @@
 
     <!-- Secondary Metrics Row -->
     <div class="metrics-row" @fadeInUp>
-
         <!-- TOTAL CLAIMS -->
         <div class="metric-card">
             <div class="metric-icon claims-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 3v18h18"></path>
-                <path d="M7 14l4-4 3 3 5-7"></path>
-            </svg>
+                    <path d="M3 3v18h18"></path>
+                    <path d="M7 14l4-4 3 3 5-7"></path>
+                </svg>
             </div>
-
             <div class="metric-content">
                 <div class="metric-value">{{ stats.totalClaims }}</div>
                 <div class="metric-label">Total Claims Processed</div>
-
                 <div class="metric-trend">
                     <span class="trend-up">↑ {{ claimsThisMonth }} this month</span>
                 </div>
@@ -189,23 +186,16 @@
         <div class="metric-card">
             <div class="metric-icon amount-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="9"></circle>
-                <path d="M16 8h-5a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H8"></path>
-                <path d="M12 6v12"></path>
-            </svg>
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M16 8h-5a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H8"></path>
+                    <path d="M12 6v12"></path>
+                </svg>
             </div>
-
             <div class="metric-content">
-                <div class="metric-value">
-                    {{ formatCurrency(stats.totalClaimAmount) }}
-                </div>
-
+                <div class="metric-value">{{ formatCurrency(stats.totalClaimAmount) }}</div>
                 <div class="metric-label">Total Claim Amount</div>
-
                 <div class="metric-trend">
-                    <span class="trend-neutral">
-                    Average: {{ formatCurrency(averageClaimAmount) }}
-                </span>
+                    <span class="trend-neutral">Average: {{ formatCurrency(averageClaimAmount) }}</span>
                 </div>
             </div>
         </div>
@@ -214,15 +204,13 @@
         <div class="metric-card">
             <div class="metric-icon weekly-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-                <path d="M8 13l2 2 6-6"></path>
-            </svg>
+                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                    <path d="M8 13l2 2 6-6"></path>
+                </svg>
             </div>
-
             <div class="metric-content">
                 <div class="metric-value">{{ claimsThisWeek }}</div>
                 <div class="metric-label">Claims This Week</div>
-
                 <div class="metric-trend">
                     <span class="trend-neutral">Last 7 days</span>
                 </div>
@@ -233,20 +221,62 @@
         <div class="metric-card">
             <div class="metric-icon success-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path>
-            </svg>
+                    <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path>
+                </svg>
             </div>
-
             <div class="metric-content">
                 <div class="metric-value">{{ approvalRate }}%</div>
                 <div class="metric-label">Success Rate</div>
-
                 <div class="metric-trend">
                     <span class="trend-up">↑ 12% vs last month</span>
                 </div>
             </div>
         </div>
+    </div>
 
+    <!-- Recent Documents Section -->
+    <div class="documents-section" @fadeInUp>
+        <div class="section-header">
+            <div class="section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                </svg>
+                <h3>Recent Documents</h3>
+            </div>
+            <button class="view-all" routerLink="/admin/claims">View All →</button>
+        </div>
+        <div class="documents-grid">
+            <div *ngFor="let doc of recentDocuments" class="document-card">
+                <div class="document-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                </div>
+                <div class="document-info">
+                    <div class="document-title">{{ doc.title }}</div>
+                    <div class="document-meta">
+                        <span class="document-type">{{ doc.type }}</span>
+                        <span class="document-date">{{ doc.uploadedAt | date:'MMM d, yyyy' }}</span>
+                    </div>
+                    <div class="document-member">{{ doc.memberName }}</div>
+                </div>
+                <button class="document-view" (click)="viewDocument(doc)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    View
+                </button>
+            </div>
+            <div *ngIf="recentDocuments.length === 0" class="no-documents">
+                No recent documents
+            </div>
+        </div>
     </div>
 
     <!-- Loading State -->
@@ -258,12 +288,50 @@
     <!-- Error State -->
     <div *ngIf="error && !loading" class="error-state">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <circle cx="12" cy="12" r="10"/>
-      <line x1="12" y1="8" x2="12" y2="12"/>
-      <line x1="12" y1="16" x2="12.01" y2="16"/>
-    </svg>
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
         <h3>Unable to load dashboard</h3>
         <p>{{ error }}</p>
         <button (click)="loadStats()" class="retry-btn">Retry</button>
+    </div>
+
+    <!-- Document Modal -->
+    <div class="modal-overlay" *ngIf="showDocumentModal" (click)="closeDocumentModal()">
+        <div class="modal-content document-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <div class="modal-icon">📄</div>
+                    <div>
+                        <h3>{{ selectedDocument?.title }}</h3>
+                        <p>{{ selectedDocument?.memberName }} • {{ selectedDocument?.uploadedAt | date:'medium' }}</p>
+                    </div>
+                </div>
+                <button class="modal-close" (click)="closeDocumentModal()">×</button>
+            </div>
+            <div class="modal-body document-body">
+                <div *ngIf="documentFileType === 'pdf'" class="pdf-viewer">
+                    <iframe [src]="documentUrl" width="100%" height="500" frameborder="0"></iframe>
+                </div>
+                <div *ngIf="documentFileType === 'image'" class="image-viewer">
+                    <img [src]="documentUrl" [alt]="selectedDocument?.title" class="document-image">
+                </div>
+                <div *ngIf="documentFileType === 'other'" class="other-viewer">
+                    <div class="file-icon">📄</div>
+                    <p>Preview not available for this file type.</p>
+                    <button class="btn-download" (click)="downloadDocument()">Download File</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="document-info">
+                    <span>File: {{ selectedDocument?.fileName }}</span>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" (click)="closeDocumentModal()">Close</button>
+                    <button class="btn-download" (click)="downloadDocument()">Download</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

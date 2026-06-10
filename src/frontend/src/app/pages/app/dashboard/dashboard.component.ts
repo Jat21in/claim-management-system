@@ -1,23 +1,14 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  inject,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  ElementRef,
-  ViewChild,
-  AfterViewInit
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { trigger, transition, style, animate, keyframes } from '@angular/animations';
 import { MemberService, MemberDashboardResponse, PolicySummary } from '../../../services/member.service';
 import { ClaimService } from '../../../services/claim.service';
-import { PolicyService } from '../../../services/policy.service';
 import { Subject, interval, takeUntil, forkJoin } from 'rxjs';
 import { of } from 'rxjs';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
+import { PdfDownloadService } from '../../../services/pdf-download.service';
+import { LanguageService } from '../../../services/language.service';
 
 Chart.register(...registerables);
 
@@ -78,10 +69,10 @@ interface AIInsight {
 export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   private memberService = inject(MemberService);
   private claimService = inject(ClaimService);
-  private policyService = inject(PolicyService);
   private router = inject(Router);
-  private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+  private pdfService = inject(PdfDownloadService);
+  private languageService = inject(LanguageService);
   private destroy$ = new Subject<void>();
 
   @ViewChild('claimsChart') claimsChartCanvas!: ElementRef<HTMLCanvasElement>;
@@ -90,6 +81,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   private claimsChartInstance: Chart | null = null;
   private statusChartInstance: Chart | null = null;
 
+  // Math helper for template
   Math = Math;
 
   // User Data
@@ -101,18 +93,8 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   daysRemaining = 0;
   coverageUtilization = 0;
   totalClaimedAmount = 0;
-  nextPremiumDue: Date | null = null;
-  nextPremiumAmount = 0;
-  daysUntilDue = 0;
-  lateFee = 0;
-  isGracePeriod = false;
-  isLapsed = false;
-  isPremiumPaid = false; // ✅ NEW
-  lastPaymentDate: Date | null = null; // ✅ NEW
-
-  // Payment success banner
-  showPaymentSuccess = false;
-  lastPaymentAmount = 0;
+  policyNumber = '';
+  policyId = '';
 
   // Claims Data
   totalClaims = 0;
@@ -146,6 +128,21 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   amountChartData = [25000, 18000, 32000, 15000, 45000, 28000, 52000];
   chartLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+  // Premium Payment Tracker
+  nextPremiumDue: Date | null = null;
+  nextPremiumAmount = 0;
+  daysUntilDue = 0;
+  lateFee = 0;
+  isGracePeriod = false;
+  isLapsed = false;
+  isPremiumPaid = false;
+  lastPaymentDate: Date | null = null;
+  lastPaymentAmount = 0;
+  lastPaymentId: string | null = null;
+
+  // Payment Success Banner
+  showPaymentSuccess = false;
+  
   // Time & Greeting
   currentTime = '';
   currentDate = '';
@@ -168,7 +165,22 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.startTimeUpdates();
     this.loadDashboardData();
     this.typeGreeting(this.currentGreeting);
-    this.checkPaymentSuccess();
+    
+    // Check for payment success from query params
+    this.router.events.subscribe(() => {
+      const url = this.router.url;
+      if (url.includes('paymentSuccess=true')) {
+        this.showPaymentSuccess = true;
+        const amountMatch = url.match(/amount=([\d.]+)/);
+        if (amountMatch) {
+          this.lastPaymentAmount = parseFloat(amountMatch[1]);
+        }
+        setTimeout(() => {
+          this.showPaymentSuccess = false;
+          this.cdr.markForCheck();
+        }, 5000);
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -193,8 +205,10 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private initCharts(): void {
-    this.initClaimsChart();
-    this.initStatusChart();
+    setTimeout(() => {
+      this.initClaimsChart();
+      this.initStatusChart();
+    }, 100);
   }
 
   private initClaimsChart(): void {
@@ -206,7 +220,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
     const data = this.chartType === 'claims' ? this.claimsChartData : this.amountChartData;
     const label = this.chartType === 'claims' ? 'Number of Claims' : 'Claim Amount (₹)';
-    const backgroundColor = this.chartType === 'claims'
+    const backgroundColor = this.chartType === 'claims' 
       ? 'rgba(34, 211, 238, 0.6)'
       : 'rgba(139, 92, 246, 0.6)';
 
@@ -242,7 +256,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
             mode: 'index',
             intersect: false,
             callbacks: {
-              label: (context: any) => {
+              label: (context) => {
                 let value = context.raw as number;
                 if (this.chartType === 'amount') {
                   return `₹${value.toLocaleString()}`;
@@ -280,7 +294,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
       this.statusChartInstance.destroy();
     }
 
-    const config: ChartConfiguration<'doughnut'> = {
+    const config: ChartConfiguration = {
       type: 'doughnut',
       data: {
         labels: ['Approved', 'Pending', 'Rejected'],
@@ -307,11 +321,22 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
           }
         },
         cutout: '65%'
-      }
+      } as any
     };
 
     this.statusChartInstance = new Chart(this.statusChartCanvas.nativeElement, config);
   }
+
+  // Add this method for debugging
+debugPolicyInfo() {
+  console.log('========== DEBUG POLICY INFO ==========');
+  console.log('activePlan:', this.activePlan);
+  console.log('policyId from activePlan?.id:', this.activePlan?.id);
+  console.log('policyId from activePlan?.policyId:', this.activePlan?.policyId);
+  console.log('policyId stored in component:', this.policyId);
+  console.log('policyNumber:', this.policyNumber);
+  console.log('========================================');
+}
 
   private typeGreeting(text: string): void {
     this.typedGreeting = '';
@@ -393,6 +418,82 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  // PDF Download Methods - FIXED with correct IDs
+  downloadPolicyCertificate() {
+    if (!this.policyId) {
+      console.error('No policy ID available. PolicyId:', this.policyId);
+      alert('Policy ID not available. Please contact support.');
+      return;
+    }
+    
+    console.log('Downloading policy certificate for policy ID:', this.policyId);
+    
+    this.pdfService.downloadPolicyCertificate(this.policyId).subscribe({
+      next: (blob) => {
+        const fileName = `Policy_Certificate_${this.policyNumber || this.policyId.slice(0, 8)}.pdf`;
+        this.pdfService.saveAs(blob, fileName);
+      },
+      error: (err) => {
+        console.error('Download failed:', err);
+        alert('Failed to download policy certificate. Please try again later.');
+      }
+    });
+  }
+
+  downloadGstInvoice() {
+    // Get the most recent completed payment ID from localStorage or from the API
+    const lastPaymentId = localStorage.getItem('lastPaymentId');
+    
+    if (!lastPaymentId) {
+      // Try to fetch the latest payment ID from the API
+      this.pdfService.getRecentPayments().subscribe({
+        next: (payments: any[]) => {
+          const completedPayment = payments.find(p => p.status === 'Completed' || p.status === 1);
+          if (completedPayment && completedPayment.paymentId) {
+            localStorage.setItem('lastPaymentId', completedPayment.paymentId);
+            this.downloadGstInvoiceWithId(completedPayment.paymentId);
+          } else {
+            alert('No completed payment found. Please make a payment first to download GST invoice.');
+          }
+        },
+        error: () => {
+          alert('Unable to fetch payment records. Please make a payment first.');
+        }
+      });
+      return;
+    }
+    
+    this.downloadGstInvoiceWithId(lastPaymentId);
+  }
+
+  private downloadGstInvoiceWithId(paymentId: string) {
+    console.log('Downloading GST invoice for payment ID:', paymentId);
+    
+    this.pdfService.downloadGstInvoice(paymentId).subscribe({
+      next: (blob) => {
+        const fileName = `GST_Invoice_${new Date().toISOString().slice(0, 10)}.pdf`;
+        this.pdfService.saveAs(blob, fileName);
+      },
+      error: (err) => {
+        console.error('Download failed:', err);
+        alert('Failed to download GST invoice. Please try again later.');
+      }
+    });
+  }
+
+  // Navigation Methods
+  navigateToPayments() {
+    this.router.navigate(['/app/payments/new']);
+  }
+
+  navigateToPaymentHistory() {
+    this.router.navigate(['/app/payments']);
+  }
+
+  navigateToReinstate() {
+    this.router.navigate(['/app/policy/reinstate']);
+  }
+
   private loadDashboardData(): void {
     console.log('🚀 Dashboard Load Started');
 
@@ -409,9 +510,19 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     }).subscribe({
       next: (result) => {
         console.log('✅ Dashboard data loaded');
+        console.log('Member data:', result.member);
 
         this.memberName = result.member?.fullName || 'User';
         this.activePlan = result.member?.activePlan;
+        
+        // ✅ FIX: Get policy ID from active plan
+        if (this.activePlan) {
+          this.policyId = this.activePlan.id || '';
+          this.policyNumber = this.activePlan.policyNumber || this.activePlan.id?.slice(0, 8) || '';
+          console.log('Policy ID set to:', this.policyId);
+          console.log('Policy Number:', this.policyNumber);
+          this.debugPolicyInfo(); // Add this line
+        }
 
         const claims = result.claims as any[];
         this.recentClaims = claims?.slice(0, 5).map((c: any) => ({
@@ -429,22 +540,22 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         this.pendingClaims = claims?.filter(c => c.status === 'Submitted' || c.status === 'Pending').length || 0;
         this.rejectedClaims = claims?.filter(c => c.status === 'Rejected').length || 0;
 
-        this.approvalRate = this.totalClaims > 0
-          ? Math.round((this.approvedClaims / this.totalClaims) * 100)
+        this.approvalRate = this.totalClaims > 0 
+          ? Math.round((this.approvedClaims / this.totalClaims) * 100) 
           : 0;
 
-        this.approvedPercent = this.totalClaims > 0
-          ? Math.round((this.approvedClaims / this.totalClaims) * 100)
+        this.approvedPercent = this.totalClaims > 0 
+          ? Math.round((this.approvedClaims / this.totalClaims) * 100) 
           : 0;
-        this.pendingPercent = this.totalClaims > 0
-          ? Math.round((this.pendingClaims / this.totalClaims) * 100)
+        this.pendingPercent = this.totalClaims > 0 
+          ? Math.round((this.pendingClaims / this.totalClaims) * 100) 
           : 0;
-        this.rejectedPercent = this.totalClaims > 0
-          ? Math.round((this.rejectedClaims / this.totalClaims) * 100)
+        this.rejectedPercent = this.totalClaims > 0 
+          ? Math.round((this.rejectedClaims / this.totalClaims) * 100) 
           : 0;
 
         if (this.activePlan) {
-          this.totalClaimedAmount = claims?.reduce((sum, c) =>
+          this.totalClaimedAmount = claims?.reduce((sum, c) => 
             (c.status === 'Approved' || c.status === 'Paid') ? sum + c.amount : sum, 0) || 0;
 
           this.coverageUtilization = Math.min(100, Math.round(
@@ -455,56 +566,57 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
           this.daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)));
         }
 
-        this.loadPremiumPaymentStatus();
         this.generateAIInsights();
+        this.loadPremiumPaymentStatus();
         this.cdr.markForCheck();
 
-        setTimeout(() => {
-          this.initCharts();
-        }, 100);
+        this.initCharts();
       },
       error: (err) => {
         console.error('❌ Dashboard data error:', err);
         this.generateFallbackData();
         this.cdr.markForCheck();
-
-        setTimeout(() => {
-          this.initCharts();
-        }, 100);
+        this.initCharts();
       }
     });
   }
 
   private loadPremiumPaymentStatus(): void {
-    this.policyService.getPolicySummary().subscribe({
-      next: (summary) => {
-        // ✅ Check if premium is already paid for current month
-        this.isPremiumPaid = summary.isPremiumPaidForCurrentMonth || false;
-
-        if (this.isPremiumPaid) {
-          this.lastPaymentDate = summary.lastPaymentDate ? new Date(summary.lastPaymentDate) : null;
-          this.lastPaymentAmount = summary.lastPaymentAmount || 0;
-          this.cdr.markForCheck();
-          return; // No need to show due payment
-        }
-
-        if (summary.nextPremiumDueDate && !this.isPremiumPaid) {
-          this.nextPremiumDue = new Date(summary.nextPremiumDueDate);
-          this.nextPremiumAmount = summary.nextPremiumAmount || 0;
-
-          const today = new Date();
-          this.daysUntilDue = Math.ceil((this.nextPremiumDue.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-
-          this.isGracePeriod = this.daysUntilDue <= 15 && this.daysUntilDue > 0;
-          this.isLapsed = this.daysUntilDue <= -30;
-
-          if (this.daysUntilDue <= 0 && this.daysUntilDue > -30) {
-            this.lateFee = this.nextPremiumAmount * 0.05;
+    this.memberService.getEnhancedDashboard().subscribe({
+      next: (data) => {
+        const summary = data.policySummary;
+        if (summary) {
+          this.isPremiumPaid = summary.isPremiumPaidForCurrentMonth || false;
+          
+          if (this.isPremiumPaid) {
+            this.lastPaymentDate = summary.lastPaymentDate ? new Date(summary.lastPaymentDate) : null;
+            this.lastPaymentAmount = summary.lastPaymentAmount || 0;
+            // Store the last payment ID for GST invoice
+            if (summary.lastPaymentId) {
+              localStorage.setItem('lastPaymentId', summary.lastPaymentId);
+              this.lastPaymentId = summary.lastPaymentId;
+            }
+            return;
+          }
+          
+          if (summary.nextPremiumDueDate && !this.isPremiumPaid) {
+            this.nextPremiumDue = new Date(summary.nextPremiumDueDate);
+            this.nextPremiumAmount = summary.nextPremiumAmount || 0;
+            
+            const today = new Date();
+            this.daysUntilDue = Math.ceil((this.nextPremiumDue.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            
+            this.isGracePeriod = this.daysUntilDue <= 15 && this.daysUntilDue > 0;
+            this.isLapsed = this.daysUntilDue <= -30;
+            
+            if (this.daysUntilDue <= 0 && this.daysUntilDue > -30) {
+              this.lateFee = this.nextPremiumAmount * 0.05;
+            }
           }
         }
-
         this.cdr.markForCheck();
-      }
+      },
+      error: (err) => console.error('Failed to load payment status:', err)
     });
   }
 
@@ -513,7 +625,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.coverageUtilization > 70) {
       this.aiInsights.push({
-        title: '📊 Coverage Alert',
+        title: 'Coverage Alert',
         message: `You've utilized ${this.coverageUtilization}% of your coverage. Consider upgrading your plan for continued protection.`,
         type: 'warning',
         action: 'Upgrade Plan',
@@ -523,7 +635,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.approvalRate < 60 && this.totalClaims > 0) {
       this.aiInsights.push({
-        title: '✓ Improve Approval Rate',
+        title: 'Improve Approval Rate',
         message: `Your claim approval rate is ${this.approvalRate}%. Review documentation requirements for better success.`,
         type: 'warning',
         action: 'View Guidelines',
@@ -533,7 +645,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.pendingClaims > 3) {
       this.aiInsights.push({
-        title: '⏳ Pending Claims Alert',
+        title: 'Pending Claims Alert',
         message: `You have ${this.pendingClaims} claims pending review. Track their status in the claims section.`,
         type: 'info',
         action: 'Track Claims',
@@ -543,7 +655,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.daysRemaining < 30 && this.daysRemaining > 0) {
       this.aiInsights.push({
-        title: '🔄 Renewal Reminder',
+        title: 'Renewal Reminder',
         message: `Your policy renews in ${this.daysRemaining} days. Renew early to avoid coverage gaps.`,
         type: 'warning',
         action: 'Renew Now',
@@ -584,12 +696,14 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.daysRemaining = 365;
 
     this.activePlan = {
-      id: '1',
+      id: 'bb4354ec-77fb-4e84-91ec-f01f4cda87e8',
       name: 'Health Pro Plus',
       insuredAmount: 500000,
       startDate: new Date().toISOString(),
       endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
     };
+    this.policyId = this.activePlan.id;
+    this.policyNumber = 'POL-DEMO-001';
 
     this.recentClaims = [];
     this.generateAIInsights();
@@ -610,19 +724,6 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   navigateTo(path: string): void {
     this.router.navigate([path]);
-  }
-
-  // Update these methods
-  navigateToPayments() {
-    this.router.navigate(['/app/payments/new']); // Goes to payment page
-  }
-
-  navigateToPaymentHistory() {
-    this.router.navigate(['/app/payments']); // Goes to history page
-  }
-
-  navigateToReinstate() {
-    this.router.navigate(['/app/policy/reinstate']);
   }
 
   switchChartType(type: 'claims' | 'amount'): void {
@@ -679,8 +780,11 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   getPolicyNumber(): string {
-    if (this.enhancedPolicy?.policyNumber) {
-      return this.enhancedPolicy.policyNumber;
+    if (this.policyNumber) {
+      return this.policyNumber;
+    }
+    if (this.activePlan?.policyNumber) {
+      return this.activePlan.policyNumber;
     }
     if (this.activePlan?.id) {
       return this.activePlan.id.slice(0, 8).toUpperCase();
@@ -695,30 +799,6 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
-  }
-
-  private checkPaymentSuccess(): void {
-    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      if (params['paymentSuccess'] === 'true') {
-        this.showPaymentSuccess = true;
-        this.lastPaymentAmount = Number(params['amount']) || 0;
-
-        // Clear cache if available and refresh payment status
-        try {
-          this.policyService.clearCache?.();
-        } catch (e) {
-          // ignore if not implemented
-        }
-        this.loadPremiumPaymentStatus();
-        this.cdr.markForCheck();
-
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-          this.showPaymentSuccess = false;
-          this.cdr.markForCheck();
-        }, 5000);
-      }
-    });
   }
 
   getNextPremiumDate(): string {

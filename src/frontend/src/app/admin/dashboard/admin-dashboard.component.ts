@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { environment } from '../../../environments/environment';
 import { trigger, transition, style, animate, keyframes, query, stagger } from '@angular/animations';
 import Chart from 'chart.js/auto';
@@ -18,6 +19,16 @@ interface MonthlyData {
   month: string;
   claims: number;
   amount: number;
+}
+
+interface RecentDocument {
+  id: string;
+  type: string;
+  title: string;
+  fileName: string;
+  filePath: string;
+  uploadedAt: string;
+  memberName: string;
 }
 
 @Component({
@@ -54,6 +65,7 @@ interface MonthlyData {
 export class AdminDashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
+  private sanitizer = inject(DomSanitizer);
 
   @ViewChild('claimsTrendChart') claimsTrendChartRef!: ElementRef;
   @ViewChild('statusDistributionChart') statusDistributionChartRef!: ElementRef;
@@ -86,6 +98,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy, AfterViewInit
   // Monthly data for charts
   monthlyData: MonthlyData[] = [];
 
+  // Recent documents
+  recentDocuments: RecentDocument[] = [];
+  showDocumentModal = false;
+  selectedDocument: RecentDocument | null = null;
+  documentUrl: SafeResourceUrl | null = null;
+  documentFileType = '';
+
   // Chart instances
   private claimsTrendChart: InstanceType<typeof Chart> | null = null;
   private statusDistributionChart: InstanceType<typeof Chart> | null = null;
@@ -95,7 +114,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy, AfterViewInit
 
   ngOnInit() {
     this.loadStats();
-    this.refreshInterval = setInterval(() => this.loadStats(), 60000);
+    this.loadRecentDocuments();
+    this.refreshInterval = setInterval(() => {
+      this.loadStats();
+      this.loadRecentDocuments();
+    }, 60000);
   }
 
   ngAfterViewInit() {
@@ -147,6 +170,60 @@ export class AdminDashboardComponent implements OnInit, OnDestroy, AfterViewInit
     });
   }
 
+  loadRecentDocuments() {
+    this.http.get(`${environment.apiBaseUrl}/admin/dashboard/recent-documents`).subscribe({
+      next: (docs: any) => {
+        this.recentDocuments = docs.slice(0, 5);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to load recent documents:', err);
+      }
+    });
+  }
+
+  viewDocument(doc: RecentDocument) {
+    this.selectedDocument = doc;
+    
+    let fullUrl = doc.filePath;
+    if (fullUrl.startsWith('/uploads/')) {
+      fullUrl = `${environment.uploadBaseUrl}${fullUrl}`;
+    } else if (!fullUrl.startsWith('http')) {
+      fullUrl = `${environment.uploadBaseUrl}/${fullUrl}`;
+    }
+    
+    this.documentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(fullUrl);
+    
+    const fileExt = doc.fileName?.split('.').pop()?.toLowerCase() || '';
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+      this.documentFileType = 'image';
+    } else if (fileExt === 'pdf') {
+      this.documentFileType = 'pdf';
+    } else {
+      this.documentFileType = 'other';
+    }
+    
+    this.showDocumentModal = true;
+  }
+
+  closeDocumentModal() {
+    this.showDocumentModal = false;
+    this.selectedDocument = null;
+    this.documentUrl = null;
+  }
+
+  downloadDocument() {
+    if (this.selectedDocument?.filePath) {
+      let downloadUrl = this.selectedDocument.filePath;
+      if (downloadUrl.startsWith('/uploads/')) {
+        downloadUrl = `${environment.uploadBaseUrl}${downloadUrl}`;
+      } else if (!downloadUrl.startsWith('http')) {
+        downloadUrl = `${environment.uploadBaseUrl}/${downloadUrl}`;
+      }
+      window.open(downloadUrl, '_blank');
+    }
+  }
+
   private calculateMetrics() {
     if (this.stats.totalClaims > 0) {
       this.approvalRate = Math.round((this.stats.approvedClaims / this.stats.totalClaims) * 100);
@@ -161,14 +238,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy, AfterViewInit
     // Mock monthly growth (can be replaced with real data)
     this.claimsThisMonth = Math.round(this.stats.totalClaims * 0.35);
     this.claimsThisWeek = Math.round(this.stats.totalClaims * 0.12);
-    this.monthOverMonthGrowth = 23; // 23% growth
+    this.monthOverMonthGrowth = 23;
   }
 
   private generateMonthlyData() {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentMonth = new Date().getMonth();
 
-    // Generate realistic monthly data based on total claims
     const baseClaims = Math.max(1, Math.round(this.stats.totalClaims / 6));
 
     this.monthlyData = [];
