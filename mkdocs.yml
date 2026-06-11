@@ -1,0 +1,102 @@
+site_name: Claim Management System - Technical Documentation
+site_description: Enterprise-scale insurance claim management system
+site_author: Development Team
+docs_dir: doc
+site_dir: site
+
+theme:
+  name: material
+  palette:
+  # Light mode
+  - scheme: default
+    primary: indigo
+    accent: blue
+    toggle:
+      icon: material/brightness-7
+      name: Switch to dark mode
+  # Dark mode
+  - scheme: slate
+    primary: indigo
+    accent: blue
+    toggle:
+      icon: material/brightness-4
+      name: Switch to light mode
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+  - navigation.tabs
+  - navigation.sections
+  - navigation.top
+  - navigation.indexes
+  - search.highlight
+  - search.share
+  - content.code.copy
+  - content.code.annotate
+
+extra_css:
+- stylesheets/extra.css
+
+markdown_extensions:
+- pymdownx.highlight:
+    anchor_linenums: true
+    line_spans: __span
+    pygments_lang_class: true
+- pymdownx.inlinehilite
+- pymdownx.snippets
+- pymdownx.superfences:
+    custom_fences:
+    - name: mermaid
+      class: mermaid
+      format: !!python/name:pymdownx.superfences.fence_code_format ""
+- admonition
+- pymdownx.details
+- pymdownx.tabbed:
+    alternate_style: true
+- tables
+- def_list
+- pymdownx.emoji:
+    emoji_index: !!python/name:material.extensions.emoji.twemoji ""
+    emoji_generator: !!python/name:material.extensions.emoji.to_svg ""
+
+plugins:
+- search
+- mermaid2:
+    arguments:
+      theme: base
+      securityLevel: loose
+      themeVariables:
+        background: transparent
+        primaryColor: "#3B82F6"
+        primaryBorderColor: "#1E3A8A"
+        primaryTextColor: "#1F2937"
+        lineColor: "#6B7280"
+        secondaryColor: "#F3F4F6"
+        tertiaryColor: "#E5E7EB"
+
+nav:
+- Home: index.md
+- Architecture:
+  - System Context: architecture/01-system-context.md
+  - Container Architecture: architecture/02-container-architecture.md
+- Backend Design:
+  - Domain-Driven Design: backend/01-domain-driven-design.md
+  - Application Layer: backend/02-application-layer.md
+  - Repository Pattern: backend/03-repository-pattern.md
+  - Dependency Injection: backend/04-dependency-injection.md
+  - EF Core Configuration: backend/05-ef-core-configuration.md
+- API Layer:
+  - Controllers: api/01-controllers.md
+  - Middleware & Auth: api/02-middleware-auth.md
+- Frontend:
+  - Angular Structure: frontend/01-angular-structure.md
+  - Services & Interceptors: frontend/02-state-services-interceptors.md
+- Database:
+  - ERD & Schema: database/01-erd-and-schema.md
+  - Migration Strategy: database/02-migration-strategy.md
+- Deployment:
+  - Build Pipeline: deployment/01-build-pipeline.md
+- Decisions:
+  - "ADR-001: ORM Choice": decisions/adr-001-orm-choice.md
+  - "ADR-002: Thin Controllers": decisions/adr-002-thin-controllers.md
+- Glossary: glossary.md
