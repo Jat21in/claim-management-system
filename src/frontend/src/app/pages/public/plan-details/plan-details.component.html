@@ -183,6 +183,8 @@
                     <p>Coverage for Ayurveda, Yoga, Unani, Siddha, and Homeopathy treatments.</p>
                 </div>
             </div>
+            <app-premium-calculator *ngIf="plan" [planId]="plan.planId" [planName]="plan.name" [coverageAmount]="plan.insuredAmount" (premiumCalculated)="onPremiumCalculated($event)">
+            </app-premium-calculator>
         </div>
 
         <!-- Tab: Analytics -->
@@ -219,6 +221,8 @@
                     </div>
                 </div>
             </div>
+        <app-premium-calculator *ngIf="plan" [planId]="plan.planId" [planName]="plan.name" [coverageAmount]="plan.insuredAmount" (premiumCalculated)="onPremiumCalculated($event)">
+            </app-premium-calculator>
         </div>
 
         <!-- Tab: Exclusions -->
@@ -277,6 +281,8 @@
                     </div>
                 </div>
             </div>
+        <app-premium-calculator *ngIf="plan" [planId]="plan.planId" [planName]="plan.name" [coverageAmount]="plan.insuredAmount" (premiumCalculated)="onPremiumCalculated($event)">
+            </app-premium-calculator>
         </div>
 
         <!-- FAQ Section -->
