@@ -201,8 +201,8 @@ mkdocs gh-deploy --force
 
 For questions about this documentation or the system architecture:
 
-- **Technical Lead:** internship-training@claimcore.com
-- **Repository:** github.com/claimcore/claim-management-system
+- **Technical Lead:** mittaljatin2004@gmail.com
+- **Repository:** [github.com/claimcore/claim-management-system](https://github.com/Jat21in/claim-management-system/tree/main)
 
 ---
 

@@ -1,0 +1,1523 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="Enterprise-scale insurance claim management system" name="description"/>
+<meta content="Development Team" name="author"/>
+<link href="../decisions/adr-002-thin-controllers/" rel="prev"/>
+<link href="../assets/images/favicon.png" rel="icon"/>
+<meta content="mkdocs-1.6.1, mkdocs-material-9.7.6" name="generator"/>
+<title>Glossary - Claim Management System - Technical Documentation</title>
+<link href="../assets/stylesheets/main.484c7ddc.min.css" rel="stylesheet"/>
+<link href="../assets/stylesheets/palette.ab4e12ef.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+<link href="../stylesheets/extra.css" rel="stylesheet"/>
+<script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+</head>
+<body data-md-color-accent="blue" data-md-color-primary="indigo" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#glossary-of-terms">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="Header" class="md-header__inner md-grid">
+<a aria-label="Claim Management System - Technical Documentation" class="md-header__button md-logo" data-md-component="logo" href=".." title="Claim Management System - Technical Documentation">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+</a>
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+</label>
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            Claim Management System - Technical Documentation
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            
+              Glossary
+            
+          </span>
+</div>
+</div>
+</div>
+<form class="md-header__option" data-md-component="palette">
+<input aria-label="Switch to dark mode" class="md-option" data-md-color-accent="blue" data-md-color-media="" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_0" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_1" hidden="" title="Switch to dark mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+<input aria-label="Switch to light mode" class="md-option" data-md-color-accent="blue" data-md-color-media="" data-md-color-primary="indigo" data-md-color-scheme="slate" id="__palette_1" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_0" hidden="" title="Switch to light mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+</form>
+<script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+<label class="md-header__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="Search" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" name="query" placeholder="Search" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+</label>
+<nav aria-label="Search" class="md-search__options">
+<a aria-label="Share" class="md-search__icon md-icon" data-clipboard="" data-clipboard-text="" data-md-component="search-share" href="javascript:void(0)" tabindex="-1" title="Share">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"></path></svg>
+</a>
+<button aria-label="Clear" class="md-search__icon md-icon" tabindex="-1" title="Clear" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+</button>
+</nav>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="" tabindex="0">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            Initializing search
+          </div>
+<ol class="md-search-result__list" role="presentation"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<nav aria-label="Tabs" class="md-tabs" data-md-component="tabs">
+<div class="md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="..">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../architecture/01-system-context/">
+          
+  
+  
+    
+  
+  Architecture
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../backend/01-domain-driven-design/">
+          
+  
+  
+    
+  
+  Backend Design
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../api/01-controllers/">
+          
+  
+  
+    
+  
+  API Layer
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../frontend/01-angular-structure/">
+          
+  
+  
+    
+  
+  Frontend
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../database/01-erd-and-schema/">
+          
+  
+  
+    
+  
+  Database
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../deployment/01-build-pipeline/">
+          
+  
+  
+    
+  
+  Deployment
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../decisions/adr-001-orm-choice/">
+          
+  
+  
+    
+  
+  Decisions
+
+        </a>
+</li>
+<li class="md-tabs__item md-tabs__item--active">
+<a class="md-tabs__link" href="./">
+        
+  
+  
+    
+  
+  Glossary
+
+      </a>
+</li>
+</ul>
+</div>
+</nav>
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="Claim Management System - Technical Documentation" class="md-nav__button md-logo" data-md-component="logo" href=".." title="Claim Management System - Technical Documentation">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+</a>
+    Claim Management System - Technical Documentation
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="..">
+<span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_2" type="checkbox"/>
+<label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_2_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../architecture/01-system-context/">
+<span class="md-ellipsis">
+    
+  
+    System Context
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../architecture/02-container-architecture/">
+<span class="md-ellipsis">
+    
+  
+    Container Architecture
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3" type="checkbox"/>
+<label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Backend Design
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_3_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Backend Design
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../backend/01-domain-driven-design/">
+<span class="md-ellipsis">
+    
+  
+    Domain-Driven Design
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../backend/02-application-layer/">
+<span class="md-ellipsis">
+    
+  
+    Application Layer
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../backend/03-repository-pattern/">
+<span class="md-ellipsis">
+    
+  
+    Repository Pattern
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../backend/04-dependency-injection/">
+<span class="md-ellipsis">
+    
+  
+    Dependency Injection
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../backend/05-ef-core-configuration/">
+<span class="md-ellipsis">
+    
+  
+    EF Core Configuration
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_4" type="checkbox"/>
+<label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    API Layer
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_4_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_4">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    API Layer
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../api/01-controllers/">
+<span class="md-ellipsis">
+    
+  
+    Controllers
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../api/02-middleware-auth/">
+<span class="md-ellipsis">
+    
+  
+    Middleware &amp; Auth
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_5" type="checkbox"/>
+<label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Frontend
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_5_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_5">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Frontend
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../frontend/01-angular-structure/">
+<span class="md-ellipsis">
+    
+  
+    Angular Structure
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../frontend/02-state-services-interceptors/">
+<span class="md-ellipsis">
+    
+  
+    Services &amp; Interceptors
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_6" type="checkbox"/>
+<label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_6_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_6">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Database
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../database/01-erd-and-schema/">
+<span class="md-ellipsis">
+    
+  
+    ERD &amp; Schema
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../database/02-migration-strategy/">
+<span class="md-ellipsis">
+    
+  
+    Migration Strategy
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_7" type="checkbox"/>
+<label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_7_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_7">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Deployment
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../deployment/01-build-pipeline/">
+<span class="md-ellipsis">
+    
+  
+    Build Pipeline
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_8" type="checkbox"/>
+<label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_8_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_8">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Decisions
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../decisions/adr-001-orm-choice/">
+<span class="md-ellipsis">
+    
+  
+    ADR-001: ORM Choice
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../decisions/adr-002-thin-controllers/">
+<span class="md-ellipsis">
+    
+  
+    ADR-002: Thin Controllers
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+<span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+<span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+</a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#domain-terminology">
+<span class="md-ellipsis">
+      
+        Domain Terminology
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#technical-architecture-terms">
+<span class="md-ellipsis">
+      
+        Technical Architecture Terms
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#database-terms">
+<span class="md-ellipsis">
+      
+        Database Terms
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#business-process-terms">
+<span class="md-ellipsis">
+      
+        Business Process Terms
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#external-service-terms">
+<span class="md-ellipsis">
+      
+        External Service Terms
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#file-paths-reference">
+<span class="md-ellipsis">
+      
+        File Paths Reference
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#acronyms">
+<span class="md-ellipsis">
+      
+        Acronyms
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#state-transition-diagrams">
+<span class="md-ellipsis">
+      
+        State Transition Diagrams
+      
+    </span>
+</a>
+<nav aria-label="State Transition Diagrams" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#kyc-status-flow">
+<span class="md-ellipsis">
+      
+        KYC Status Flow
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#claim-status-flow">
+<span class="md-ellipsis">
+      
+        Claim Status Flow
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#policy-status-flow">
+<span class="md-ellipsis">
+      
+        Policy Status Flow
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#quick-reference-common-tasks">
+<span class="md-ellipsis">
+      
+        Quick Reference – Common Tasks
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#version-history">
+<span class="md-ellipsis">
+      
+        Version History
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#domain-terminology">
+<span class="md-ellipsis">
+      
+        Domain Terminology
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#technical-architecture-terms">
+<span class="md-ellipsis">
+      
+        Technical Architecture Terms
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#database-terms">
+<span class="md-ellipsis">
+      
+        Database Terms
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#business-process-terms">
+<span class="md-ellipsis">
+      
+        Business Process Terms
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#external-service-terms">
+<span class="md-ellipsis">
+      
+        External Service Terms
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#file-paths-reference">
+<span class="md-ellipsis">
+      
+        File Paths Reference
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#acronyms">
+<span class="md-ellipsis">
+      
+        Acronyms
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#state-transition-diagrams">
+<span class="md-ellipsis">
+      
+        State Transition Diagrams
+      
+    </span>
+</a>
+<nav aria-label="State Transition Diagrams" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#kyc-status-flow">
+<span class="md-ellipsis">
+      
+        KYC Status Flow
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#claim-status-flow">
+<span class="md-ellipsis">
+      
+        Claim Status Flow
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#policy-status-flow">
+<span class="md-ellipsis">
+      
+        Policy Status Flow
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#quick-reference-common-tasks">
+<span class="md-ellipsis">
+      
+        Quick Reference – Common Tasks
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#version-history">
+<span class="md-ellipsis">
+      
+        Version History
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="glossary-of-terms">Glossary of Terms</h1>
+<hr/>
+<h2 id="domain-terminology">Domain Terminology</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+<th>Used In</th>
+<th>Related Entities</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Member</strong></td>
+<td>A registered user who can purchase insurance policies and submit claims. Each member has a unique email and password.</td>
+<td><code>Member</code> entity, <code>MemberService</code>, <code>MembersController</code></td>
+<td><code>Policy</code>, <code>Claim</code>, <code>KycDocument</code></td>
+</tr>
+<tr>
+<td><strong>Policy</strong></td>
+<td>An active insurance contract issued to a member. Contains coverage amount, premium, start/end dates, dependents, and nominees.</td>
+<td><code>Policy</code> entity, <code>PolicyService</code>, <code>Policies</code> table</td>
+<td><code>Member</code>, <code>Plan</code>, <code>Dependent</code>, <code>Nominee</code>, <code>PremiumPayment</code></td>
+</tr>
+<tr>
+<td><strong>Plan</strong></td>
+<td>A predefined insurance product with fixed coverage amount, duration, and premium calculation rules. Members select a plan when purchasing a policy.</td>
+<td><code>Plan</code> entity, <code>PlanService</code>, <code>PublicPlansController</code></td>
+<td><code>Policy</code></td>
+</tr>
+<tr>
+<td><strong>Claim</strong></td>
+<td>A request submitted by a member for reimbursement of medical expenses. Claims go through AI verification and admin review.</td>
+<td><code>Claim</code> entity, <code>ClaimService</code>, <code>Claims</code> table</td>
+<td><code>Member</code>, <code>Policy</code></td>
+</tr>
+<tr>
+<td><strong>Dependent</strong></td>
+<td>A family member (spouse, child, parent) covered under a member's policy. Dependents increase the premium.</td>
+<td><code>Dependent</code> entity, <code>PolicyService</code></td>
+<td><code>Policy</code></td>
+</tr>
+<tr>
+<td><strong>Nominee</strong></td>
+<td>A beneficiary designated to receive claim payouts in case of the member's death. Multiple nominees can have percentage allocations.</td>
+<td><code>Nominee</code> entity, <code>PolicyService</code></td>
+<td><code>Policy</code></td>
+</tr>
+<tr>
+<td><strong>Premium Payment</strong></td>
+<td>A recurring payment made by the member to keep the policy active. Payments can be monthly, quarterly, half-yearly, or yearly.</td>
+<td><code>PremiumPayment</code> entity, <code>PaymentService</code>, <code>PremiumPayments</code> table</td>
+<td><code>Policy</code></td>
+</tr>
+<tr>
+<td><strong>KYC (Know Your Customer)</strong></td>
+<td>Identity verification process required before purchasing a policy. Members upload documents (Aadhaar, PAN, Passport).</td>
+<td><code>KycDocument</code> entity, <code>KycService</code>, <code>KycDocuments</code> table</td>
+<td><code>Member</code></td>
+</tr>
+<tr>
+<td><strong>Grace Period</strong></td>
+<td>15-day window after premium due date where the policy remains active without penalty.</td>
+<td><code>GracePeriodService</code></td>
+<td><code>PremiumPayment</code>, <code>Policy</code></td>
+</tr>
+<tr>
+<td><strong>Lapse</strong></td>
+<td>Policy termination due to non-payment of premium for 30+ days beyond due date.</td>
+<td><code>Policy.Lapse()</code>, <code>GracePeriodService</code></td>
+<td><code>Policy</code></td>
+</tr>
+<tr>
+<td><strong>Reinstatement</strong></td>
+<td>Restoring a lapsed policy within 180 days by paying outstanding premiums plus a fee.</td>
+<td><code>GracePeriodService.ReinstatePolicyAsync()</code></td>
+<td><code>Policy</code></td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="technical-architecture-terms">Technical Architecture Terms</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Aggregate Root</strong></td>
+<td>A domain entity that ensures consistency for a group of related objects. External references only go through the root.</td>
+<td><code>Member</code>, <code>Policy</code>, <code>Claim</code></td>
+</tr>
+<tr>
+<td><strong>Value Object</strong></td>
+<td>An immutable object identified by its attributes, not an ID.</td>
+<td><code>Money</code>, <code>Address</code></td>
+</tr>
+<tr>
+<td><strong>Repository</strong></td>
+<td>A pattern that abstracts data access, presenting a collection-like interface for aggregates.</td>
+<td><code>IMemberRepository</code>, <code>MemberRepository</code></td>
+</tr>
+<tr>
+<td><strong>Unit of Work</strong></td>
+<td>A pattern that groups multiple operations into a single transaction.</td>
+<td><code>CmsDbContext.SaveChangesAsync()</code></td>
+</tr>
+<tr>
+<td><strong>DTO (Data Transfer Object)</strong></td>
+<td>A simple object for transferring data between API and client, containing no business logic.</td>
+<td><code>SubmitClaimRequest</code>, <code>LoginResponse</code></td>
+</tr>
+<tr>
+<td><strong>Thin Controller</strong></td>
+<td>A controller that delegates all business logic to services, only handling HTTP concerns.</td>
+<td>All controllers in <code>CMS.API/Controllers/</code></td>
+</tr>
+<tr>
+<td><strong>JWT (JSON Web Token)</strong></td>
+<td>A stateless authentication token containing claims (MemberId, Email, Role).</td>
+<td><code>JwtTokenGenerator.cs</code></td>
+</tr>
+<tr>
+<td><strong>Interceptor (Angular)</strong></td>
+<td>A function that intercepts HTTP requests/responses to add headers or handle errors.</td>
+<td><code>jwt.interceptor.ts</code>, <code>http-error.interceptor.ts</code></td>
+</tr>
+<tr>
+<td><strong>Guard (Angular)</strong></td>
+<td>A function that protects routes by checking authentication or KYC status before navigation.</td>
+<td><code>authGuard</code>, <code>kycGuard</code>, <code>adminGuard</code></td>
+</tr>
+<tr>
+<td><strong>Standalone Component</strong></td>
+<td>An Angular component that does not belong to an NgModule, enabling lazy loading and tree-shaking.</td>
+<td>All components in <code>src/frontend/src/app/</code></td>
+</tr>
+<tr>
+<td><strong>Background Job</strong></td>
+<td>A task executed asynchronously outside the HTTP request pipeline.</td>
+<td>Hangfire jobs (grace period reminders)</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="database-terms">Database Terms</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+<th>Table</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Primary Key (PK)</strong></td>
+<td>A unique identifier for each row in a table.</td>
+<td><code>MemberId</code> in <code>Members</code> table</td>
+</tr>
+<tr>
+<td><strong>Foreign Key (FK)</strong></td>
+<td>A column that references the primary key of another table, establishing a relationship.</td>
+<td><code>MemberId</code> in <code>Claims</code> table → references <code>Members.MemberId</code></td>
+</tr>
+<tr>
+<td><strong>Index</strong></td>
+<td>A database structure that speeds up query performance.</td>
+<td><code>IX_Members_Email</code></td>
+</tr>
+<tr>
+<td><strong>Migration</strong></td>
+<td>A version-controlled change to the database schema.</td>
+<td><code>20260606173901_AddPremiumConfigurationToPlan.cs</code></td>
+</tr>
+<tr>
+<td><strong>CASCADE Delete</strong></td>
+<td>Automatically deleting child rows when the parent row is deleted.</td>
+<td><code>Policies</code> → <code>Dependents</code> (CASCADE)</td>
+</tr>
+<tr>
+<td><strong>RESTRICT Delete</strong></td>
+<td>Preventing deletion of a parent row if child rows exist.</td>
+<td><code>Members</code> → <code>Policies</code> (RESTRICT)</td>
+</tr>
+<tr>
+<td><strong>Owned Type</strong></td>
+<td>A value object mapped to columns in the parent table (no separate table).</td>
+<td><code>Address</code> owned by <code>Member</code></td>
+</tr>
+<tr>
+<td><strong>Value Converter</strong></td>
+<td>A mapping between a domain type and a database column type.</td>
+<td><code>Money</code> ↔ <code>decimal</code></td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="business-process-terms">Business Process Terms</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+<th>States/Transitions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>KYC Status</strong></td>
+<td>Current state of a member's identity verification.</td>
+<td><code>Pending</code> → <code>Verified</code> / <code>Rejected</code></td>
+</tr>
+<tr>
+<td><strong>Policy Status</strong></td>
+<td>Current state of an insurance policy.</td>
+<td><code>Active</code> → <code>Lapsed</code> / <code>Cancelled</code> / <code>Expired</code></td>
+</tr>
+<tr>
+<td><strong>Claim Status</strong></td>
+<td>Current state of a claim submission.</td>
+<td><code>Submitted</code> → <code>PendingAI</code> → <code>Approved</code> / <code>Rejected</code> → <code>Paid</code></td>
+</tr>
+<tr>
+<td><strong>Payment Status</strong></td>
+<td>Current state of a premium payment.</td>
+<td><code>Pending</code> → <code>Completed</code> / <code>Failed</code></td>
+</tr>
+<tr>
+<td><strong>Member Role</strong></td>
+<td>Authorization level for system access.</td>
+<td><code>Member</code>, <code>Admin</code>, <code>ClaimsProcessor</code></td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="external-service-terms">External Service Terms</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+<th>Integration Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Groq AI</strong></td>
+<td>Cloud-based LLM service (Llama 3.3 70B) used for automated claim verification.</td>
+<td>REST API</td>
+</tr>
+<tr>
+<td><strong>Hangfire</strong></td>
+<td>.NET background job library that persists jobs to SQL Server.</td>
+<td>SQL Server queue</td>
+</tr>
+<tr>
+<td><strong>SMTP</strong></td>
+<td>Simple Mail Transfer Protocol – used to send emails via Gmail.</td>
+<td>SMTP with STARTTLS</td>
+</tr>
+<tr>
+<td><strong>Azure Blob Storage</strong></td>
+<td>Microsoft's object storage service for documents and files.</td>
+<td>Azure SDK</td>
+</tr>
+<tr>
+<td><strong>Razorpay / Stripe</strong></td>
+<td>Payment gateways for processing premium payments (currently in mock mode).</td>
+<td>REST API (planned)</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="file-paths-reference">File Paths Reference</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>File Path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Domain Entities</strong></td>
+<td><code>src/backend/CMS.Domain/Entities/</code></td>
+</tr>
+<tr>
+<td><strong>Value Objects</strong></td>
+<td><code>src/backend/CMS.Domain/ValueObjects/</code></td>
+</tr>
+<tr>
+<td><strong>Enums</strong></td>
+<td><code>src/backend/CMS.Domain/Enums/</code></td>
+</tr>
+<tr>
+<td><strong>Application Services</strong></td>
+<td><code>src/backend/CMS.Application/Services/</code></td>
+</tr>
+<tr>
+<td><strong>DTOs</strong></td>
+<td><code>src/backend/CMS.Application/DTOs/</code></td>
+</tr>
+<tr>
+<td><strong>Repository Interfaces</strong></td>
+<td><code>src/backend/CMS.Application/Interfaces/Repositories/</code></td>
+</tr>
+<tr>
+<td><strong>Repository Implementations</strong></td>
+<td><code>src/backend/CMS.Infrastructure/Repositories/</code></td>
+</tr>
+<tr>
+<td><strong>EF Core Configurations</strong></td>
+<td><code>src/backend/CMS.Infrastructure/Data/Configurations/</code></td>
+</tr>
+<tr>
+<td><strong>Migrations</strong></td>
+<td><code>src/backend/CMS.Infrastructure/Migrations/</code></td>
+</tr>
+<tr>
+<td><strong>API Controllers</strong></td>
+<td><code>src/backend/CMS.API/Controllers/</code></td>
+</tr>
+<tr>
+<td><strong>Angular Components</strong></td>
+<td><code>src/frontend/src/app/</code></td>
+</tr>
+<tr>
+<td><strong>Angular Services</strong></td>
+<td><code>src/frontend/src/app/services/</code></td>
+</tr>
+<tr>
+<td><strong>Angular Guards</strong></td>
+<td><code>src/frontend/src/app/guards/</code></td>
+</tr>
+<tr>
+<td><strong>Angular Interceptors</strong></td>
+<td><code>src/frontend/src/app/interceptors/</code></td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="acronyms">Acronyms</h2>
+<table>
+<thead>
+<tr>
+<th>Acronym</th>
+<th>Full Form</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ADR</strong></td>
+<td>Architecture Decision Record</td>
+</tr>
+<tr>
+<td><strong>API</strong></td>
+<td>Application Programming Interface</td>
+</tr>
+<tr>
+<td><strong>C4</strong></td>
+<td>Context, Containers, Components, Code (modelling)</td>
+</tr>
+<tr>
+<td><strong>CMS</strong></td>
+<td>Claim Management System (this project)</td>
+</tr>
+<tr>
+<td><strong>DDD</strong></td>
+<td>Domain-Driven Design</td>
+</tr>
+<tr>
+<td><strong>DI</strong></td>
+<td>Dependency Injection</td>
+</tr>
+<tr>
+<td><strong>DTO</strong></td>
+<td>Data Transfer Object</td>
+</tr>
+<tr>
+<td><strong>EF Core</strong></td>
+<td>Entity Framework Core</td>
+</tr>
+<tr>
+<td><strong>ERD</strong></td>
+<td>Entity Relationship Diagram</td>
+</tr>
+<tr>
+<td><strong>FK</strong></td>
+<td>Foreign Key</td>
+</tr>
+<tr>
+<td><strong>HA</strong></td>
+<td>High Availability</td>
+</tr>
+<tr>
+<td><strong>HTTP</strong></td>
+<td>Hypertext Transfer Protocol</td>
+</tr>
+<tr>
+<td><strong>HTTPS</strong></td>
+<td>HTTP Secure</td>
+</tr>
+<tr>
+<td><strong>JWT</strong></td>
+<td>JSON Web Token</td>
+</tr>
+<tr>
+<td><strong>KYC</strong></td>
+<td>Know Your Customer</td>
+</tr>
+<tr>
+<td><strong>LINQ</strong></td>
+<td>Language Integrated Query</td>
+</tr>
+<tr>
+<td><strong>LLM</strong></td>
+<td>Large Language Model</td>
+</tr>
+<tr>
+<td><strong>ORM</strong></td>
+<td>Object-Relational Mapping</td>
+</tr>
+<tr>
+<td><strong>OTP</strong></td>
+<td>One-Time Password</td>
+</tr>
+<tr>
+<td><strong>PK</strong></td>
+<td>Primary Key</td>
+</tr>
+<tr>
+<td><strong>REST</strong></td>
+<td>Representational State Transfer</td>
+</tr>
+<tr>
+<td><strong>RPO</strong></td>
+<td>Recovery Point Objective</td>
+</tr>
+<tr>
+<td><strong>RTO</strong></td>
+<td>Recovery Time Objective</td>
+</tr>
+<tr>
+<td><strong>SLA</strong></td>
+<td>Service Level Agreement</td>
+</tr>
+<tr>
+<td><strong>SMTP</strong></td>
+<td>Simple Mail Transfer Protocol</td>
+</tr>
+<tr>
+<td><strong>SPA</strong></td>
+<td>Single Page Application</td>
+</tr>
+<tr>
+<td><strong>SQL</strong></td>
+<td>Structured Query Language</td>
+</tr>
+<tr>
+<td><strong>TLS</strong></td>
+<td>Transport Layer Security</td>
+</tr>
+<tr>
+<td><strong>UI</strong></td>
+<td>User Interface</td>
+</tr>
+<tr>
+<td><strong>URL</strong></td>
+<td>Uniform Resource Locator</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="state-transition-diagrams">State Transition Diagrams</h2>
+<h3 id="kyc-status-flow">KYC Status Flow</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Pending: Member registers
+    Pending --&gt; Verified: Admin approves KYC
+    Pending --&gt; Rejected: Admin rejects KYC
+    Rejected --&gt; Pending: Member re-submits
+    Verified --&gt; [*]</code></pre>
+<h3 id="claim-status-flow">Claim Status Flow</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Submitted: Member submits claim
+    Submitted --&gt; PendingAI: Start AI verification
+    PendingAI --&gt; Approved: AI confidence &gt; 70
+    PendingAI --&gt; Rejected: AI confidence &lt; 30
+    PendingAI --&gt; ManualReview: AI confidence 30-70
+    Approved --&gt; Paid: Claim payment processed
+    Rejected --&gt; [*]
+    Paid --&gt; [*]</code></pre>
+<h3 id="policy-status-flow">Policy Status Flow</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Active: Policy created after payment
+    Active --&gt; Lapsed: 30+ days overdue
+    Active --&gt; Cancelled: Admin or member cancels
+    Active --&gt; Expired: End date reached
+    Lapsed --&gt; Active: Reinstated within 180 days
+    Lapsed --&gt; [*]: Expired beyond 180 days
+    Cancelled --&gt; [*]
+    Expired --&gt; [*]</code></pre>
+<hr/>
+<h2 id="quick-reference-common-tasks">Quick Reference – Common Tasks</h2>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Service Method</th>
+<th>Controller Endpoint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Register new member</td>
+<td><code>IAuthService.RegisterAsync()</code></td>
+<td><code>POST /api/auth/register</code></td>
+</tr>
+<tr>
+<td>Login</td>
+<td><code>IAuthService.LoginAsync()</code></td>
+<td><code>POST /api/auth/login</code></td>
+</tr>
+<tr>
+<td>View dashboard</td>
+<td><code>IMemberService.GetMyDashboardAsync()</code></td>
+<td><code>GET /api/v1/members/me</code></td>
+</tr>
+<tr>
+<td>Submit claim</td>
+<td><code>IClaimService.SubmitClaimAsync()</code></td>
+<td><code>POST /api/v1/claims</code></td>
+</tr>
+<tr>
+<td>Upload KYC</td>
+<td><code>IKycService.SubmitKycDocumentsAsync()</code></td>
+<td><code>POST /api/v1/kyc/upload</code></td>
+</tr>
+<tr>
+<td>Check KYC status</td>
+<td><code>IKycService.GetKycStatusAsync()</code></td>
+<td><code>GET /api/v1/kyc/status</code></td>
+</tr>
+<tr>
+<td>Calculate premium</td>
+<td><code>IPremiumCalculatorService.CalculatePremiumAsync()</code></td>
+<td><code>POST /api/v1/premium/calculate</code></td>
+</tr>
+<tr>
+<td>Assign plan</td>
+<td><code>IMemberService.AssignPlanAsync()</code></td>
+<td><code>POST /api/v1/plans/assign</code></td>
+</tr>
+<tr>
+<td>Make payment</td>
+<td><code>IPaymentService.ProcessMockPaymentAsync()</code></td>
+<td><code>POST /api/v1/payments/mock/{paymentId}</code></td>
+</tr>
+<tr>
+<td>View payment history</td>
+<td><code>IPaymentService.GetPaymentHistoryAsync()</code></td>
+<td><code>GET /api/v1/payments/history</code></td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="version-history">Version History</h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Changes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.0.0</td>
+<td>2026-06-11</td>
+<td>Initial glossary for Claim Management System</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<p><strong>Last Updated:</strong> June 11, 2026</p>
+</article>
+</div>
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+</div>
+<button class="md-top md-icon" data-md-component="top" hidden="" type="button">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  Back to top
+</button>
+</main>
+<footer class="md-footer">
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+      Material for MkDocs
+    </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.indexes", "search.highlight", "search.share", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+<script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+</body>
+</html>
