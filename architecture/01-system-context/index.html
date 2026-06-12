@@ -1,0 +1,1940 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="Enterprise-scale insurance claim management system" name="description"/>
+<meta content="Development Team" name="author"/>
+<link href="../.." rel="prev"/>
+<link href="../02-container-architecture/" rel="next"/>
+<link href="../../assets/images/favicon.png" rel="icon"/>
+<meta content="mkdocs-1.6.1, mkdocs-material-9.7.6" name="generator"/>
+<title>System Context - Claim Management System - Technical Documentation</title>
+<link href="../../assets/stylesheets/main.484c7ddc.min.css" rel="stylesheet"/>
+<link href="../../assets/stylesheets/palette.ab4e12ef.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+<link href="../../stylesheets/extra.css" rel="stylesheet"/>
+<script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+</head>
+<body data-md-color-accent="blue" data-md-color-primary="indigo" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#system-context-c4-level-1">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="Header" class="md-header__inner md-grid">
+<a aria-label="Claim Management System - Technical Documentation" class="md-header__button md-logo" data-md-component="logo" href="../.." title="Claim Management System - Technical Documentation">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+</a>
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+</label>
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            Claim Management System - Technical Documentation
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            
+              System Context
+            
+          </span>
+</div>
+</div>
+</div>
+<form class="md-header__option" data-md-component="palette">
+<input aria-label="Switch to dark mode" class="md-option" data-md-color-accent="blue" data-md-color-media="" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_0" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_1" hidden="" title="Switch to dark mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+<input aria-label="Switch to light mode" class="md-option" data-md-color-accent="blue" data-md-color-media="" data-md-color-primary="indigo" data-md-color-scheme="slate" id="__palette_1" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_0" hidden="" title="Switch to light mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+</form>
+<script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+<label class="md-header__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="Search" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" name="query" placeholder="Search" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+</label>
+<nav aria-label="Search" class="md-search__options">
+<a aria-label="Share" class="md-search__icon md-icon" data-clipboard="" data-clipboard-text="" data-md-component="search-share" href="javascript:void(0)" tabindex="-1" title="Share">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"></path></svg>
+</a>
+<button aria-label="Clear" class="md-search__icon md-icon" tabindex="-1" title="Clear" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+</button>
+</nav>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="" tabindex="0">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            Initializing search
+          </div>
+<ol class="md-search-result__list" role="presentation"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<nav aria-label="Tabs" class="md-tabs" data-md-component="tabs">
+<div class="md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../..">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+</li>
+<li class="md-tabs__item md-tabs__item--active">
+<a class="md-tabs__link" href="./">
+          
+  
+  
+    
+  
+  Architecture
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../backend/01-domain-driven-design/">
+          
+  
+  
+    
+  
+  Backend Design
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../api/01-controllers/">
+          
+  
+  
+    
+  
+  API Layer
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../frontend/01-angular-structure/">
+          
+  
+  
+    
+  
+  Frontend
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../database/01-erd-and-schema/">
+          
+  
+  
+    
+  
+  Database
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../deployment/01-build-pipeline/">
+          
+  
+  
+    
+  
+  Deployment
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../decisions/adr-001-orm-choice/">
+          
+  
+  
+    
+  
+  Decisions
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../glossary/">
+        
+  
+  
+    
+  
+  Glossary
+
+      </a>
+</li>
+</ul>
+</div>
+</nav>
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="Claim Management System - Technical Documentation" class="md-nav__button md-logo" data-md-component="logo" href="../.." title="Claim Management System - Technical Documentation">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+</a>
+    Claim Management System - Technical Documentation
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../..">
+<span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" id="__nav_2" type="checkbox"/>
+<label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+<span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="true" aria-labelledby="__nav_2_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+<span class="md-ellipsis">
+    
+  
+    System Context
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+<span class="md-ellipsis">
+    
+  
+    System Context
+  
+
+    
+  </span>
+</a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#overview">
+<span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#system-context-diagram-mermaid">
+<span class="md-ellipsis">
+      
+        System Context Diagram (Mermaid)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#external-actors">
+<span class="md-ellipsis">
+      
+        External Actors
+      
+    </span>
+</a>
+<nav aria-label="External Actors" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#primary-actors">
+<span class="md-ellipsis">
+      
+        Primary Actors
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#secondary-actors-supporting">
+<span class="md-ellipsis">
+      
+        Secondary Actors (Supporting)
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#external-system-details">
+<span class="md-ellipsis">
+      
+        External System Details
+      
+    </span>
+</a>
+<nav aria-label="External System Details" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#1-groq-ai-service-claim-verification">
+<span class="md-ellipsis">
+      
+        1. Groq AI Service (Claim Verification)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#2-smtp-email-service-gmail">
+<span class="md-ellipsis">
+      
+        2. SMTP Email Service (Gmail)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#3-payment-gateway-mock">
+<span class="md-ellipsis">
+      
+        3. Payment Gateway (Mock)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#4-azure-blob-storage-document-storage">
+<span class="md-ellipsis">
+      
+        4. Azure Blob Storage (Document Storage)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#5-hangfire-server-background-jobs">
+<span class="md-ellipsis">
+      
+        5. Hangfire Server (Background Jobs)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#6-sql-server-database">
+<span class="md-ellipsis">
+      
+        6. SQL Server Database
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#user-journeys-mapped-to-external-systems">
+<span class="md-ellipsis">
+      
+        User Journeys Mapped to External Systems
+      
+    </span>
+</a>
+<nav aria-label="User Journeys Mapped to External Systems" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#journey-1-member-submits-a-claim">
+<span class="md-ellipsis">
+      
+        Journey 1: Member Submits a Claim
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#journey-2-admin-approves-kyc">
+<span class="md-ellipsis">
+      
+        Journey 2: Admin Approves KYC
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#journey-3-grace-period-reminder-background">
+<span class="md-ellipsis">
+      
+        Journey 3: Grace Period Reminder (Background)
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#security-boundaries">
+<span class="md-ellipsis">
+      
+        Security Boundaries
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#deployment-architecture-physical-view">
+<span class="md-ellipsis">
+      
+        Deployment Architecture (Physical View)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#quality-attribute-scenarios">
+<span class="md-ellipsis">
+      
+        Quality Attribute Scenarios
+      
+    </span>
+</a>
+<nav aria-label="Quality Attribute Scenarios" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#performance">
+<span class="md-ellipsis">
+      
+        Performance
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#scalability">
+<span class="md-ellipsis">
+      
+        Scalability
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#availability">
+<span class="md-ellipsis">
+      
+        Availability
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#security">
+<span class="md-ellipsis">
+      
+        Security
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#technology-stack-summary">
+<span class="md-ellipsis">
+      
+        Technology Stack Summary
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#glossary-of-external-terms">
+<span class="md-ellipsis">
+      
+        Glossary of External Terms
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#references">
+<span class="md-ellipsis">
+      
+        References
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../02-container-architecture/">
+<span class="md-ellipsis">
+    
+  
+    Container Architecture
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3" type="checkbox"/>
+<label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Backend Design
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_3_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Backend Design
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../backend/01-domain-driven-design/">
+<span class="md-ellipsis">
+    
+  
+    Domain-Driven Design
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../backend/02-application-layer/">
+<span class="md-ellipsis">
+    
+  
+    Application Layer
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../backend/03-repository-pattern/">
+<span class="md-ellipsis">
+    
+  
+    Repository Pattern
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../backend/04-dependency-injection/">
+<span class="md-ellipsis">
+    
+  
+    Dependency Injection
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../backend/05-ef-core-configuration/">
+<span class="md-ellipsis">
+    
+  
+    EF Core Configuration
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_4" type="checkbox"/>
+<label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    API Layer
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_4_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_4">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    API Layer
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../api/01-controllers/">
+<span class="md-ellipsis">
+    
+  
+    Controllers
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../api/02-middleware-auth/">
+<span class="md-ellipsis">
+    
+  
+    Middleware &amp; Auth
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_5" type="checkbox"/>
+<label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Frontend
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_5_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_5">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Frontend
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../frontend/01-angular-structure/">
+<span class="md-ellipsis">
+    
+  
+    Angular Structure
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../frontend/02-state-services-interceptors/">
+<span class="md-ellipsis">
+    
+  
+    Services &amp; Interceptors
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_6" type="checkbox"/>
+<label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_6_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_6">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Database
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../database/01-erd-and-schema/">
+<span class="md-ellipsis">
+    
+  
+    ERD &amp; Schema
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../database/02-migration-strategy/">
+<span class="md-ellipsis">
+    
+  
+    Migration Strategy
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_7" type="checkbox"/>
+<label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_7_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_7">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Deployment
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../deployment/01-build-pipeline/">
+<span class="md-ellipsis">
+    
+  
+    Build Pipeline
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_8" type="checkbox"/>
+<label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_8_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_8">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Decisions
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../decisions/adr-001-orm-choice/">
+<span class="md-ellipsis">
+    
+  
+    ADR-001: ORM Choice
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../decisions/adr-002-thin-controllers/">
+<span class="md-ellipsis">
+    
+  
+    ADR-002: Thin Controllers
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../glossary/">
+<span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#overview">
+<span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#system-context-diagram-mermaid">
+<span class="md-ellipsis">
+      
+        System Context Diagram (Mermaid)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#external-actors">
+<span class="md-ellipsis">
+      
+        External Actors
+      
+    </span>
+</a>
+<nav aria-label="External Actors" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#primary-actors">
+<span class="md-ellipsis">
+      
+        Primary Actors
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#secondary-actors-supporting">
+<span class="md-ellipsis">
+      
+        Secondary Actors (Supporting)
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#external-system-details">
+<span class="md-ellipsis">
+      
+        External System Details
+      
+    </span>
+</a>
+<nav aria-label="External System Details" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#1-groq-ai-service-claim-verification">
+<span class="md-ellipsis">
+      
+        1. Groq AI Service (Claim Verification)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#2-smtp-email-service-gmail">
+<span class="md-ellipsis">
+      
+        2. SMTP Email Service (Gmail)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#3-payment-gateway-mock">
+<span class="md-ellipsis">
+      
+        3. Payment Gateway (Mock)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#4-azure-blob-storage-document-storage">
+<span class="md-ellipsis">
+      
+        4. Azure Blob Storage (Document Storage)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#5-hangfire-server-background-jobs">
+<span class="md-ellipsis">
+      
+        5. Hangfire Server (Background Jobs)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#6-sql-server-database">
+<span class="md-ellipsis">
+      
+        6. SQL Server Database
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#user-journeys-mapped-to-external-systems">
+<span class="md-ellipsis">
+      
+        User Journeys Mapped to External Systems
+      
+    </span>
+</a>
+<nav aria-label="User Journeys Mapped to External Systems" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#journey-1-member-submits-a-claim">
+<span class="md-ellipsis">
+      
+        Journey 1: Member Submits a Claim
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#journey-2-admin-approves-kyc">
+<span class="md-ellipsis">
+      
+        Journey 2: Admin Approves KYC
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#journey-3-grace-period-reminder-background">
+<span class="md-ellipsis">
+      
+        Journey 3: Grace Period Reminder (Background)
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#security-boundaries">
+<span class="md-ellipsis">
+      
+        Security Boundaries
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#deployment-architecture-physical-view">
+<span class="md-ellipsis">
+      
+        Deployment Architecture (Physical View)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#quality-attribute-scenarios">
+<span class="md-ellipsis">
+      
+        Quality Attribute Scenarios
+      
+    </span>
+</a>
+<nav aria-label="Quality Attribute Scenarios" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#performance">
+<span class="md-ellipsis">
+      
+        Performance
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#scalability">
+<span class="md-ellipsis">
+      
+        Scalability
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#availability">
+<span class="md-ellipsis">
+      
+        Availability
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#security">
+<span class="md-ellipsis">
+      
+        Security
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#technology-stack-summary">
+<span class="md-ellipsis">
+      
+        Technology Stack Summary
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#glossary-of-external-terms">
+<span class="md-ellipsis">
+      
+        Glossary of External Terms
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#references">
+<span class="md-ellipsis">
+      
+        References
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="system-context-c4-level-1">System Context – C4 Level 1</h1>
+<h2 id="overview">Overview</h2>
+<p>The Claim Management System (CMS) is an enterprise-scale insurance platform that enables members to purchase health policies, submit claims, and track settlements. Administrators manage KYC verification, claims processing, and policy configurations.</p>
+<p>This document uses the <strong>C4 model</strong> (Context, Containers, Components, Code) at Level 1 – showing the system's boundaries and external integrations.</p>
+<hr/>
+<h2 id="system-context-diagram-mermaid">System Context Diagram (Mermaid)</h2>
+<pre class="mermaid"><code>C4Context
+    title System Context diagram for Claim Management System
+    Person(member, "Insurance Member", "Policyholder who buys insurance and submits claims")
+    Person(admin, "Administrator", "Claims processor or system admin")
+    Person(guest, "Guest User", "Unregistered visitor browsing plans")
+
+    System(cms, "Claim Management System", "Manages policies, claims, KYC, and premium payments")
+
+    System_Ext(groq, "Groq AI Service", "Verifies claim authenticity using LLM (Llama 3.3)")
+    System_Ext(email, "SMTP Email Service", "Sends KYC approvals, payment receipts, and reminders")
+    System_Ext(payment, "Payment Gateway", "Processes premium payments (Razorpay/Stripe)")
+    System_Ext(storage, "Azure Blob Storage", "Stores KYC documents and medical reports")
+    System_Ext(hangfire, "Hangfire Server", "Executes background jobs (grace period reminders)")
+    System_Ext(db, "SQL Server Database", "Persistent storage for all transactional data")
+
+    Rel(member, cms, "Uses", "HTTPS/JWT")
+    Rel(admin, cms, "Manages", "HTTPS/JWT")
+    Rel(guest, cms, "Browses", "HTTPS")
+
+    Rel(cms, groq, "Verifies claims", "REST API/Groq Cloud")
+    Rel(cms, email, "Sends notifications", "SMTP/Gmail")
+    Rel(cms, payment, "Processes payments", "REST API")
+    Rel(cms, storage, "Uploads/downloads documents", "Azure SDK")
+    Rel(cms, hangfire, "Schedules jobs", "SQL Server")
+    Rel(cms, db, "Reads/writes data", "ADO.NET/EF Core")
+
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")</code></pre>
+<hr/>
+<h2 id="external-actors">External Actors</h2>
+<h3 id="primary-actors">Primary Actors</h3>
+<table>
+<thead>
+<tr>
+<th>Actor</th>
+<th>Description</th>
+<th>Interactions</th>
+<th>Authentication</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Insurance Member</td>
+<td>Registered policyholder</td>
+<td>Purchases policies, submits claims, views documents, makes premium payments</td>
+<td>JWT token (from login)</td>
+</tr>
+<tr>
+<td>Administrator</td>
+<td>Claims processor or admin</td>
+<td>Approves KYC, processes claims, configures plans, views analytics</td>
+<td>JWT token + Admin role claim</td>
+</tr>
+<tr>
+<td>Guest User</td>
+<td>Unregistered visitor</td>
+<td>Browses public plans, calculates premium estimates</td>
+<td>None (anonymous)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="secondary-actors-supporting">Secondary Actors (Supporting)</h3>
+<table>
+<thead>
+<tr>
+<th>Actor</th>
+<th>Description</th>
+<th>Trigger</th>
+<th>Frequency</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Groq AI Service</td>
+<td>LLM-based claim verifier</td>
+<td>Every claim submission</td>
+<td>Real-time</td>
+</tr>
+<tr>
+<td>SMTP Email Service</td>
+<td>Email delivery (Gmail SMTP)</td>
+<td>KYC approval, payment confirmation, reminders</td>
+<td>Async</td>
+</tr>
+<tr>
+<td>Payment Gateway</td>
+<td>Mock payment processor</td>
+<td>Premium payment initiation</td>
+<td>Real-time</td>
+</tr>
+<tr>
+<td>Azure Blob Storage</td>
+<td>Document storage</td>
+<td>KYC upload, medical report upload</td>
+<td>Real-time</td>
+</tr>
+<tr>
+<td>Hangfire Server</td>
+<td>Background job processor</td>
+<td>Grace period reminders (daily), overdue payment checks (hourly)</td>
+<td>Scheduled</td>
+</tr>
+<tr>
+<td>SQL Server</td>
+<td>Primary database</td>
+<td>All data operations</td>
+<td>Real-time</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="external-system-details">External System Details</h2>
+<h3 id="1-groq-ai-service-claim-verification">1. Groq AI Service (Claim Verification)</h3>
+<p><strong>Purpose:</strong> Automates claim approval using LLM (Llama 3.3 70B)</p>
+<p><strong>Configuration:</strong> <code>src/backend/CMS.API/appsettings.json</code> lines 19-27</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a href="#__codelineno-0-1" id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="nt">"AI"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-2"><a href="#__codelineno-0-2" id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="w">    </span><span class="nt">"Provider"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Groq"</span><span class="p">,</span>
+</span><span id="__span-0-3"><a href="#__codelineno-0-3" id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="w">    </span><span class="nt">"ApiKey"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span>
+</span><span id="__span-0-4"><a href="#__codelineno-0-4" id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="w">    </span><span class="nt">"BaseUrl"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.groq.com/openai/v1"</span><span class="p">,</span>
+</span><span id="__span-0-5"><a href="#__codelineno-0-5" id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="w">    </span><span class="nt">"Model"</span><span class="p">:</span><span class="w"> </span><span class="s2">"llama-3.3-70b-versatile"</span><span class="p">,</span>
+</span><span id="__span-0-6"><a href="#__codelineno-0-6" id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="w">    </span><span class="nt">"UseMockInDevelopment"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+</span><span id="__span-0-7"><a href="#__codelineno-0-7" id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="w">    </span><span class="nt">"ConfidenceThreshold"</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span>
+</span><span id="__span-0-8"><a href="#__codelineno-0-8" id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="p">}</span>
+</span></code></pre></div>
+<p><strong>Integration Pattern:</strong> REST API with JSON payload</p>
+<p><strong>File:</strong> <code>src/backend/CMS.Application/Services/GrokAiVerificationService.cs</code> lines 47-75</p>
+<div class="language-csharp highlight"><pre><span></span><code><span id="__span-1-1"><a href="#__codelineno-1-1" id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="kt">var</span><span class="w"> </span><span class="n">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="n">_httpClient</span><span class="p">.</span><span class="n">PostAsync</span><span class="p">(</span>
+</span><span id="__span-1-2"><a href="#__codelineno-1-2" id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="w">    </span><span class="s">$"{_baseUrl}/chat/completions"</span><span class="p">,</span>
+</span><span id="__span-1-3"><a href="#__codelineno-1-3" id="__codelineno-1-3" name="__codelineno-1-3"></a><span class="w">    </span><span class="n">httpContent</span><span class="p">,</span>
+</span><span id="__span-1-4"><a href="#__codelineno-1-4" id="__codelineno-1-4" name="__codelineno-1-4"></a><span class="w">    </span><span class="n">cancellationToken</span><span class="p">);</span>
+</span></code></pre></div>
+<ul>
+<li><strong>Fallback:</strong> Mock mode when <code>UseMockInDevelopment: true</code> (lines 37-45)</li>
+<li><strong>SLA:</strong> 45-second timeout (line 28)</li>
+</ul>
+<hr/>
+<h3 id="2-smtp-email-service-gmail">2. SMTP Email Service (Gmail)</h3>
+<p><strong>Purpose:</strong> Send transactional emails (KYC, payments, claims)</p>
+<p><strong>Configuration:</strong> <code>src/backend/CMS.API/appsettings.json</code> lines 29-36</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-2-1"><a href="#__codelineno-2-1" id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="nt">"EmailSettings"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-2"><a href="#__codelineno-2-2" id="__codelineno-2-2" name="__codelineno-2-2"></a><span class="w">    </span><span class="nt">"SmtpServer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"smtp.gmail.com"</span><span class="p">,</span>
+</span><span id="__span-2-3"><a href="#__codelineno-2-3" id="__codelineno-2-3" name="__codelineno-2-3"></a><span class="w">    </span><span class="nt">"SmtpPort"</span><span class="p">:</span><span class="w"> </span><span class="mi">587</span><span class="p">,</span>
+</span><span id="__span-2-4"><a href="#__codelineno-2-4" id="__codelineno-2-4" name="__codelineno-2-4"></a><span class="w">    </span><span class="nt">"Username"</span><span class="p">:</span><span class="w"> </span><span class="s2">"jatinmittal0717@gmail.com"</span><span class="p">,</span>
+</span><span id="__span-2-5"><a href="#__codelineno-2-5" id="__codelineno-2-5" name="__codelineno-2-5"></a><span class="w">    </span><span class="nt">"Password"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fmmgyjmulybjxnay"</span><span class="p">,</span>
+</span><span id="__span-2-6"><a href="#__codelineno-2-6" id="__codelineno-2-6" name="__codelineno-2-6"></a><span class="w">    </span><span class="nt">"FromEmail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"noreply@claimcore.comm"</span><span class="p">,</span>
+</span><span id="__span-2-7"><a href="#__codelineno-2-7" id="__codelineno-2-7" name="__codelineno-2-7"></a><span class="w">    </span><span class="nt">"FromName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ClaimCore Insurance"</span><span class="p">,</span>
+</span><span id="__span-2-8"><a href="#__codelineno-2-8" id="__codelineno-2-8" name="__codelineno-2-8"></a><span class="w">    </span><span class="nt">"AdminEmail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mittaljatin2004@gmail.com"</span>
+</span><span id="__span-2-9"><a href="#__codelineno-2-9" id="__codelineno-2-9" name="__codelineno-2-9"></a><span class="p">}</span>
+</span></code></pre></div>
+<p><strong>Integration Pattern:</strong> SMTP with STARTTLS</p>
+<p><strong>File:</strong> <code>src/backend/CMS.Application/Services/EmailService.cs</code> lines 185-210</p>
+<div class="language-csharp highlight"><pre><span></span><code><span id="__span-3-1"><a href="#__codelineno-3-1" id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="k">using</span><span class="w"> </span><span class="nn">var</span><span class="w"> </span><span class="n">smtp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">SmtpClient</span><span class="p">();</span>
+</span><span id="__span-3-2"><a href="#__codelineno-3-2" id="__codelineno-3-2" name="__codelineno-3-2"></a><span class="k">await</span><span class="w"> </span><span class="n">smtp</span><span class="p">.</span><span class="n">ConnectAsync</span><span class="p">(</span><span class="n">_configuration</span><span class="p">[</span><span class="s">"EmailSettings:SmtpServer"</span><span class="p">],</span>
+</span><span id="__span-3-3"><a href="#__codelineno-3-3" id="__codelineno-3-3" name="__codelineno-3-3"></a><span class="w">    </span><span class="kt">int</span><span class="p">.</span><span class="n">Parse</span><span class="p">(</span><span class="n">_configuration</span><span class="p">[</span><span class="s">"EmailSettings:SmtpPort"</span><span class="p">]),</span>
+</span><span id="__span-3-4"><a href="#__codelineno-3-4" id="__codelineno-3-4" name="__codelineno-3-4"></a><span class="w">    </span><span class="n">SecureSocketOptions</span><span class="p">.</span><span class="n">StartTls</span><span class="p">);</span>
+</span></code></pre></div>
+<p><strong>Email Types:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Email Type</th>
+<th>Trigger</th>
+<th>File Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KYC Approved</td>
+<td>Admin action</td>
+<td><code>EmailService.cs</code> lines 13-38</td>
+</tr>
+<tr>
+<td>KYC Rejected</td>
+<td>Admin action</td>
+<td><code>EmailService.cs</code> lines 40-65</td>
+</tr>
+<tr>
+<td>Premium Reminder</td>
+<td>Grace period service</td>
+<td><code>EmailService.cs</code> lines 67-92</td>
+</tr>
+<tr>
+<td>Policy Created</td>
+<td>Registration with plan</td>
+<td><code>EmailService.cs</code> lines 94-119</td>
+</tr>
+<tr>
+<td>Payment Confirmation</td>
+<td>Payment completion</td>
+<td><code>EmailService.cs</code> lines 121-146</td>
+</tr>
+<tr>
+<td>Policy Lapsed</td>
+<td>30+ days overdue</td>
+<td><code>EmailService.cs</code> lines 176-201</td>
+</tr>
+<tr>
+<td>OTP Verification</td>
+<td>Document upload</td>
+<td><code>EmailService.cs</code> lines 148-174</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h3 id="3-payment-gateway-mock">3. Payment Gateway (Mock)</h3>
+<p><strong>Purpose:</strong> Process premium payments (currently mock implementation)</p>
+<p><strong>Integration Pattern:</strong> REST API (simulated)</p>
+<p><strong>File:</strong> <code>src/backend/CMS.Application/Services/PaymentService.cs</code> lines 47-76</p>
+<div class="language-csharp highlight"><pre><span></span><code><span id="__span-4-1"><a href="#__codelineno-4-1" id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="kt">var</span><span class="w"> </span><span class="n">transactionId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">$"MOCK_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString().Substring(0, 8)}"</span><span class="p">;</span>
+</span><span id="__span-4-2"><a href="#__codelineno-4-2" id="__codelineno-4-2" name="__codelineno-4-2"></a><span class="n">payment</span><span class="p">.</span><span class="n">MarkCompleted</span><span class="p">(</span><span class="n">transactionId</span><span class="p">,</span><span class="w"> </span><span class="s">$"/receipts/{paymentId}.pdf"</span><span class="p">);</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>Future Integration:</strong> Replace with Razorpay/Stripe SDK</p>
+</blockquote>
+<hr/>
+<h3 id="4-azure-blob-storage-document-storage">4. Azure Blob Storage (Document Storage)</h3>
+<p><strong>Purpose:</strong> Store KYC documents and medical reports</p>
+<p><strong>Integration Pattern:</strong> Azure SDK (via <code>IFileStorageService</code>)</p>
+<p><strong>File:</strong> <code>src/backend/CMS.Application/Interfaces/Services/IFileStorageService.cs</code></p>
+<div class="language-csharp highlight"><pre><span></span><code><span id="__span-5-1"><a href="#__codelineno-5-1" id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="n">Task</span><span class="o">&lt;</span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">UploadKycDocumentAsync</span><span class="p">(</span><span class="n">Guid</span><span class="w"> </span><span class="n">memberId</span><span class="p">,</span><span class="w"> </span><span class="n">DocumentType</span><span class="w"> </span><span class="n">documentType</span><span class="p">,</span>
+</span><span id="__span-5-2"><a href="#__codelineno-5-2" id="__codelineno-5-2" name="__codelineno-5-2"></a><span class="w">    </span><span class="n">Stream</span><span class="w"> </span><span class="n">fileStream</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">fileName</span><span class="p">,</span><span class="w"> </span><span class="n">CancellationToken</span><span class="w"> </span><span class="n">cancellationToken</span><span class="p">);</span>
+</span></code></pre></div>
+<ul>
+<li><strong>File naming convention:</strong> <code>{memberId}/{documentType}/{timestamp}_{fileName}</code></li>
+<li><strong>Storage limits:</strong> 5MB per file (enforced in <code>KycController.cs</code> lines 29-31)</li>
+</ul>
+<hr/>
+<h3 id="5-hangfire-server-background-jobs">5. Hangfire Server (Background Jobs)</h3>
+<p><strong>Purpose:</strong> Execute scheduled jobs without blocking HTTP requests</p>
+<p><strong>Configuration:</strong> <code>src/backend/CMS.API/CMS.API.csproj</code> lines 21-23</p>
+<div class="language-xml highlight"><pre><span></span><code><span id="__span-6-1"><a href="#__codelineno-6-1" id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="nt">&lt;PackageReference</span><span class="w"> </span><span class="na">Include=</span><span class="s">"Hangfire"</span><span class="w"> </span><span class="na">Version=</span><span class="s">"1.8.23"</span><span class="w"> </span><span class="nt">/&gt;</span>
+</span><span id="__span-6-2"><a href="#__codelineno-6-2" id="__codelineno-6-2" name="__codelineno-6-2"></a><span class="nt">&lt;PackageReference</span><span class="w"> </span><span class="na">Include=</span><span class="s">"Hangfire.AspNetCore"</span><span class="w"> </span><span class="na">Version=</span><span class="s">"1.8.23"</span><span class="w"> </span><span class="nt">/&gt;</span>
+</span><span id="__span-6-3"><a href="#__codelineno-6-3" id="__codelineno-6-3" name="__codelineno-6-3"></a><span class="nt">&lt;PackageReference</span><span class="w"> </span><span class="na">Include=</span><span class="s">"Hangfire.SqlServer"</span><span class="w"> </span><span class="na">Version=</span><span class="s">"1.8.23"</span><span class="w"> </span><span class="nt">/&gt;</span>
+</span></code></pre></div>
+<p><strong>Scheduled Jobs:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Job</th>
+<th>Schedule</th>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Grace period reminders</td>
+<td>Daily at 9:00 AM</td>
+<td><code>IGracePeriodService.SendGracePeriodRemindersAsync</code></td>
+<td>Send payment reminders 7/3/1 days before due</td>
+</tr>
+<tr>
+<td>Overdue payment check</td>
+<td>Hourly</td>
+<td><code>IGracePeriodService.CheckAndUpdateOverduePaymentsAsync</code></td>
+<td>Lapse policies after 30 days</td>
+</tr>
+<tr>
+<td>Premium calculation cache</td>
+<td>Daily at 2:00 AM</td>
+<td><code>IPremiumCalculatorService</code> (future)</td>
+<td>Pre-calculate premium rates</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h3 id="6-sql-server-database">6. SQL Server Database</h3>
+<p><strong>Purpose:</strong> Primary data store</p>
+<p><strong>Connection String:</strong> <code>src/backend/CMS.API/appsettings.json</code> lines 10-12</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-7-1"><a href="#__codelineno-7-1" id="__codelineno-7-1" name="__codelineno-7-1"></a><span class="nt">"ConnectionStrings"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-2"><a href="#__codelineno-7-2" id="__codelineno-7-2" name="__codelineno-7-2"></a><span class="w">    </span><span class="nt">"CmsDatabase"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Server=localhost,1433;Database=ClaimManagementDB;User Id=sa;Password=Work@2026!EVS;TrustServerCertificate=True;MultipleActiveResultSets=true"</span>
+</span><span id="__span-7-3"><a href="#__codelineno-7-3" id="__codelineno-7-3" name="__codelineno-7-3"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><strong>Retry Policy:</strong> 3 retries with 10-second delay (<code>CMS.Infrastructure.DependencyInjection.cs</code> lines 27-29)</li>
+<li><strong>Command Timeout:</strong> 120 seconds (line 32)</li>
+</ul>
+<hr/>
+<h2 id="user-journeys-mapped-to-external-systems">User Journeys Mapped to External Systems</h2>
+<h3 id="journey-1-member-submits-a-claim">Journey 1: Member Submits a Claim</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    participant Member as Member (Browser)
+    participant CMS as CMS API
+    participant Groq as Groq AI
+    participant Storage as Azure Blob
+    participant DB as SQL Server
+    participant Email as SMTP (Admin)
+
+    Member-&gt;&gt;CMS: POST /api/v1/claims (with medical report)
+    CMS-&gt;&gt;Storage: Upload medical report
+    Storage--&gt;&gt;CMS: File URL
+    CMS-&gt;&gt;DB: Save claim (Status = Submitted)
+    CMS-&gt;&gt;Groq: Verify claim (Llama 3.3)
+    Groq--&gt;&gt;CMS: { confidence: 85, decision: "Approved" }
+    CMS-&gt;&gt;DB: Update claim (Status = Approved, AI score)
+    CMS--&gt;&gt;Member: 200 OK { claimId }
+    CMS-&gt;&gt;Email: Notify admin (new claim)</code></pre>
+<h3 id="journey-2-admin-approves-kyc">Journey 2: Admin Approves KYC</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    participant Admin as Admin (Dashboard)
+    participant CMS as CMS API
+    participant DB as SQL Server
+    participant Email as SMTP (Member)
+    participant Member as Member
+
+    Admin-&gt;&gt;CMS: POST /api/admin/kyc/approve
+    CMS-&gt;&gt;DB: Update Member.Status = 1 (Verified)
+    CMS-&gt;&gt;DB: Update KycDocuments.IsVerified = true
+    CMS-&gt;&gt;Email: Send KYC approved email
+    Email--&gt;&gt;Member: "Your KYC has been approved"
+    CMS--&gt;&gt;Admin: 200 OK</code></pre>
+<h3 id="journey-3-grace-period-reminder-background">Journey 3: Grace Period Reminder (Background)</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    participant Hangfire as Hangfire Scheduler
+    participant CMS as CMS API
+    participant DB as SQL Server
+    participant Email as SMTP (Member)
+    participant Member as Member
+
+    Note over Hangfire: Daily at 9:00 AM
+    Hangfire-&gt;&gt;CMS: Trigger SendGracePeriodRemindersAsync
+    CMS-&gt;&gt;DB: SELECT * FROM PremiumPayments WHERE DueDate &lt;= 7 days
+    DB--&gt;&gt;CMS: List of pending payments
+    loop Each payment
+        CMS-&gt;&gt;Email: Send premium reminder
+        Email--&gt;&gt;Member: "Your premium is due in X days"
+    end
+    CMS--&gt;&gt;Hangfire: Completed</code></pre>
+<hr/>
+<h2 id="security-boundaries">Security Boundaries</h2>
+<table>
+<thead>
+<tr>
+<th>Boundary</th>
+<th>Authentication</th>
+<th>Authorization</th>
+<th>Encryption</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Member ↔ CMS</td>
+<td>JWT (expiry 60 min)</td>
+<td>Role = "Member"</td>
+<td>HTTPS (TLS 1.2+)</td>
+</tr>
+<tr>
+<td>Admin ↔ CMS</td>
+<td>JWT (expiry 60 min)</td>
+<td>Role = "Admin" or "ClaimsProcessor"</td>
+<td>HTTPS (TLS 1.2+)</td>
+</tr>
+<tr>
+<td>Guest ↔ CMS</td>
+<td>None</td>
+<td>None</td>
+<td>HTTPS (TLS 1.2+)</td>
+</tr>
+<tr>
+<td>CMS ↔ Groq</td>
+<td>API Key (Bearer)</td>
+<td>None (API key only)</td>
+<td>HTTPS</td>
+</tr>
+<tr>
+<td>CMS ↔ Email</td>
+<td>Username/Password</td>
+<td>SMTP Auth</td>
+<td>STARTTLS</td>
+</tr>
+<tr>
+<td>CMS ↔ Storage</td>
+<td>Azure Key (via SDK)</td>
+<td>Managed Identity</td>
+<td>HTTPS + AES-256 at rest</td>
+</tr>
+<tr>
+<td>CMS ↔ Database</td>
+<td>SQL Login (sa)</td>
+<td>Database roles</td>
+<td>Encrypted connection</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="deployment-architecture-physical-view">Deployment Architecture (Physical View)</h2>
+<pre class="mermaid"><code>graph TB
+    subgraph "Load Balancer / Reverse Proxy"
+        LB[nginx / Azure Front Door]
+    end
+
+    subgraph "Application Layer"
+        API1[CMS.API Instance 1]
+        API2[CMS.API Instance 2]
+        API3[CMS.API Instance n]
+    end
+
+    subgraph "Background Processing"
+        HF[Hangfire Server]
+    end
+
+    subgraph "Data Layer"
+        DB[(SQL Server Always On)]
+        BLOB[(Azure Blob Storage)]
+    end
+
+    subgraph "External Services"
+        GROQ[Groq AI]
+        SMTP[Gmail SMTP]
+        PG[Payment Gateway]
+    end
+
+    LB --&gt; API1
+    LB --&gt; API2
+    LB --&gt; API3
+
+    API1 --&gt; DB
+    API2 --&gt; DB
+    API3 --&gt; DB
+    API1 --&gt; BLOB
+    API2 --&gt; BLOB
+
+    HF --&gt; DB
+    HF --&gt; SMTP
+
+    API1 --&gt; GROQ
+    API2 --&gt; GROQ
+    API1 --&gt; PG
+
+    style LB fill:#3B82F6
+    style API1 fill:#1E3A8A
+    style API2 fill:#1E3A8A
+    style API3 fill:#1E3A8A
+    style HF fill:#0F172A
+    style DB fill:#0F172A</code></pre>
+<hr/>
+<h2 id="quality-attribute-scenarios">Quality Attribute Scenarios</h2>
+<h3 id="performance">Performance</h3>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Metric</th>
+<th>Target</th>
+<th>Current</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claim submission (no AI)</td>
+<td>Response time</td>
+<td>&lt; 500 ms</td>
+<td>~300 ms</td>
+</tr>
+<tr>
+<td>Claim submission (with AI)</td>
+<td>Response time</td>
+<td>&lt; 5 seconds</td>
+<td>~3 seconds</td>
+</tr>
+<tr>
+<td>Dashboard load</td>
+<td>Response time</td>
+<td>&lt; 1 second</td>
+<td>~600 ms</td>
+</tr>
+<tr>
+<td>Concurrent users</td>
+<td>Supported</td>
+<td>1000</td>
+<td>500 (tested)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="scalability">Scalability</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Scaling Strategy</th>
+<th>Horizontal Limit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CMS.API</td>
+<td>Add instances behind load balancer</td>
+<td>Unlimited</td>
+</tr>
+<tr>
+<td>SQL Server</td>
+<td>Read replicas for reporting</td>
+<td>5 replicas</td>
+</tr>
+<tr>
+<td>Hangfire</td>
+<td>Separate server instance</td>
+<td>1 (requires distributed lock)</td>
+</tr>
+<tr>
+<td>Azure Blob</td>
+<td>Native scaling</td>
+<td>Unlimited</td>
+</tr>
+</tbody>
+</table>
+<h3 id="availability">Availability</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Uptime Target</th>
+<th>Recovery Strategy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CMS.API</td>
+<td>99.9%</td>
+<td>Load balancer health checks</td>
+</tr>
+<tr>
+<td>SQL Server</td>
+<td>99.95%</td>
+<td>Always On availability group</td>
+</tr>
+<tr>
+<td>External APIs (Groq)</td>
+<td>99.5%</td>
+<td>Mock mode fallback</td>
+</tr>
+</tbody>
+</table>
+<h3 id="security">Security</h3>
+<table>
+<thead>
+<tr>
+<th>Threat</th>
+<th>Mitigation</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JWT theft</td>
+<td>Short expiry (60 min)</td>
+<td><code>appsettings.json</code> line 17</td>
+</tr>
+<tr>
+<td>SQL injection</td>
+<td>EF Core parameterization</td>
+<td>All queries via LINQ</td>
+</tr>
+<tr>
+<td>XSS</td>
+<td>Angular sanitization</td>
+<td>Automatic</td>
+</tr>
+<tr>
+<td>CORS</td>
+<td>Restricted origins</td>
+<td>Configured in <code>Program.cs</code></td>
+</tr>
+<tr>
+<td>Sensitive data exposure</td>
+<td>No secrets in logs</td>
+<td><code>appsettings.Development.json</code> redacts</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="technology-stack-summary">Technology Stack Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+<th>Version</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend</td>
+<td>Angular</td>
+<td>21</td>
+<td>SPA framework</td>
+</tr>
+<tr>
+<td>Frontend</td>
+<td>Tailwind CSS</td>
+<td>3.4</td>
+<td>Styling</td>
+</tr>
+<tr>
+<td>Frontend</td>
+<td>Lottie Web</td>
+<td>5.13</td>
+<td>Animations</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>.NET</td>
+<td>10</td>
+<td>Runtime</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>ASP.NET Core</td>
+<td>10</td>
+<td>Web API</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>Entity Framework Core</td>
+<td>10</td>
+<td>ORM</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>BCrypt</td>
+<td>4.2</td>
+<td>Password hashing</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>JWT Bearer</td>
+<td>10</td>
+<td>Authentication</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>Hangfire</td>
+<td>1.8</td>
+<td>Background jobs</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>QuestPDF</td>
+<td>2026.6</td>
+<td>PDF generation</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>MailKit</td>
+<td>4.17</td>
+<td>Email sending</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>SQL Server</td>
+<td>2022</td>
+<td>Relational DB</td>
+</tr>
+<tr>
+<td>AI</td>
+<td>Groq (Llama 3.3)</td>
+<td>–</td>
+<td>Claim verification</td>
+</tr>
+<tr>
+<td>Infrastructure</td>
+<td>Azure Blob Storage</td>
+<td>–</td>
+<td>Document storage</td>
+</tr>
+<tr>
+<td>Monitoring</td>
+<td>Serilog</td>
+<td>(inferred)</td>
+<td>Structured logging</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="glossary-of-external-terms">Glossary of External Terms</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Groq</td>
+<td>Cloud AI provider offering LLM inference (Llama 3.3 70B)</td>
+</tr>
+<tr>
+<td>Hangfire</td>
+<td>.NET background job library with SQL Server persistence</td>
+</tr>
+<tr>
+<td>Llama 3.3</td>
+<td>Meta's open-source LLM (70B parameters)</td>
+</tr>
+<tr>
+<td>STARTTLS</td>
+<td>Upgrade plain SMTP to encrypted connection</td>
+</tr>
+<tr>
+<td>JWT</td>
+<td>JSON Web Token – stateless authentication</td>
+</tr>
+<tr>
+<td>CORS</td>
+<td>Cross-Origin Resource Sharing</td>
+</tr>
+<tr>
+<td>Azure Blob</td>
+<td>Microsoft's object storage service</td>
+</tr>
+<tr>
+<td>Always On</td>
+<td>SQL Server high availability feature</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="references">References</h2>
+<ul>
+<li>C4 Model: <a href="https://c4model.com/">https://c4model.com/</a></li>
+<li>Groq API: <a href="https://console.groq.com/docs">https://console.groq.com/docs</a></li>
+<li>Hangfire Documentation: <a href="https://www.hangfire.io/">https://www.hangfire.io/</a></li>
+<li>Azure Blob Storage: <a href="https://azure.microsoft.com/en-us/products/storage/blobs">https://azure.microsoft.com/en-us/products/storage/blobs</a></li>
+</ul>
+<!-- Chat Widget -->
+<div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+<div id="chatToggle" style="background: #3B82F6; width: 56px; height: 56px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+<svg fill="white" height="24" viewbox="0 0 24 24" width="24">
+<path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2z"></path>
+</svg>
+</div>
+<div id="chatFrame" style="display: none; position: fixed; bottom: 90px; right: 20px; width: 380px; height: 500px; background: #1E1E2E; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); border: 1px solid #3B82F6; z-index: 999;">
+<iframe frameborder="0" height="100%" src="https://jatinmittal-cms-chatbot.hf.space" style="border-radius: 12px;" width="100%"></iframe>
+</div>
+</div>
+<script>
+    document.getElementById('chatToggle').onclick = function() {
+        var frame = document.getElementById('chatFrame');
+        frame.style.display = frame.style.display === 'none' ? 'block' : 'none';
+    };
+</script>
+</article>
+</div>
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+</div>
+<button class="md-top md-icon" data-md-component="top" hidden="" type="button">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  Back to top
+</button>
+</main>
+<footer class="md-footer">
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+      Material for MkDocs
+    </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.indexes", "search.highlight", "search.share", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+<script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+</body>
+</html>
