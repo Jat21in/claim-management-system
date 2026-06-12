@@ -2033,6 +2033,7 @@
               
               <article class="md-content__inner md-typeset">
                 
+
                   
 
 
@@ -2453,6 +2454,27 @@ Verify that <code>appsettings.json</code> exists in the <code>CMS.API</code> pro
 
 
                 
+
+<!-- Chat Widget -->
+<div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+    <div id="chatToggle" style="background: #3B82F6; width: 56px; height: 56px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2z"/>
+        </svg>
+    </div>
+    <div id="chatFrame" style="display: none; position: fixed; bottom: 90px; right: 20px; width: 380px; height: 500px; background: #1E1E2E; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); border: 1px solid #3B82F6; z-index: 999;">
+        <iframe src="https://jatinmittal-cms-chatbot.hf.space" width="100%" height="100%" frameborder="0" style="border-radius: 12px;"></iframe>
+    </div>
+</div>
+
+<script>
+    document.getElementById('chatToggle').onclick = function() {
+        var frame = document.getElementById('chatFrame');
+        frame.style.display = frame.style.display === 'none' ? 'block' : 'none';
+    };
+</script>
+
+
               </article>
             </div>
           
