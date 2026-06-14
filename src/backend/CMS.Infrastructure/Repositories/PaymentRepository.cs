@@ -3,16 +3,19 @@ using CMS.Domain.Entities;
 using CMS.Domain.Enums;
 using CMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CMS.Infrastructure.Repositories;
 
 public sealed class PaymentRepository : IPaymentRepository
 {
     private readonly CmsDbContext _context;
+    private readonly ILogger<PaymentRepository> _logger;
 
-    public PaymentRepository(CmsDbContext context)
+    public PaymentRepository(CmsDbContext context, ILogger<PaymentRepository> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<PremiumPayment?> GetByIdAsync(Guid paymentId, CancellationToken cancellationToken)
@@ -88,9 +91,28 @@ public sealed class PaymentRepository : IPaymentRepository
         await _context.SaveChangesAsync(cancellationToken);
     }
 
+    // /src/backend/CMS.Infrastructure/Repositories/PaymentRepository.cs
+
+    // /src/backend/CMS.Infrastructure/Repositories/PaymentRepository.cs
+
     public async Task UpdateAsync(PremiumPayment payment, CancellationToken cancellationToken)
     {
-        _context.Set<PremiumPayment>().Update(payment);
-        await _context.SaveChangesAsync(cancellationToken);
+        // ✅ Simple approach - just update without checking tracked entities
+        _context.Entry(payment).State = EntityState.Modified;
+
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+            Console.WriteLine($"Payment {payment.PaymentId} updated successfully");
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            // If concurrency conflict, reload and try again
+            foreach (var entry in ex.Entries)
+            {
+                await entry.ReloadAsync(cancellationToken);
+            }
+            await _context.SaveChangesAsync(cancellationToken);
+        }
     }
 }

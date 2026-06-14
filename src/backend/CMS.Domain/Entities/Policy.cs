@@ -1,4 +1,6 @@
-﻿using CMS.Domain.Enums;
+﻿// /src/backend/CMS.Domain/Entities/Policy.cs
+
+using CMS.Domain.Enums;
 
 namespace CMS.Domain.Entities;
 
@@ -20,8 +22,12 @@ public sealed class Policy
     public decimal SumInsured { get; private set; }
     public decimal UtilizedAmount { get; private set; }
 
-    // ✅ NEW ADD-ON
+    // ✅ EXISTING FIELDS
     public DateTime? LastPaymentDate { get; private set; }
+
+    // ✅ NEW FIELDS - ADD THESE (line 237-240 errors)
+    public decimal? LastPaymentAmount { get; private set; }
+    public DateTime? NextPremiumDueDate { get; private set; }
 
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
@@ -85,16 +91,11 @@ public sealed class Policy
         if (nominee == null)
             throw new ArgumentNullException(nameof(nominee));
 
-        // ✅ Validate total percentage doesn't exceed 100
-        var totalPercentage =
-            _nominees.Sum(n => n.PercentageAllocation)
-            + nominee.PercentageAllocation;
+        var totalPercentage = _nominees.Sum(n => n.PercentageAllocation) + nominee.PercentageAllocation;
 
         if (totalPercentage > 100)
         {
-            throw new InvalidOperationException(
-                "Total nominee allocation cannot exceed 100%"
-            );
+            throw new InvalidOperationException("Total nominee allocation cannot exceed 100%");
         }
 
         _nominees.Add(nominee);
@@ -102,24 +103,22 @@ public sealed class Policy
         UpdatedAt = DateTime.UtcNow;
     }
 
-    // ✅ UPDATED METHOD
     public void RecordPayment(PremiumPayment payment)
     {
         if (payment == null)
             throw new ArgumentNullException(nameof(payment));
 
-        // ✅ Prevent duplicate entries
         if (!_payments.Any(p => p.PaymentId == payment.PaymentId))
         {
             _payments.Add(payment);
         }
 
-        // ✅ Update last payment date only for completed payments
         if (payment.Status == PaymentStatus.Completed)
         {
             LastPaymentDate = payment.PaymentDate;
+            LastPaymentAmount = payment.Amount;  // ✅ Now works
+            NextPremiumDueDate = payment.DueDate.AddMonths(1);  // ✅ Now works
 
-            // ✅ Auto reactivate lapsed policy
             if (Status == PolicyStatus.Lapsed)
             {
                 Status = PolicyStatus.Active;
@@ -128,6 +127,21 @@ public sealed class Policy
 
             UpdatedAt = DateTime.UtcNow;
         }
+    }
+
+    // ✅ FIXED RecordPayment overload
+    public void RecordPayment(decimal amount, DateTime paymentDueDate)
+    {
+        LastPaymentDate = DateTime.UtcNow;
+        LastPaymentAmount = amount;
+        NextPremiumDueDate = paymentDueDate.AddMonths(1);
+
+        if (Status == PolicyStatus.Lapsed)
+        {
+            Status = PolicyStatus.Active;
+        }
+
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public bool CanClaim(decimal amount)
@@ -141,13 +155,10 @@ public sealed class Policy
     {
         if (!CanClaim(amount))
         {
-            throw new InvalidOperationException(
-                "Claim amount exceeds available coverage"
-            );
+            throw new InvalidOperationException("Claim amount exceeds available coverage");
         }
 
         UtilizedAmount += amount;
-
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -157,9 +168,7 @@ public sealed class Policy
             return;
 
         Status = PolicyStatus.Lapsed;
-
         LapsedAt = DateTime.UtcNow;
-
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -168,48 +177,39 @@ public sealed class Policy
         if (Status == PolicyStatus.Active)
         {
             Status = PolicyStatus.Cancelled;
-
             CancelledAt = DateTime.UtcNow;
-
             UpdatedAt = DateTime.UtcNow;
         }
     }
 
-    // ✅ UPDATED METHOD
     public DateTime GetNextPremiumDueDate()
     {
-        // ✅ Use optimized payment tracking
-        if (LastPaymentDate.HasValue)
-        {
-            return LastPaymentDate.Value.AddMonths(1);
-        }
+        if (NextPremiumDueDate.HasValue)
+            return NextPremiumDueDate.Value;
 
-        // ✅ Fallback for older records
+        if (LastPaymentDate.HasValue)
+            return LastPaymentDate.Value.AddMonths(1);
+
         var lastPayment = _payments
             .Where(p => p.Status == PaymentStatus.Completed)
             .OrderByDescending(p => p.PaymentDate)
             .FirstOrDefault();
 
         if (lastPayment != null)
-        {
             return lastPayment.PaymentDate.AddMonths(1);
-        }
 
         return StartDate.AddMonths(1);
     }
 
-    // ✅ NEW METHOD
     public bool IsPremiumPaidForCurrentMonth()
     {
         var nextDue = GetNextPremiumDueDate();
-
         return nextDue > DateTime.UtcNow;
     }
 
     public bool IsPremiumDue(DateTime currentDate)
     {
         var nextDue = GetNextPremiumDueDate();
-
         return currentDate >= nextDue;
     }
 
@@ -217,15 +217,11 @@ public sealed class Policy
     {
         if (Status != PolicyStatus.Lapsed)
         {
-            throw new InvalidOperationException(
-                "Only lapsed policies can be reinstated."
-            );
+            throw new InvalidOperationException("Only lapsed policies can be reinstated.");
         }
 
         Status = PolicyStatus.Active;
-
         LapsedAt = null;
-
         UpdatedAt = DateTime.UtcNow;
     }
 }

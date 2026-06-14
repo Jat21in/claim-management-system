@@ -3,6 +3,8 @@ using CMS.Application.Interfaces.Repositories;
 using CMS.Application.Interfaces.Services;
 using CMS.Domain.Entities;
 using CMS.Domain.Enums;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace CMS.Application.Services;
 
@@ -11,18 +13,27 @@ public sealed class PaymentService : IPaymentService
     private readonly IPaymentRepository _paymentRepository;
     private readonly IPolicyRepository _policyRepository;
     private readonly IMemberRepository _memberRepository;
+    private readonly IPdfGenerationService _pdfGenerationService;
     private readonly IEmailService _emailService;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly ILogger<PaymentService> _logger;
 
     public PaymentService(
         IPaymentRepository paymentRepository,
         IPolicyRepository policyRepository,
         IMemberRepository memberRepository,
-        IEmailService emailService)
+        IPdfGenerationService pdfGenerationService,
+        IEmailService emailService,
+        IServiceScopeFactory serviceScopeFactory,
+        ILogger<PaymentService> logger)
     {
         _paymentRepository = paymentRepository;
         _policyRepository = policyRepository;
         _memberRepository = memberRepository;
+        _pdfGenerationService = pdfGenerationService;
         _emailService = emailService;
+        _serviceScopeFactory = serviceScopeFactory;
+        _logger = logger;
     }
 
     public async Task<InitiatePaymentResponse> InitiatePaymentAsync(Guid memberId, InitiatePaymentRequest request, CancellationToken cancellationToken)
@@ -52,33 +63,64 @@ public sealed class PaymentService : IPaymentService
         };
     }
 
+    // /src/backend/CMS.Application/Services/PaymentService.cs
+
     public async Task<PaymentResponse> ProcessMockPaymentAsync(Guid memberId, Guid paymentId, CancellationToken cancellationToken)
     {
-        var payment = await _paymentRepository.GetByIdAsync(paymentId, cancellationToken);
+        // ✅ Use a fresh scope to avoid tracking conflicts
+        using var scope = _serviceScopeFactory.CreateScope();
+        var freshPaymentRepo = scope.ServiceProvider.GetRequiredService<IPaymentRepository>();
+        var freshPolicyRepo = scope.ServiceProvider.GetRequiredService<IPolicyRepository>();
+        var freshMemberRepo = scope.ServiceProvider.GetRequiredService<IMemberRepository>();
+        var freshPdfService = scope.ServiceProvider.GetRequiredService<IPdfGenerationService>();
+        var freshEmailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+
+        // ✅ Get payment with fresh DbContext
+        var payment = await freshPaymentRepo.GetByIdAsync(paymentId, cancellationToken);
         if (payment == null)
             return new PaymentResponse { Success = false, Message = "Payment not found" };
 
-        var policy = await _policyRepository.GetByIdAsync(payment.PolicyId, cancellationToken);
-        if (policy == null || policy.MemberId != memberId)
+        // ✅ Get policy
+        var policy = await freshPolicyRepo.GetByIdAsync(payment.PolicyId, cancellationToken);
+        if (policy == null)
+            return new PaymentResponse { Success = false, Message = "Policy not found" };
+
+        // ✅ Check authorization
+        if (policy.MemberId != memberId)
             return new PaymentResponse { Success = false, Message = "Unauthorized" };
 
-        // Mark payment as completed
+        // ✅ Check if payment is already completed
+        if (payment.Status == PaymentStatus.Completed)
+            return new PaymentResponse { Success = false, Message = "Payment already processed" };
+
+        // ✅ Generate transaction ID
         var transactionId = $"MOCK_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString().Substring(0, 8)}";
-        payment.MarkCompleted(transactionId, $"/receipts/{paymentId}.pdf");
-        await _paymentRepository.UpdateAsync(payment, cancellationToken);
 
-        // ✅ CRITICAL FIX: Update policy's last payment date
-        policy.RecordPayment(payment);
-        await _policyRepository.UpdateAsync(policy, cancellationToken);
+        // ✅ Mark payment as completed
+        payment.MarkCompleted(transactionId, $"receipt_{paymentId}.pdf");
+        await freshPaymentRepo.UpdateAsync(payment, cancellationToken);
 
-        // Send confirmation email
-        await _emailService.SendPaymentConfirmationEmailAsync(
-            policy.Member.Email,
-            policy.Member.FullName,
-            policy.PolicyNumber,
-            payment.Amount,
-            transactionId,
-            cancellationToken);
+        // ✅ Update policy with payment info
+        policy.RecordPayment(payment.Amount, payment.DueDate);
+        await freshPolicyRepo.UpdateAsync(policy, cancellationToken);
+
+        // ✅ Get member for email
+        var member = await freshMemberRepo.GetByIdAsync(memberId, cancellationToken);
+
+        // ✅ Generate and send GST invoice
+        if (member != null)
+        {
+            try
+            {
+                var invoicePdf = await freshPdfService.GenerateGstInvoiceAsync(payment, policy, member, cancellationToken);
+                var invoiceNumber = $"INV-{DateTime.Now:yyyyMMdd}-{paymentId.ToString().Substring(0, 8)}";
+                await freshEmailService.SendGstInvoiceEmailAsync(member.Email, member.FullName, invoiceNumber, payment.Amount, invoicePdf, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send GST invoice email for payment {PaymentId}", paymentId);
+            }
+        }
 
         return new PaymentResponse
         {
@@ -87,42 +129,72 @@ public sealed class PaymentService : IPaymentService
             TransactionId = transactionId
         };
     }
-
+    // /src/backend/CMS.Application/Services/PaymentService.cs
 
     public async Task<PaymentHistoryResponse> GetPaymentHistoryAsync(Guid memberId, CancellationToken cancellationToken)
     {
+        // ✅ Get member's policy
         var policy = await _policyRepository.GetByMemberIdAsync(memberId, cancellationToken);
         if (policy == null)
-            return new PaymentHistoryResponse();
+        {
+            return new PaymentHistoryResponse
+            {
+                Payments = new List<PaymentRecord>(),
+                Summary = new PaymentSummary
+                {
+                    TotalPayments = 0,
+                    TotalAmountPaid = 0,
+                    PendingPayments = 0,
+                    NextPremiumAmount = 0,
+                    NextDueDate = null
+                }
+            };
+        }
 
+        // ✅ Get all payments for this policy
         var payments = await _paymentRepository.GetByPolicyIdAsync(policy.PolicyId, cancellationToken);
 
-        var response = new PaymentHistoryResponse
+        var completedPayments = payments.Where(p => p.Status == PaymentStatus.Completed).ToList();
+        var pendingPayments = payments.Where(p => p.Status == PaymentStatus.Pending).ToList();
+
+        // ✅ Calculate next due amount (monthly premium)
+        var nextPremiumAmount = policy.MonthlyPremium;
+        var nextDueDate = policy.GetNextPremiumDueDate();
+
+        // ✅ Check if current month's premium is already paid
+        var currentMonthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+        var currentMonthPaid = completedPayments.Any(p => p.PaymentDate >= currentMonthStart);
+
+        if (currentMonthPaid)
         {
-            Payments = payments.Select(p => new PaymentRecord
-            {
-                PaymentId = p.PaymentId,
-                Amount = p.Amount,
-                PaymentDate = p.PaymentDate,
-                DueDate = p.DueDate,
-                Status = p.Status.ToString(),
-                PaymentMethod = p.PaymentMethod,
-                TransactionId = p.TransactionId,
-                ReceiptUrl = p.ReceiptUrl
-            }).ToList(),
+            nextDueDate = nextDueDate.AddMonths(1);
+        }
+
+        var paymentRecords = payments.Select(p => new PaymentRecord
+        {
+            PaymentId = p.PaymentId,
+            Amount = p.Amount,
+            PaymentDate = p.PaymentDate,
+            DueDate = p.DueDate,
+            Status = p.Status.ToString(),
+            PaymentMethod = p.PaymentMethod,
+            TransactionId = p.TransactionId,
+            ReceiptUrl = p.ReceiptUrl
+        }).OrderByDescending(p => p.PaymentDate).ToList();
+
+        return new PaymentHistoryResponse
+        {
+            Payments = paymentRecords,
             Summary = new PaymentSummary
             {
-                TotalPayments = payments.Count(p => p.Status == PaymentStatus.Completed),
-                TotalAmountPaid = payments.Where(p => p.Status == PaymentStatus.Completed).Sum(p => p.Amount),
-                PendingPayments = payments.Count(p => p.Status == PaymentStatus.Pending),
-                NextPremiumAmount = policy.MonthlyPremium,
-                NextDueDate = policy.GetNextPremiumDueDate()
+                TotalPayments = completedPayments.Count,
+                TotalAmountPaid = completedPayments.Sum(p => p.Amount),
+                PendingPayments = pendingPayments.Count,
+                NextPremiumAmount = nextPremiumAmount,
+                NextDueDate = nextDueDate
             }
         };
-
-        return response;
     }
-
     public async Task CheckOverduePaymentsAndLapsePoliciesAsync(CancellationToken cancellationToken)
     {
         var overduePayments = await _paymentRepository.GetOverduePaymentsAsync(cancellationToken);

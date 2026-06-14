@@ -89,9 +89,44 @@ public sealed class PolicyRepository : IPolicyRepository
         await _context.SaveChangesAsync(cancellationToken);
     }
 
+    // /src/backend/CMS.Infrastructure/Repositories/PolicyRepository.cs
+
+    // /src/backend/CMS.Infrastructure/Repositories/PolicyRepository.cs
+
+    // /src/backend/CMS.Infrastructure/Repositories/PolicyRepository.cs
+
     public async Task UpdateAsync(Policy policy, CancellationToken cancellationToken)
     {
-        _context.Set<Policy>().Update(policy);
+        // ✅ Get the existing policy WITH tracking (not AsNoTracking)
+        var existingPolicy = await _context.Policies
+            .FirstOrDefaultAsync(p => p.PolicyId == policy.PolicyId, cancellationToken);
+
+        if (existingPolicy == null)
+        {
+            await _context.Policies.AddAsync(policy, cancellationToken);
+        }
+        else
+        {
+            // ✅ Use the domain methods that already exist in Policy class
+            // The RecordPayment method already updates LastPaymentDate, LastPaymentAmount, NextPremiumDueDate
+            // But we need to update the existing policy, not the detached one
+
+            // Update scalar properties using EF Core's property access (bypassing private setters)
+            _context.Entry(existingPolicy).CurrentValues.SetValues(policy);
+
+            // Mark only specific properties as modified to avoid conflicts
+            _context.Entry(existingPolicy).Property(x => x.LastPaymentDate).IsModified = true;
+            _context.Entry(existingPolicy).Property(x => x.LastPaymentAmount).IsModified = true;
+            _context.Entry(existingPolicy).Property(x => x.NextPremiumDueDate).IsModified = true;
+            _context.Entry(existingPolicy).Property(x => x.UpdatedAt).IsModified = true;
+
+            // Update status if changed
+            if (existingPolicy.Status != policy.Status)
+            {
+                _context.Entry(existingPolicy).Property(x => x.Status).IsModified = true;
+            }
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
     }
 

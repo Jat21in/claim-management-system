@@ -99,6 +99,8 @@ builder.Services.Configure<FormOptions>(options =>
     options.MemoryBufferThreshold = int.MaxValue;
 });
 
+builder.Services.AddLogging();
+
 var app = builder.Build();
 
 // ✅ Serve uploaded files

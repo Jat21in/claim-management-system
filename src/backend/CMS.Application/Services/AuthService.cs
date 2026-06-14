@@ -55,6 +55,7 @@ public sealed class AuthService : IAuthService
     {
         // Fast existence check
         if (await _memberRepository.ExistsByEmailAsync(request.Email, cancellationToken))
+            
             throw new InvalidOperationException("Email already exists");
 
         var member = new Member(
