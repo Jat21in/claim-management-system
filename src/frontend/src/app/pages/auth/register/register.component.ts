@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NgIf, NgFor } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { finalize } from 'rxjs';
 
 import { AuthService } from '../../../auth/auth.service';
@@ -45,7 +45,8 @@ export class RegisterComponent implements OnInit {
 
   loading = false;
   error: string | null = null;
-  success: string | null = null;
+  successMessage: string | null = null;
+  registrationSuccess = false;  // ✅ Track if registration succeeded
 
   maxDob = new Date().toISOString().split('T')[0];
   selectedPlanId: string | undefined = undefined;
@@ -55,8 +56,8 @@ export class RegisterComponent implements OnInit {
   showConfirmPassword = false;
 
   // CAPTCHA
-  captchaQuestion = '';   // Will hold the random string to display
-  captchaAnswer = '';     // Store the same string for comparison (case-insensitive)
+  captchaQuestion = '';
+  captchaAnswer = '';
 
   // Terms modal
   showTermsModal = false;
@@ -110,7 +111,6 @@ export class RegisterComponent implements OnInit {
     this.showConfirmPassword = !this.showConfirmPassword;
   }
 
-  // Helper to generate random alphanumeric string (length 6)
   private generateRandomCode(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
@@ -119,10 +119,10 @@ export class RegisterComponent implements OnInit {
     }
     return result;
   }
+  
   generateCaptcha(): void {
     this.captchaAnswer = this.generateRandomCode();
-    this.captchaQuestion = this.captchaAnswer; // Display the same string
-    // Reset the captcha form field
+    this.captchaQuestion = this.captchaAnswer;
     this.form.get('captcha')?.setValue('');
     this.form.get('captcha')?.setErrors(null);
   }
@@ -131,13 +131,26 @@ export class RegisterComponent implements OnInit {
     this.generateCaptcha();
   }
 
-
   openTermsModal(): void {
     this.showTermsModal = true;
   }
 
   closeTermsModal(): void {
     this.showTermsModal = false;
+  }
+
+  // ✅ Reset form after successful registration
+  private resetForm(): void {
+    this.form.reset({
+      fullName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      dateOfBirth: '',
+      captcha: '',
+      acceptTerms: false
+    });
+    this.generateCaptcha();
   }
 
   submit(): void {
@@ -167,24 +180,34 @@ export class RegisterComponent implements OnInit {
 
     this.loading = true;
     this.error = null;
-    this.success = null;
+    this.successMessage = null;
 
     this.auth.register(payload)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+      }))
       .subscribe({
         next: () => {
-          this.success = 'Registration successful! Redirecting to login...';
+          // ✅ Show success message
+          this.successMessage = '✅ Account created successfully! Kindly Redirect to login.';
+          this.registrationSuccess = true;
+          
+          // ✅ Reset the form (clear all fields)
+          this.resetForm();
+          
+          // ✅ Auto redirect to login after 2 seconds
           setTimeout(() => {
             this.router.navigate(['/auth/login'], {
               queryParams: {
                 registered: 'true',
-                email: this.form.value.email
+                email: payload.email
               }
             });
           }, 2000);
         },
         error: err => {
-          this.error = err?.error?.message ?? 'Registration failed';
+          this.error = err?.error?.message ?? 'Registration failed. Please try again.';
+          this.registrationSuccess = false;
         },
       });
   }

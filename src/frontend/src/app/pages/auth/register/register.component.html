@@ -16,14 +16,14 @@
     <div class="relative">
         <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="Password" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg pr-10" />
         <button type="button" (click)="togglePasswordVisibility()" class="absolute right-3 top-2 text-gray-400 hover:text-white">
-      <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-      </svg>
-      <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639a10.455 10.455 0 0 1-3.335 4.187M6.228 6.228 3 3m3.228 3.228 3.65 3.65m-3.65-3.65 5.65 5.65m-5.65-5.65L3 3m18 18-3.65-3.65m0 0-3.65-3.65m3.65 3.65L21 21" />
-      </svg>
-    </button>
+            <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+            </svg>
+            <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639a10.455 10.455 0 0 1-3.335 4.187M6.228 6.228 3 3m3.228 3.228 3.65 3.65m-3.65-3.65 5.65 5.65m-5.65-5.65L3 3m18 18-3.65-3.65m0 0-3.65-3.65m3.65 3.65L21 21" />
+            </svg>
+        </button>
     </div>
     <div *ngIf="form.get('password')?.touched && form.get('password')?.invalid" class="text-red-400 text-xs">
         <span *ngIf="form.get('password')?.errors?.['required']">Password is required</span>
@@ -35,14 +35,14 @@
     <div class="relative">
         <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" placeholder="Confirm password" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg pr-10" />
         <button type="button" (click)="toggleConfirmPasswordVisibility()" class="absolute right-3 top-2 text-gray-400 hover:text-white">
-      <svg *ngIf="!showConfirmPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-      </svg>
-      <svg *ngIf="showConfirmPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639a10.455 10.455 0 0 1-3.335 4.187M6.228 6.228 3 3m3.228 3.228 3.65 3.65m-3.65-3.65 5.65 5.65m-5.65-5.65L3 3m18 18-3.65-3.65m0 0-3.65-3.65m3.65 3.65L21 21" />
-      </svg>
-    </button>
+            <svg *ngIf="!showConfirmPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+            </svg>
+            <svg *ngIf="showConfirmPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639a10.455 10.455 0 0 1-3.335 4.187M6.228 6.228 3 3m3.228 3.228 3.65 3.65m-3.65-3.65 5.65 5.65m-5.65-5.65L3 3m18 18-3.65-3.65m0 0-3.65-3.65m3.65 3.65L21 21" />
+            </svg>
+        </button>
     </div>
     <div *ngIf="form.get('confirmPassword')?.touched && form.get('confirmPassword')?.invalid" class="text-red-400 text-xs">
         <span *ngIf="form.get('confirmPassword')?.errors?.['required']">Please confirm your password</span>
@@ -64,10 +64,10 @@
                 <span class="font-mono text-lg tracking-wider bg-black/30 px-3 py-1 rounded border border-white/10">{{ captchaQuestion }}</span>
             </div>
             <button type="button" (click)="refreshCaptcha()" class="text-accent hover:text-accent/80 transition" title="Refresh CAPTCHA">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-      </svg>
-    </button>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+            </button>
         </div>
         <input formControlName="captcha" type="text" placeholder="Enter code above" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg" />
         <div *ngIf="form.get('captcha')?.touched && form.get('captcha')?.invalid" class="text-red-400 text-xs mt-1">
@@ -76,13 +76,12 @@
         </div>
     </div>
 
-
     <!-- Terms and Conditions -->
     <div class="flex items-start gap-2">
         <input type="checkbox" formControlName="acceptTerms" id="acceptTerms" class="mt-1 w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-accent" />
         <label for="acceptTerms" class="text-sm text-gray-300">
-      I accept the <button type="button" (click)="openTermsModal()" class="text-accent hover:underline">Terms and Conditions</button>
-    </label>
+            I accept the <button type="button" (click)="openTermsModal()" class="text-accent hover:underline">Terms and Conditions</button>
+        </label>
     </div>
     <div *ngIf="form.get('acceptTerms')?.touched && form.get('acceptTerms')?.invalid" class="text-red-400 text-xs">
         You must accept the Terms and Conditions
@@ -94,25 +93,41 @@
         <span class="text-white">This plan will be activated upon registration</span>
     </div>
 
-    <!-- Success Message -->
-    <div *ngIf="success" class="bg-green-500/20 text-green-400 px-4 py-3 rounded-lg text-sm border border-green-500/30">
-        {{ success }}
-        <div class="text-xs text-green-400/70 mt-1">Redirecting to login...</div>
+    <!-- ✅ SUCCESS MESSAGE (Green, appears inside form) -->
+    <div *ngIf="successMessage" class="bg-green-500/20 text-green-400 px-4 py-3 rounded-lg text-sm border border-green-500/30 animate-pulse">
+        <div class="flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            {{ successMessage }}
+        </div>
     </div>
 
-    <!-- Error -->
-    <div *ngIf="error" class="bg-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm border border-red-500/30">
+    <!-- Error Message -->
+    <div *ngIf="error && !successMessage" class="bg-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm border border-red-500/30">
         {{ error }}
     </div>
 
-    <!-- Submit -->
-    <button type="submit" [disabled]="loading || form.invalid" class="w-full py-2 bg-accent text-black font-semibold rounded-lg disabled:opacity-60">
-    {{ loading ? 'Creating account...' : 'Create account' }}
-  </button>
+    <!-- Submit Button -->
+    <button type="submit" [disabled]="loading || form.invalid || registrationSuccess" class="w-full py-2 bg-accent text-black font-semibold rounded-lg disabled:opacity-60 transition-all duration-200">
+        <span *ngIf="!loading">Create account</span>
+        <span *ngIf="loading" class="flex items-center justify-center gap-2">
+            <svg class="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Creating account...
+        </span>
+    </button>
+
+    <!-- Skip Link -->
+    <!-- <div class="mt-6 text-center text-sm opacity-70 cursor-pointer hover:opacity-100" routerLink="/plans">
+        Skip for now → Explore plans
+    </div> -->
 
 </form>
 
-<!-- Terms Modal (hidden by default) -->
+<!-- Terms Modal -->
 <div *ngIf="showTermsModal" class="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm" (click)="closeTermsModal()">
     <div class="bg-gray-900 rounded-xl max-w-lg w-full mx-4 p-6 border border-white/10 shadow-2xl" (click)="$event.stopPropagation()">
         <h2 class="text-xl font-bold mb-4">Terms and Conditions</h2>

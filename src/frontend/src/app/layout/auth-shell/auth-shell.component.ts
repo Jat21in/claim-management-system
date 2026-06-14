@@ -19,7 +19,7 @@ import { AuthDeckComponent } from '../../components/auth-deck/auth-deck.componen
 })
 export class AuthShellComponent implements OnInit, AfterViewInit, OnDestroy {
 
-  mode: 'login' | 'register' = 'login';
+  mode: 'login' | 'register' = 'register';
 
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);

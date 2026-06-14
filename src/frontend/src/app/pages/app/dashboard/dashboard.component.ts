@@ -160,27 +160,63 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   private typingIndex = 0;
   private typingSpeed = 30;
 
+  // /src/frontend/src/app/pages/app/dashboard/dashboard.component.ts
+
   ngOnInit(): void {
-    this.initializeTime();
-    this.startTimeUpdates();
-    this.loadDashboardData();
-    this.typeGreeting(this.currentGreeting);
-    
-    // Check for payment success from query params
-    this.router.events.subscribe(() => {
-      const url = this.router.url;
-      if (url.includes('paymentSuccess=true')) {
-        this.showPaymentSuccess = true;
-        const amountMatch = url.match(/amount=([\d.]+)/);
-        if (amountMatch) {
-          this.lastPaymentAmount = parseFloat(amountMatch[1]);
-        }
-        setTimeout(() => {
-          this.showPaymentSuccess = false;
+      this.initializeTime();
+      this.startTimeUpdates();
+      this.loadDashboardData();
+      this.typeGreeting(this.currentGreeting);
+      
+      // ✅ FIX: Check for payment success from query params IMMEDIATELY and store in localStorage
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentSuccess = urlParams.get('paymentSuccess');
+      const amount = urlParams.get('amount');
+      
+      if (paymentSuccess === 'true' && amount) {
+          console.log('🎉 Payment success detected! Amount:', amount);
+          
+          // Store in localStorage to persist across navigation
+          localStorage.setItem('paymentSuccess', 'true');
+          localStorage.setItem('paymentAmount', amount);
+          
+          // Show banner
+          this.showPaymentSuccess = true;
+          this.lastPaymentAmount = parseFloat(amount);
+          
+          // Remove the query param from URL without reloading
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+          
+          // Auto-hide after 5 seconds
+          setTimeout(() => {
+              this.showPaymentSuccess = false;
+              localStorage.removeItem('paymentSuccess');
+              localStorage.removeItem('paymentAmount');
+              this.cdr.markForCheck();
+          }, 5000);
+          
           this.cdr.markForCheck();
-        }, 5000);
+      } else {
+          // ✅ Check localStorage for pending success message (in case of page refresh)
+          const storedSuccess = localStorage.getItem('paymentSuccess');
+          const storedAmount = localStorage.getItem('paymentAmount');
+          
+          if (storedSuccess === 'true' && storedAmount) {
+              console.log('🎉 Retrieved payment success from localStorage');
+              this.showPaymentSuccess = true;
+              this.lastPaymentAmount = parseFloat(storedAmount);
+              
+              setTimeout(() => {
+                  this.showPaymentSuccess = false;
+                  localStorage.removeItem('paymentSuccess');
+                  localStorage.removeItem('paymentAmount');
+                  this.cdr.markForCheck();
+              }, 5000);
+              
+              this.cdr.markForCheck();
+          }
       }
-    });
   }
 
   ngAfterViewInit(): void {
@@ -442,45 +478,73 @@ debugPolicyInfo() {
 }
 
   downloadGstInvoice() {
-    // Get the most recent completed payment ID from localStorage or from the API
-    const lastPaymentId = localStorage.getItem('lastPaymentId');
-    
-    if (!lastPaymentId) {
-      // Try to fetch the latest payment ID from the API
-      this.pdfService.getRecentPayments().subscribe({
+    // ✅ First try to get the latest payment ID from API
+    this.pdfService.getRecentPayments().subscribe({
         next: (payments: any[]) => {
-          const completedPayment = payments.find(p => p.status === 'Completed' || p.status === 1);
-          if (completedPayment && completedPayment.paymentId) {
-            localStorage.setItem('lastPaymentId', completedPayment.paymentId);
-            this.downloadGstInvoiceWithId(completedPayment.paymentId);
-          } else {
-            alert('No completed payment found. Please make a payment first to download GST invoice.');
-          }
+            console.log('📋 All payments:', payments);
+            
+            // Find completed payments (status === 1 or status === 'Completed')
+            const completedPayments = payments.filter(p => p.status === 1 || p.status === 'Completed');
+            console.log('✅ Completed payments:', completedPayments);
+            
+            if (completedPayments.length === 0) {
+                alert('No completed payment found. Please make a payment first to download GST invoice.');
+                return;
+            }
+            
+            // Sort by payment date to get the latest
+            const sortedPayments = [...completedPayments].sort((a, b) => 
+                new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
+            );
+            
+            const latestPayment = sortedPayments[0];
+            const paymentId = latestPayment.paymentId;
+            const paymentDate = latestPayment.paymentDate;
+            const amount = latestPayment.amount;
+            
+            console.log(`📄 Downloading GST invoice for payment ${paymentId} from ${paymentDate} amount ₹${amount}`);
+            
+            // Store for future use
+            localStorage.setItem('lastPaymentId', paymentId);
+            
+            this.downloadGstInvoiceWithId(paymentId);
         },
-        error: () => {
-          alert('Unable to fetch payment records. Please make a payment first.');
+        error: (err) => {
+            console.error('Failed to fetch payment records:', err);
+            alert('Unable to fetch payment records. Please make a payment first.');
         }
-      });
-      return;
-    }
-    
-    this.downloadGstInvoiceWithId(lastPaymentId);
-  }
+    });
+}
 
-  private downloadGstInvoiceWithId(paymentId: string) {
-    console.log('Downloading GST invoice for payment ID:', paymentId);
+private downloadGstInvoiceWithId(paymentId: string) {
+    console.log('📄 Downloading GST invoice for payment ID:', paymentId);
     
     this.pdfService.downloadGstInvoice(paymentId).subscribe({
-      next: (blob) => {
-        const fileName = `GST_Invoice_${new Date().toISOString().slice(0, 10)}.pdf`;
-        this.pdfService.saveAs(blob, fileName);
-      },
-      error: (err) => {
-        console.error('Download failed:', err);
-        alert('Failed to download GST invoice. Please try again later.');
-      }
+        next: (blob) => {
+            if (blob.size === 0) {
+                console.error('Received empty PDF');
+                alert('Generated invoice is empty. Please try again.');
+                return;
+            }
+            const fileName = `GST_Invoice_${new Date().toISOString().slice(0, 10)}.pdf`;
+            this.pdfService.saveAs(blob, fileName);
+        },
+        error: (err) => {
+            console.error('Download failed:', err);
+            
+            // If 404, clear the cached ID and retry
+            if (err.status === 404) {
+                console.log('Payment ID not found, clearing cache and retrying...');
+                localStorage.removeItem('lastPaymentId');
+                
+                // Retry once
+                this.downloadGstInvoice();
+            } else {
+                alert('Failed to download GST invoice. Please try again later.');
+            }
+        }
     });
-  }
+}
 
   // Navigation Methods
   navigateToPayments() {
@@ -598,10 +662,28 @@ private loadLastPaymentId(): void {
     this.pdfService.getRecentPayments().subscribe({
         next: (payments) => {
             console.log('Recent payments:', payments);
-            const completedPayment = payments?.find(p => p.status === 'Completed');
-            if (completedPayment?.paymentId) {
-                localStorage.setItem('lastPaymentId', completedPayment.paymentId);
-                console.log('Last payment ID stored:', completedPayment.paymentId);
+            
+            // ✅ Find the MOST RECENT COMPLETED payment (not first, but with latest paymentDate)
+            const completedPayments = payments?.filter(p => p.status === 'Completed' || p.status === 1);
+            
+            if (completedPayments && completedPayments.length > 0) {
+                // Sort by payment date descending to get the latest
+                const sortedPayments = [...completedPayments].sort((a, b) => 
+                    new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
+                );
+                
+                const latestPayment = sortedPayments[0];
+                
+                if (latestPayment?.paymentId) {
+                    localStorage.setItem('lastPaymentId', latestPayment.paymentId);
+                    this.lastPaymentId = latestPayment.paymentId;
+                    console.log('✅ Last payment ID stored:', latestPayment.paymentId);
+                    console.log('✅ Payment date:', latestPayment.paymentDate);
+                    console.log('✅ Payment amount:', latestPayment.amount);
+                }
+            } else {
+                console.log('No completed payments found');
+                localStorage.removeItem('lastPaymentId');
             }
         },
         error: (err) => {
