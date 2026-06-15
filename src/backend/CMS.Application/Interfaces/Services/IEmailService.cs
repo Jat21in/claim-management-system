@@ -16,4 +16,18 @@ public interface IEmailService
 
     // NEW: GST Invoice Email
     Task SendGstInvoiceEmailAsync(string toEmail, string fullName, string invoiceNumber, decimal amount, byte[] pdfAttachment, CancellationToken cancellationToken);
+
+    Task SendClaimStatusUpdateEmailAsync(
+    string toEmail,
+    string fullName,
+    string claimId,
+    decimal amount,
+    DateTime claimDate,
+    string description,
+    string status,
+    double? aiConfidenceScore,
+    string aiDecision,
+    string aiReasoning,
+    CancellationToken cancellationToken);
+
 }

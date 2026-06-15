@@ -19,6 +19,218 @@ public sealed class EmailService : IEmailService
         _logger = logger;
     }
 
+    public async Task SendClaimStatusUpdateEmailAsync(
+        string toEmail,
+        string fullName,
+        string claimId,
+        decimal amount,
+        DateTime claimDate,
+        string description,
+        string status,
+        double? aiConfidenceScore,
+        string aiDecision,
+        string aiReasoning,
+        CancellationToken cancellationToken)
+    {
+        // Determine status configuration
+        var (statusColor, statusIconSvg, statusBgColor, nextSteps) = status.ToLower() switch
+        {
+            "approved" => (
+                "#10B981",
+                GetCheckCircleIcon(),
+                "#F0FDF4",
+                "The approved amount will be credited to your registered bank account within 2-3 business days."),
+            "rejected" => (
+                "#EF4444",
+                GetXCircleIcon(),
+                "#FEF2F2",
+                "Please review the rejection reason above. If you believe this is an error, please contact our support team."),
+            "pendingai" => (
+                "#F59E0B",
+                GetClockIcon(),
+                "#FFFBEB",
+                "Our AI is analyzing your claim. You will receive another email once the review is complete."),
+            "paid" => (
+                "#10B981",
+                GetBanknoteIcon(),
+                "#F0FDF4",
+                "The settlement amount has been credited to your registered bank account."),
+            _ => (
+                "#6B7280",
+                GetFileTextIcon(),
+                "#F9FAFB",
+                "Your claim is being processed. We'll update you soon.")
+        };
+
+        var subject = status.ToLower() switch
+        {
+            "approved" => $"CLAIM APPROVED - ClaimCore Insurance",
+            "rejected" => $"CLAIM DECISION - ClaimCore Insurance",
+            "pendingai" => $"UNDER REVIEW - ClaimCore Insurance",
+            "paid" => $"CLAIM SETTLED - ClaimCore Insurance",
+            _ => $"STATUS UPDATE - ClaimCore Insurance"
+        };
+
+        var formattedClaimId = claimId.Length > 8 ? claimId.Substring(0, 8) + "..." : claimId;
+        var formattedDate = claimDate.ToString("dd MMMM yyyy");
+        var formattedAmount = $"₹{amount:N2}";
+
+        // Truncate description if too long
+        var truncatedDescription = description?.Length > 100
+            ? description.Substring(0, 100) + "..."
+            : description ?? "No description provided";
+
+        // Build confidence score visualization
+        var confidenceScoreHtml = "";
+        if (aiConfidenceScore.HasValue)
+        {
+            var score = (int)aiConfidenceScore.Value;
+            var barWidth = score;
+            var barColor = score >= 70 ? "#10B981" : (score >= 40 ? "#F59E0B" : "#EF4444");
+
+            confidenceScoreHtml = $@"
+                <div style='margin-bottom: 16px;'>
+                    <div style='display: flex; justify-content: space-between; margin-bottom: 8px;'>
+                        <span style='color: #6B7280; font-size: 14px;'>AI Confidence Score</span>
+                        <span style='color: {barColor}; font-weight: 600;'>{score}%</span>
+                    </div>
+                    <div style='background: #E5E7EB; height: 8px; border-radius: 4px; overflow: hidden;'>
+                        <div style='background: {barColor}; width: {barWidth}%; height: 100%; border-radius: 4px;'></div>
+                    </div>
+                </div>";
+        }
+
+        // Build AI reasoning section
+        var aiReasoningHtml = "";
+        if (!string.IsNullOrEmpty(aiReasoning))
+        {
+            aiReasoningHtml = $@"
+                <div style='background: #F0F9FF; padding: 20px; border-radius: 12px; margin-bottom: 24px; border-left: 4px solid {statusColor};'>
+                    <div style='display: flex; align-items: center; gap: 12px; margin-bottom: 12px;'>
+                        {GetBrainIcon()}
+                        <span style='color: #0284C7; font-weight: 600;'>AI Verification Insights</span>
+                    </div>
+                    <p style='color: #374151; font-size: 14px; line-height: 1.6; margin: 0;'>{aiReasoning}</p>
+                </div>";
+        }
+
+        var body = $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <title>{subject}</title>
+                <style>
+                    @media only screen and (max-width: 600px) {{
+                        .container {{ width: 100% !important; padding: 10px !important; }}
+                        .content {{ padding: 20px !important; }}
+                    }}
+                </style>
+            </head>
+            <body style='margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F3F4F6; line-height: 1.5;'>
+                <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                    
+                    <!-- Header -->
+                    <div style='background: linear-gradient(135deg, #0891B2, #06B6D4); padding: 32px; text-align: center; border-radius: 16px 16px 0 0;'>
+                        {GetShieldIcon()}
+                        <h1 style='color: #FFFFFF; margin: 12px 0 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;'>ClaimCore Insurance</h1>
+                        <p style='color: #E0F2FE; opacity: 0.9; margin: 8px 0 0; font-size: 14px;'>Smart Claims, Faster Settlements</p>
+                    </div>
+                    
+                    <!-- Status Banner -->
+                    <div style='background: {statusBgColor}; padding: 20px 24px; text-align: center; border-bottom: 1px solid #E5E7EB;'>
+                        <div style='display: inline-block;'>{statusIconSvg}</div>
+                        <h2 style='color: {statusColor}; margin: 12px 0 0; font-size: 22px; font-weight: 700; letter-spacing: 1px;'>CLAIM {status.ToUpper()}</h2>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div style='background: #FFFFFF; padding: 32px; border-radius: 0 0 16px 16px; border: 1px solid #E5E7EB; border-top: none;'>
+                        
+                        <!-- Greeting -->
+                        <p style='color: #111827; font-size: 16px; margin-bottom: 24px;'>Dear <strong style='color: #0891B2;'>{fullName}</strong>,</p>
+                        
+                        <!-- Status Message -->
+                        <div style='background: #F9FAFB; padding: 16px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #E5E7EB;'>
+                            <p style='color: #4B5563; margin: 0;'>
+                                Your claim has been <strong style='color: {statusColor}; text-transform: uppercase;'>{status}</strong>.
+                            </p>
+                        </div>
+                        
+                        <!-- Claim Details Card -->
+                        <div style='background: #F9FAFB; border-radius: 12px; overflow: hidden; margin-bottom: 24px; border: 1px solid #E5E7EB;'>
+                            <div style='background: #F3F4F6; padding: 14px 20px; border-bottom: 1px solid #E5E7EB;'>
+                                <div style='display: flex; align-items: center; gap: 8px;'>
+                                    {GetFileTextIcon()}
+                                    <span style='color: #374151; font-weight: 600;'>Claim Details</span>
+                                </div>
+                            </div>
+                            <table style='width: 100%; border-collapse: collapse;'>
+                                <tr style='border-bottom: 1px solid #E5E7EB;'>
+                                    <td style='padding: 14px 20px; color: #6B7280; width: 40%;'>Claim ID:</td>
+                                    <td style='padding: 14px 20px; color: #111827; font-family: 'Courier New', monospace; font-size: 14px;'>{formattedClaimId}</td>
+                                 </tr>
+                                <tr style='border-bottom: 1px solid #E5E7EB;'>
+                                    <td style='padding: 14px 20px; color: #6B7280;'>Amount:</td>
+                                    <td style='padding: 14px 20px; color: #10B981; font-weight: 700;'>{formattedAmount}</td>
+                                 </tr>
+                                <tr style='border-bottom: 1px solid #E5E7EB;'>
+                                    <td style='padding: 14px 20px; color: #6B7280;'>Submission Date:</td>
+                                    <td style='padding: 14px 20px; color: #111827;'>{formattedDate}</td>
+                                 </tr>
+                                <tr>
+                                    <td style='padding: 14px 20px; color: #6B7280; vertical-align: top;'>Description:</td>
+                                    <td style='padding: 14px 20px; color: #4B5563;'>""{truncatedDescription}""</td>
+                                 </tr>
+                            </table>
+                        </div>
+                        
+                        <!-- AI Insights Section -->
+                        {aiReasoningHtml}
+                        {confidenceScoreHtml}
+                        
+                        <!-- Next Steps -->
+                        <div style='background: #F0F9FF; padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #BAE6FD;'>
+                            <div style='display: flex; align-items: center; gap: 12px; margin-bottom: 12px;'>
+                                {GetFlagIcon()}
+                                <span style='color: #0369A1; font-weight: 600;'>Next Steps</span>
+                            </div>
+                            <p style='color: #075985; margin: 0; font-size: 14px; line-height: 1.6;'>{nextSteps}</p>
+                        </div>
+                        
+                        <!-- Action Button -->
+                        <div style='text-align: center; margin-bottom: 28px;'>
+                            <a href='https://portal.claimcore.com/claims/{claimId}' 
+                               style='display: inline-block; background: #0891B2; color: #FFFFFF; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;'>
+                                Access Claim Dashboard
+                            </a>
+                        </div>
+                        
+                        <!-- Support Section -->
+                        <div style='background: #F9FAFB; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #E5E7EB;'>
+                            <p style='color: #6B7280; font-size: 12px; margin: 0;'>
+                                Need assistance? Contact our support team at <a href='mailto:support@claimcore.com' style='color: #0891B2; text-decoration: none;'>support@claimcore.com</a>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div style='background: #F3F4F6; padding: 24px; text-align: center; border-radius: 0 0 16px 16px; border: 1px solid #E5E7EB; border-top: none;'>
+                        <p style='color: #9CA3AF; font-size: 12px; margin: 0;'>
+                            This is an automated transactional message. Please do not reply directly to this email.
+                        </p>
+                        <p style='color: #9CA3AF; font-size: 12px; margin: 12px 0 0;'>
+                            © {DateTime.UtcNow.Year} ClaimCore Insurance. All rights reserved.
+                        </p>
+                    </div>
+                    
+                </div>
+            </body>
+            </html>";
+
+        await SendEmailAsync(toEmail, subject, body, cancellationToken);
+    }
+
     public async Task SendKycApprovedEmailAsync(string toEmail, string fullName, CancellationToken cancellationToken)
     {
         var subject = "Your KYC has been approved! - ClaimCore Insurance";
@@ -369,29 +581,29 @@ public sealed class EmailService : IEmailService
             <div style='background: linear-gradient(135deg, #22D3EE, #06B6D4); padding: 20px; text-align: center;'>
                 <h2 style='color: #0B1220; margin: 0;'>Claim Settlement Confirmation</h2>
             </div>
-            <div style='background: #111827; padding: 30px; border: 1px solid #1F2937;'>
-                <p style='color: #FFFFFF; font-size: 16px;'>Dear {fullName},</p>
-                <p style='color: #9CA3AF;'>Your claim has been successfully settled. The details are as follows:</p>
+            <div style='background: #FFFFFF; padding: 30px; border: 1px solid #E5E7EB;'>
+                <p style='color: #111827; font-size: 16px;'>Dear {fullName},</p>
+                <p style='color: #4B5563;'>Your claim has been successfully settled. The details are as follows:</p>
                 <table style='width: 100%; margin: 20px 0; border-collapse: collapse;'>
-                    <tr style='border-bottom: 1px solid #1F2937;'>
-                        <td style='padding: 10px 0; color: #9CA3AF;'>Claim Number:</td>
-                        <td style='padding: 10px 0; color: #22D3EE; font-weight: bold;'>{claimNumber}</td>
+                    <tr style='border-bottom: 1px solid #E5E7EB;'>
+                        <td style='padding: 10px 0; color: #6B7280;'>Claim Number:</td>
+                        <td style='padding: 10px 0; color: #0891B2; font-weight: bold;'>{claimNumber}</td>
                     </tr>
-                    <tr style='border-bottom: 1px solid #1F2937;'>
-                        <td style='padding: 10px 0; color: #9CA3AF;'>Settled Amount:</td>
+                    <tr style='border-bottom: 1px solid #E5E7EB;'>
+                        <td style='padding: 10px 0; color: #6B7280;'>Settled Amount:</td>
                         <td style='padding: 10px 0; color: #10B981; font-weight: bold;'>₹{amount:N2}</td>
                     </tr>
-                    <tr style='border-bottom: 1px solid #1F2937;'>
-                        <td style='padding: 10px 0; color: #9CA3AF;'>Payment Reference:</td>
-                        <td style='padding: 10px 0; color: #FFFFFF;'>{paymentReference}</td>
+                    <tr>
+                        <td style='padding: 10px 0; color: #6B7280;'>Payment Reference:</td>
+                        <td style='padding: 10px 0; color: #111827;'>{paymentReference}</td>
                     </tr>
                 </table>
-                <p style='color: #9CA3AF;'>The amount will be credited to your registered bank account within 2-3 business days.</p>
+                <p style='color: #4B5563;'>The amount will be credited to your registered bank account within 2-3 business days.</p>
                 <div style='margin-top: 30px; text-align: center;'>
-                    <a href='https://claimcore.com/app/claims/{claimNumber}' style='background: #22D3EE; color: #0B1220; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;'>View Claim Details</a>
+                    <a href='https://claimcore.com/app/claims/{claimNumber}' style='background: #0891B2; color: #FFFFFF; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;'>View Claim Details</a>
                 </div>
             </div>
-            <div style='background: #0F172A; padding: 15px; text-align: center; font-size: 12px; color: #6B7280;'>
+            <div style='background: #F3F4F6; padding: 15px; text-align: center; font-size: 12px; color: #6B7280;'>
                 <p>This is an automated message. Please do not reply to this email.</p>
                 <p>&copy; {DateTime.UtcNow.Year} ClaimCore Insurance. All rights reserved.</p>
             </div>
@@ -408,29 +620,29 @@ public sealed class EmailService : IEmailService
             <div style='background: linear-gradient(135deg, #22D3EE, #06B6D4); padding: 20px; text-align: center;'>
                 <h2 style='color: #0B1220; margin: 0;'>GST Invoice</h2>
             </div>
-            <div style='background: #111827; padding: 30px; border: 1px solid #1F2937;'>
-                <p style='color: #FFFFFF; font-size: 16px;'>Dear {fullName},</p>
-                <p style='color: #9CA3AF;'>Thank you for your payment. Please find attached your GST invoice.</p>
+            <div style='background: #FFFFFF; padding: 30px; border: 1px solid #E5E7EB;'>
+                <p style='color: #111827; font-size: 16px;'>Dear {fullName},</p>
+                <p style='color: #4B5563;'>Thank you for your payment. Please find attached your GST invoice.</p>
                 <table style='width: 100%; margin: 20px 0; border-collapse: collapse;'>
-                    <tr style='border-bottom: 1px solid #1F2937;'>
-                        <td style='padding: 10px 0; color: #9CA3AF;'>Invoice Number:</td>
-                        <td style='padding: 10px 0; color: #22D3EE; font-weight: bold;'>{invoiceNumber}</td>
+                    <tr style='border-bottom: 1px solid #E5E7EB;'>
+                        <td style='padding: 10px 0; color: #6B7280;'>Invoice Number:</td>
+                        <td style='padding: 10px 0; color: #0891B2; font-weight: bold;'>{invoiceNumber}</td>
                     </tr>
-                    <tr style='border-bottom: 1px solid #1F2937;'>
-                        <td style='padding: 10px 0; color: #9CA3AF;'>Invoice Date:</td>
-                        <td style='padding: 10px 0; color: #FFFFFF;'>{DateTime.UtcNow:dd MMM yyyy}</td>
+                    <tr style='border-bottom: 1px solid #E5E7EB;'>
+                        <td style='padding: 10px 0; color: #6B7280;'>Invoice Date:</td>
+                        <td style='padding: 10px 0; color: #111827;'>{DateTime.UtcNow:dd MMM yyyy}</td>
                     </tr>
-                    <tr style='border-bottom: 1px solid #1F2937;'>
-                        <td style='padding: 10px 0; color: #9CA3AF;'>Total Amount:</td>
+                    <tr style='border-bottom: 1px solid #E5E7EB;'>
+                        <td style='padding: 10px 0; color: #6B7280;'>Total Amount:</td>
                         <td style='padding: 10px 0; color: #10B981; font-weight: bold;'>₹{amount:N2}</td>
                     </tr>
                 </table>
-                <p style='color: #9CA3AF;'>Please find the attached PDF for your records.</p>
+                <p style='color: #4B5563;'>Please find the attached PDF for your records.</p>
                 <div style='margin-top: 30px; text-align: center;'>
-                    <a href='#' style='background: #22D3EE; color: #0B1220; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;'>Download Invoice</a>
+                    <a href='#' style='background: #0891B2; color: #FFFFFF; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;'>Download Invoice</a>
                 </div>
             </div>
-            <div style='background: #0F172A; padding: 15px; text-align: center; font-size: 12px; color: #6B7280;'>
+            <div style='background: #F3F4F6; padding: 15px; text-align: center; font-size: 12px; color: #6B7280;'>
                 <p>This is a system-generated invoice. It is valid without signature.</p>
                 <p>&copy; {DateTime.UtcNow.Year} ClaimCore Insurance. All rights reserved.</p>
             </div>
@@ -439,7 +651,80 @@ public sealed class EmailService : IEmailService
         await SendEmailWithAttachmentAsync(toEmail, subject, body, pdfAttachment, $"Invoice_{invoiceNumber}.pdf", cancellationToken);
     }
 
-    // ✅ FIXED: Core email sending method
+    #region SVG Icon Helpers
+
+    private static string GetCheckCircleIcon()
+    {
+        return @"<svg width='48' height='48' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+            <circle cx='12' cy='12' r='10' stroke='#10B981' stroke-width='2'/>
+            <path d='M8 12L11 15L16 9' stroke='#10B981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/>
+        </svg>";
+    }
+
+    private static string GetXCircleIcon()
+    {
+        return @"<svg width='48' height='48' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+            <circle cx='12' cy='12' r='10' stroke='#EF4444' stroke-width='2'/>
+            <path d='M15 9L9 15M9 9L15 15' stroke='#EF4444' stroke-width='2' stroke-linecap='round'/>
+        </svg>";
+    }
+
+    private static string GetClockIcon()
+    {
+        return @"<svg width='48' height='48' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+            <circle cx='12' cy='12' r='10' stroke='#F59E0B' stroke-width='2'/>
+            <path d='M12 8V12L15 15' stroke='#F59E0B' stroke-width='2' stroke-linecap='round'/>
+        </svg>";
+    }
+
+    private static string GetBanknoteIcon()
+    {
+        return @"<svg width='48' height='48' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+            <rect x='2' y='6' width='20' height='12' rx='2' stroke='#10B981' stroke-width='2'/>
+            <circle cx='12' cy='12' r='2' fill='#10B981'/>
+            <path d='M6 12H8M16 12H18' stroke='#10B981' stroke-width='2' stroke-linecap='round'/>
+        </svg>";
+    }
+
+    private static string GetFileTextIcon()
+    {
+        return @"<svg width='20' height='20' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+            <path d='M4 4H20V20H4V4Z' stroke='#374151' stroke-width='1.5'/>
+            <path d='M8 8H16M8 12H16M8 16H12' stroke='#374151' stroke-width='1.5' stroke-linecap='round'/>
+        </svg>";
+    }
+
+    private static string GetShieldIcon()
+    {
+        return @"<svg width='40' height='40' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg' style='margin: 0 auto;'>
+            <path d='M12 2L3 6V12C3 16.97 7.03 21 12 21C16.97 21 21 16.97 21 12V6L12 2Z' stroke='#FFFFFF' stroke-width='1.5' fill='rgba(255, 255, 255, 0.2)'/>
+            <path d='M12 7V12M12 16H12.01' stroke='#FFFFFF' stroke-width='1.5' stroke-linecap='round'/>
+        </svg>";
+    }
+
+    private static string GetBrainIcon()
+    {
+        return @"<svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+            <path d='M12 4C8 4 6 6 6 8C6 10 8 12 12 12C16 12 18 10 18 8C18 6 16 4 12 4Z' stroke='#0284C7' stroke-width='1.5' fill='rgba(2, 132, 199, 0.1)'/>
+            <path d='M7 12C4 12 3 14 3 16C3 18 5 19 7 19' stroke='#0284C7' stroke-width='1.5'/>
+            <path d='M17 12C20 12 21 14 21 16C21 18 19 19 17 19' stroke='#0284C7' stroke-width='1.5'/>
+            <path d='M9 19V15M15 19V15' stroke='#0284C7' stroke-width='1.5' stroke-linecap='round'/>
+            <circle cx='9' cy='17' r='1' fill='#0284C7'/>
+            <circle cx='15' cy='17' r='1' fill='#0284C7'/>
+        </svg>";
+    }
+
+    private static string GetFlagIcon()
+    {
+        return @"<svg width='20' height='20' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+            <path d='M4 3V21' stroke='#0369A1' stroke-width='1.5' stroke-linecap='round'/>
+            <path d='M4 3H16L18 8L16 13H4' stroke='#0369A1' stroke-width='1.5' fill='rgba(3, 105, 161, 0.1)'/>
+        </svg>";
+    }
+
+    #endregion
+
+    // Core email sending method
     private async Task SendEmailAsync(string toEmail, string subject, string htmlBody, CancellationToken cancellationToken)
     {
         try
@@ -480,7 +765,7 @@ public sealed class EmailService : IEmailService
         }
     }
 
-    // ✅ FIXED: Email with attachment - Now uses configuration instead of undefined variables
+    // Email with attachment method
     private async Task SendEmailWithAttachmentAsync(string toEmail, string subject, string htmlBody, byte[] attachment, string attachmentName, CancellationToken cancellationToken)
     {
         try

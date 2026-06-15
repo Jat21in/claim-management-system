@@ -111,7 +111,7 @@ public sealed class GrokAiVerificationService : IAiVerificationService
         - validationPassed (array of strings, list what checks passed)
 
         Rules:
-        - Auto-approve if confidenceScore > 90
+        - Auto-approve if confidenceScore > 75
         - Reject if confidenceScore < 30
         - ManualReview otherwise
         - Consider: amount vs coverage, claim date within plan validity, description quality, member claim history, any red flags (fraud keywords, excessive amount).";

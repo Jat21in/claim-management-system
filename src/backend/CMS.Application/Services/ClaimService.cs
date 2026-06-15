@@ -15,6 +15,7 @@ public sealed class ClaimService : IClaimService
     private readonly IAiVerificationService _aiVerificationService;
     private readonly IFileStorageService _fileStorageService;
     private readonly ILogger<ClaimService> _logger;
+    private readonly IEmailService _emailService;
 
     public ClaimService(
         IMemberRepository memberRepository,
@@ -22,6 +23,7 @@ public sealed class ClaimService : IClaimService
         IPlanRepository planRepository,
         IAiVerificationService aiVerificationService,
         IFileStorageService fileStorageService,
+        IEmailService emailService,
         ILogger<ClaimService> logger)
     {
         _memberRepository = memberRepository;
@@ -29,6 +31,7 @@ public sealed class ClaimService : IClaimService
         _planRepository = planRepository;
         _aiVerificationService = aiVerificationService;
         _fileStorageService = fileStorageService;
+        _emailService = emailService;
         _logger = logger;
     }
 
@@ -55,11 +58,9 @@ public sealed class ClaimService : IClaimService
             var allowedTypes = new[] { "image/jpeg", "image/png", "image/jpg", "application/pdf" };
             if (!allowedTypes.Contains(request.MedicalReport.ContentType))
                 throw new InvalidOperationException("Only JPEG, PNG, and PDF files are allowed");
-
-            // We'll save after claim is created to use ClaimId
         }
 
-        // Create claim (initially without file)
+        // request.ClaimDate is already DateTime, use directly
         var claim = member.SubmitClaim(
             new Money(request.Amount),
             request.ClaimDate,
@@ -103,7 +104,7 @@ public sealed class ClaimService : IClaimService
             MemberId = memberId,
             ClaimAmount = request.Amount,
             ClaimDate = request.ClaimDate,
-            Description = enhancedDescription, // Enhanced with file content
+            Description = enhancedDescription,
             PlanContext = new PlanContextDto
             {
                 PlanName = member.ActivePlan.Name,
@@ -125,9 +126,10 @@ public sealed class ClaimService : IClaimService
         };
 
         // Run AI verification
+        AiVerificationResponse? aiResult = null;
         try
         {
-            var aiResult = await _aiVerificationService.VerifyClaimAsync(aiRequest, ct);
+            aiResult = await _aiVerificationService.VerifyClaimAsync(aiRequest, ct);
 
             claim.UpdateAiVerification(
                 aiResult.ConfidenceScore,
@@ -145,6 +147,35 @@ public sealed class ClaimService : IClaimService
         catch (Exception ex)
         {
             _logger.LogError(ex, "AI verification failed for claim {ClaimId}", claim.ClaimId);
+        }
+
+        // Send email notification to user
+        try
+        {
+            var memberInfo = await _memberRepository.GetByIdAsync(memberId, ct);
+            if (memberInfo != null && !string.IsNullOrEmpty(memberInfo.Email))
+            {
+                await _emailService.SendClaimStatusUpdateEmailAsync(
+                    memberInfo.Email,
+                    memberInfo.FullName,
+                    claim.ClaimId.ToString(),
+                    request.Amount,
+                    request.ClaimDate, // Already DateTime, use directly
+                    request.Description ?? string.Empty,
+                    claim.Status.ToString(),
+                    aiResult?.ConfidenceScore,
+                    aiResult?.Decision ?? "Pending",
+                    aiResult?.Reasoning ?? "AI verification in progress",
+                    ct);
+
+                _logger.LogInformation("Claim status email sent to {Email} for claim {ClaimId}",
+                    memberInfo.Email, claim.ClaimId);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Don't fail the claim processing if email fails
+            _logger.LogError(ex, "Failed to send claim status email for claim {ClaimId}", claim.ClaimId);
         }
 
         return claim.ClaimId;
@@ -181,9 +212,9 @@ public sealed class ClaimService : IClaimService
     }
 
     public async Task<ClaimPaymentResult> ProcessClaimPaymentAsync(
-    Guid claimId,
-    ProcessClaimPaymentRequest request,
-    CancellationToken cancellationToken)
+        Guid claimId,
+        ProcessClaimPaymentRequest request,
+        CancellationToken cancellationToken)
     {
         var claim = await _claimRepository.GetByIdAsync(
             claimId,
@@ -209,6 +240,37 @@ public sealed class ClaimService : IClaimService
         await _claimRepository.UpdateAsync(
             claim,
             cancellationToken);
+
+        // Send payment confirmation email
+        try
+        {
+            var member = await _memberRepository.GetByIdAsync(claim.MemberId, cancellationToken);
+            if (member != null && !string.IsNullOrEmpty(member.Email))
+            {
+                // Convert DateOnly to DateTime for email
+                var claimDateForEmail = claim.ClaimDate.ToDateTime(TimeOnly.MinValue);
+
+                await _emailService.SendClaimStatusUpdateEmailAsync(
+                    member.Email,
+                    member.FullName,
+                    claim.ClaimId.ToString(),
+                    claim.ClaimAmount.Amount,
+                    claimDateForEmail,
+                    claim.Description ?? string.Empty,
+                    claim.Status.ToString(),
+                    claim.AiConfidenceScore,
+                    claim.AiDecision ?? "Approved",
+                    claim.AiReasoning ?? "Claim approved and payment processed",
+                    cancellationToken);
+
+                _logger.LogInformation("Payment confirmation email sent to {Email} for claim {ClaimId}",
+                    member.Email, claim.ClaimId);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send payment confirmation email for claim {ClaimId}", claim.ClaimId);
+        }
 
         _logger.LogInformation(
             "Claim payment processed successfully for ClaimId: {ClaimId}",
