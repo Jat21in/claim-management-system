@@ -17,13 +17,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          submodules: false  # ← CHANGED THIS
+          submodules: false
           lfs: false
           
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22'  # ← CHANGED FROM '18' TO '22'
           
       - name: Install Dependencies
         run: |
