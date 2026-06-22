@@ -27,7 +27,11 @@ public sealed class PlanService : IPlanService
             DurationInMonths = p.DurationInMonths,
             Features = JsonSerializer.Deserialize<string[]>(p.FeaturesJson)
                        ?? Array.Empty<string>(),
-            IsFeatured = p.IsFeatured
+            IsFeatured = p.IsFeatured,
+            BasePremiumAnnual = p.BasePremiumAnnual, // ✅ NOW INCLUDED
+            DependentLoadingPercentage = p.DependentLoadingPercentage,
+            MaxDependentsAllowed = p.MaxDependentsAllowed,
+            MaxNomineesAllowed = p.MaxNomineesAllowed
         }).ToList();
     }
 
@@ -47,7 +51,11 @@ public sealed class PlanService : IPlanService
             DurationInMonths = p.DurationInMonths,
             Features = JsonSerializer.Deserialize<string[]>(p.FeaturesJson)
                        ?? Array.Empty<string>(),
-            IsFeatured = p.IsFeatured
+            IsFeatured = p.IsFeatured,
+            BasePremiumAnnual = p.BasePremiumAnnual, // ✅ NOW INCLUDED
+            DependentLoadingPercentage = p.DependentLoadingPercentage,
+            MaxDependentsAllowed = p.MaxDependentsAllowed,
+            MaxNomineesAllowed = p.MaxNomineesAllowed
         };
     }
 }

@@ -1,7 +1,8 @@
 <div class="pricing-wrapper" (mousemove)="onMouseMove($event)" (mouseleave)="resetGlow()">
 
     <!-- ✅ CURSOR GLOW -->
-    <div class="cursor-glow" [style.transform]="'translate(' + glowX + 'px,' + glowY + 'px) translate(-50%, -50%)'" [style.background]="'radial-gradient(circle,' + glowColor + ' 0%, rgba(99,102,241,0.25) 25%, transparent 70%)'">
+    <div class="cursor-glow" [style.transform]="'translate(' + glowX + 'px,' + glowY + 'px) translate(-50%, -50%)'"
+        [style.background]="'radial-gradient(circle,' + glowColor + ' 0%, rgba(99,102,241,0.25) 25%, transparent 70%)'">
     </div>
 
     <!-- ✅ HERO (UNCHANGED ✅) -->
@@ -66,16 +67,14 @@
         <span [class.active]="billing === 'monthly'">Monthly</span>
 
         <label class="switch">
-      <input type="checkbox"
-             [checked]="billing === 'yearly'"
-             (change)="toggleBilling($event)" />
-      <span class="slider"></span>
-    </label>
+            <input type="checkbox" [checked]="billing === 'yearly'" (change)="toggleBilling($event)" />
+            <span class="slider"></span>
+        </label>
 
         <div class="yearly-wrapper">
             <span class="discount-badge" *ngIf="billing === 'yearly'" [class.animate]="priceChanging">
-        15% off
-      </span>
+                15% off
+            </span>
         </div>
 
         <span [class.active]="billing === 'yearly'">Yearly</span>
@@ -84,7 +83,8 @@
     <!-- ✅ ✅ PLANS (UPDATED WITH API + DYNAMIC RENDERING) -->
     <div class="pricing-grid" *ngIf="plans.length > 0">
 
-        <div class="pricing-card" *ngFor="let plan of plans; let i = index" [class.popular-card]="i === 1" (mouseenter)="setGlowColor(i === 1 ? 'silver' : i === 0 ? 'gold' : 'blue')" (mouseleave)="resetGlowColor()">
+        <div class="pricing-card" *ngFor="let plan of plans; let i = index" [class.popular-card]="i === 1"
+            (mouseenter)="setGlowColor(i === 1 ? 'silver' : i === 0 ? 'gold' : 'blue')" (mouseleave)="resetGlowColor()">
 
             <div class="best-value-badge" *ngIf="i === 1">Best Value</div>
 
@@ -95,8 +95,8 @@
                 <!-- <span class="currency"></span> -->
                 <span class="amount">{{ formatPlanPremium(plan) }}</span>
                 <span class="billing">
-          / {{ billing === 'monthly' ? 'month' : 'year' }}
-        </span>
+                    / {{ billing === 'monthly' ? 'month' : 'year' }}
+                </span>
             </div>
 
             <div class="price-row">
@@ -173,80 +173,23 @@
             <tbody>
                 <tr>
                     <td>Coverage Amount</td>
-                    <td>{{ formatCurrency(getCoverageByName('Essential Care Plan')) }}</td>
-                    <td>{{ formatCurrency(getCoverageByName('Health Pro Plus')) }}</td>
-                    <td>{{ formatCurrency(getCoverageByName('Advanced Care Plus Plan')) }}</td>
-                    <td>{{ formatCurrency(getCoverageByName('Elite Family Protection Plan')) }}</td>
+                    <td *ngFor="let plan of plans">{{ plan.insuredAmount | currency:'INR':'symbol':'1.0-0' }}</td>
                 </tr>
                 <tr>
-                    <td>Doctor Consultations</td>
-                    <td>{{ getConfigByPlanName('Essential Care Plan')?.doctorConsultations || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Health Pro Plus')?.doctorConsultations || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.doctorConsultations || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.doctorConsultations || '-' }}</td>
-                </tr>
-                <tr>
-                    <td>Hospitalization</td>
-                    <td>{{ getConfigByPlanName('Essential Care Plan')?.hospitalization || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Health Pro Plus')?.hospitalization || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.hospitalization || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.hospitalization || '-' }}</td>
-                </tr>
-                <tr>
-                    <td>Maternity Cover</td>
-                    <td>{{ getConfigByPlanName('Essential Care Plan')?.maternityCover ? '✅' : '❌' }}</td>
-                    <td>{{ getConfigByPlanName('Health Pro Plus')?.maternityCover ? '✅' : '❌' }}</td>
-                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.maternityCover ? '✅' : '❌' }}</td>
-                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.maternityCover ? '✅' : '❌' }}</td>
-                </tr>
-                <tr>
-                    <td>Preventive Checkups</td>
-                    <td>{{ getConfigByPlanName('Essential Care Plan')?.healthCheckup ? '✅' : '❌' }}</td>
-                    <td>{{ getConfigByPlanName('Health Pro Plus')?.healthCheckup ? '✅' : '❌' }}</td>
-                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.healthCheckup ? '✅' : '❌' }}</td>
-                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.healthCheckup ? '✅' : '❌' }}</td>
-                </tr>
-                <tr>
-                    <td>Emergency Care</td>
-                    <td>{{ getConfigByPlanName('Essential Care Plan')?.emergencyCare ? '✅' : '❌' }}</td>
-                    <td>{{ getConfigByPlanName('Health Pro Plus')?.emergencyCare ? '✅' : '❌' }}</td>
-                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.emergencyCare ? '✅' : '❌' }}</td>
-                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.emergencyCare ? '✅' : '❌' }}</td>
+                    <td>Duration</td>
+                    <td *ngFor="let plan of plans">{{ plan.durationInMonths }} months</td>
                 </tr>
                 <tr>
                     <td>Family Coverage</td>
-                    <td>{{ getConfigByPlanName('Essential Care Plan')?.familyCoverage || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Health Pro Plus')?.familyCoverage || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.familyCoverage || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.familyCoverage || '-' }}</td>
+                    <td *ngFor="let plan of plans">{{ plan.insuredAmount >= 500000 ? '✅' : '❌' }}</td>
                 </tr>
                 <tr>
                     <td>Max Dependents</td>
-                    <td>{{ getConfigByPlanName('Essential Care Plan')?.maxDependents ?? '-' }}</td>
-                    <td>{{ getConfigByPlanName('Health Pro Plus')?.maxDependents ?? '-' }}</td>
-                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.maxDependents ?? '-' }}</td>
-                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.maxDependents ?? '-' }}</td>
+                    <td *ngFor="let plan of plans">{{ plan.maxDependentsAllowed }}</td>
                 </tr>
                 <tr>
-                    <td>Cashless Hospitals</td>
-                    <td>{{ getConfigByPlanName('Essential Care Plan')?.cashlessHospitals || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Health Pro Plus')?.cashlessHospitals || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.cashlessHospitals || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.cashlessHospitals || '-' }}</td>
-                </tr>
-                <tr>
-                    <td>Claim Settlement</td>
-                    <td>{{ getConfigByPlanName('Essential Care Plan')?.claimSettlement || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Health Pro Plus')?.claimSettlement || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.claimSettlement || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.claimSettlement || '-' }}</td>
-                </tr>
-                <tr>
-                    <td>No Claim Bonus</td>
-                    <td>{{ getConfigByPlanName('Essential Care Plan')?.noClaimBonusLabel === 'No' ? '❌' : getConfigByPlanName('Essential Care Plan')?.noClaimBonusLabel || '❌' }}</td>
-                    <td>{{ getConfigByPlanName('Health Pro Plus')?.noClaimBonusLabel || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Advanced Care Plus Plan')?.noClaimBonusLabel || '-' }}</td>
-                    <td>{{ getConfigByPlanName('Elite Family Protection Plan')?.noClaimBonusLabel || '-' }}</td>
+                    <td>Max Nominees</td>
+                    <td *ngFor="let plan of plans">{{ plan.maxNomineesAllowed }}</td>
                 </tr>
             </tbody>
         </table>
