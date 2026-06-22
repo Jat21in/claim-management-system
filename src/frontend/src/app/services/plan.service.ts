@@ -16,6 +16,7 @@ export interface PublicPlan {
   dependentLoadingPercentage: number;
   maxDependentsAllowed: number;
   maxNomineesAllowed: number;
+  isFamilyFloater: boolean; // ✅ ADD THIS
 }
 
 @Injectable({ providedIn: 'root' })

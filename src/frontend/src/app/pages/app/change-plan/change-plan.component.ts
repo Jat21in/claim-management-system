@@ -33,30 +33,7 @@ export class ChangePlanComponent implements OnInit {
   isDowngrade = false;
 
   ngOnInit(): void {
-    this.loadCurrentPlan();
     this.loadPlans();
-  }
-
-  private loadCurrentPlan(): void {
-    this.memberService.getDashboard().subscribe({
-      next: (res) => {
-        if (res.activePlan) {
-          this.currentPlan = {
-            planId: res.activePlan.id,
-            name: res.activePlan.name,
-            description: 'Your current active plan',
-            insuredAmount: res.activePlan.insuredAmount,
-            durationInMonths: 12,
-            features: [],
-            isFeatured: false
-          };
-        }
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        console.error('Failed to load current plan');
-      }
-    });
   }
 
   private loadPlans(): void {
@@ -73,12 +50,48 @@ export class ChangePlanComponent implements OnInit {
         next: (plans) => {
           this.plans = plans;
           console.log('Plans loaded:', plans);
+          this.loadCurrentPlan();
         },
         error: () => {
           this.loadError = 'Failed to load plans. Please try again.';
           this.cdr.markForCheck();
         }
       });
+  }
+
+  private loadCurrentPlan(): void {
+    this.memberService.getDashboard().subscribe({
+      next: (res) => {
+        // ✅ Fixed: safe navigation with optional chaining
+        if (res?.activePlan) {
+          const fullPlan = this.plans.find(p => p.planId === res.activePlan?.id);
+          
+          if (fullPlan) {
+            this.currentPlan = fullPlan;
+          } else {
+            // ✅ Fallback with all required fields
+            this.currentPlan = {
+              planId: res.activePlan.id,
+              name: res.activePlan.name,
+              description: 'Your current active plan',
+              insuredAmount: res.activePlan.insuredAmount,
+              durationInMonths: 12,
+              features: [],
+              isFeatured: false,
+              basePremiumAnnual: 0,
+              dependentLoadingPercentage: 0,
+              maxDependentsAllowed: 0,
+              maxNomineesAllowed: 0,
+              isFamilyFloater: false
+            };
+          }
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        console.error('Failed to load current plan');
+      }
+    });
   }
 
   selectPlan(plan: PublicPlan): void {
@@ -115,8 +128,6 @@ export class ChangePlanComponent implements OnInit {
         next: () => {
           this.success = `Successfully upgraded to ${this.selectedPlanForConfirm!.name}!`;
           this.showConfirmModal = false;
-
-          // Update current plan
           this.currentPlan = this.selectedPlanForConfirm;
           this.selectedPlanId = null;
 
