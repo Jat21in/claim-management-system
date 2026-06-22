@@ -20,21 +20,6 @@ jobs:
           submodules: false
           lfs: false
           
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '22'  # ← CHANGED FROM '18' TO '22'
-          
-      - name: Install Dependencies
-        run: |
-          cd src/frontend
-          npm install
-          
-      - name: Build Angular App
-        run: |
-          cd src/frontend
-          npm run build -- --configuration=production
-          
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -42,17 +27,6 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_SALMON_DESERT_0E09F5300 }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "src/frontend"
-          output_location: "dist/cms-frontend"
-
-  close_pull_request_job:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    name: Close Pull Request Job
-    steps:
-      - name: Close Pull Request
-        id: closepullrequest
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_SALMON_DESERT_0E09F5300 }}
-          action: "close"
+          app_location: "/src/frontend"
+          output_location: "dist/cms-frontend/browser"  # ← THIS IS THE FIX
+          skip_app_build: false
