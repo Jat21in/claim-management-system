@@ -57,13 +57,17 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// ✅ CORS - Allow both local and Azure frontend
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
         policy =>
         {
             policy
-                .WithOrigins("http://localhost:4200")
+                .WithOrigins(
+                    "http://localhost:4200",
+                    "https://salmon-desert-0e09f5300.7.azurestaticapps.net"
+                )
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
@@ -104,10 +108,15 @@ builder.Services.AddLogging();
 var app = builder.Build();
 
 // ✅ Serve uploaded files
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
+
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(builder.Environment.ContentRootPath, "Uploads")),
+    FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/uploads"
 });
 
@@ -136,33 +145,45 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
-// ✅ Register recurring jobs using IRecurringJobManager (not static RecurringJob)
-using (var scope = app.Services.CreateScope())
+// ✅ REGISTER RECURRING JOBS ONLY IF ENABLED VIA ENVIRONMENT VARIABLE
+// Set Hangfire__EnableRecurringJobs=false in Azure App Settings to disable
+var enableRecurringJobs = builder.Configuration.GetValue<bool>("Hangfire:EnableRecurringJobs", true);
+
+if (enableRecurringJobs)
 {
-    var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
-    var gracePeriodService = scope.ServiceProvider.GetRequiredService<IGracePeriodService>();
-    var paymentService = scope.ServiceProvider.GetRequiredService<IPaymentService>();
+    using (var scope = app.Services.CreateScope())
+    {
+        var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+        var gracePeriodService = scope.ServiceProvider.GetRequiredService<IGracePeriodService>();
+        var paymentService = scope.ServiceProvider.GetRequiredService<IPaymentService>();
 
-    // Clear existing jobs first (prevents duplicates on restart)
-    recurringJobManager.RemoveIfExists("check-overdue-payments");
-    recurringJobManager.RemoveIfExists("send-grace-reminders");
-    recurringJobManager.RemoveIfExists("check-lapsed-policies");
+        // Clear existing jobs first (prevents duplicates on restart)
+        recurringJobManager.RemoveIfExists("check-overdue-payments");
+        recurringJobManager.RemoveIfExists("send-grace-reminders");
+        recurringJobManager.RemoveIfExists("check-lapsed-policies");
 
-    // Add recurring jobs
-    recurringJobManager.AddOrUpdate(
-        "check-overdue-payments",
-        () => gracePeriodService.CheckAndUpdateOverduePaymentsAsync(CancellationToken.None),
-        Cron.Daily);
+        // Add recurring jobs
+        recurringJobManager.AddOrUpdate(
+            "check-overdue-payments",
+            () => gracePeriodService.CheckAndUpdateOverduePaymentsAsync(CancellationToken.None),
+            Cron.Daily);
 
-    recurringJobManager.AddOrUpdate(
-        "send-grace-reminders",
-        () => gracePeriodService.SendGracePeriodRemindersAsync(CancellationToken.None),
-        Cron.Daily(9));
+        recurringJobManager.AddOrUpdate(
+            "send-grace-reminders",
+            () => gracePeriodService.SendGracePeriodRemindersAsync(CancellationToken.None),
+            Cron.Daily(9));
 
-    recurringJobManager.AddOrUpdate(
-        "check-lapsed-policies",
-        () => paymentService.CheckOverduePaymentsAndLapsePoliciesAsync(CancellationToken.None),
-        Cron.Daily(1));
+        recurringJobManager.AddOrUpdate(
+            "check-lapsed-policies",
+            () => paymentService.CheckOverduePaymentsAndLapsePoliciesAsync(CancellationToken.None),
+            Cron.Daily(1));
+    }
+}
+else
+{
+    // Log that recurring jobs are disabled
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("✅ Hangfire recurring jobs are DISABLED via environment variable.");
 }
 
 app.MapControllers();
