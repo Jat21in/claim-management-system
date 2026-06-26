@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CMS.Infrastructure.Migrations
 {
     [DbContext(typeof(CmsDbContext))]
-    [Migration("20260601085111_AddPhoneNumberToMember")]
-    partial class AddPhoneNumberToMember
+    [Migration("20260626055533_PurwaFixedDb")]
+    partial class PurwaFixedDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -30,6 +30,9 @@ namespace CMS.Infrastructure.Migrations
                     b.Property<Guid>("ClaimId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("AdmissionDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<double?>("AiConfidenceScore")
                         .HasPrecision(5, 2)
@@ -60,6 +63,24 @@ namespace CMS.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("Diagnosis")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DischargeDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DoctorName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("HospitalId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("HospitalName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsPreAuthorization")
+                        .HasColumnType("bit");
+
                     b.Property<string>("MedicalReportContentType")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -78,11 +99,23 @@ namespace CMS.Infrastructure.Migrations
                     b.Property<Guid>("MemberId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("PaymentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PaymentMode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentReferenceNumber")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("PlanId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TreatmentType")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -232,7 +265,8 @@ namespace CMS.Infrastructure.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("RejectionReason")
                         .HasColumnType("nvarchar(max)");
@@ -255,6 +289,87 @@ namespace CMS.Infrastructure.Migrations
                     b.HasIndex("ActivePlanId");
 
                     b.ToTable("Members");
+                });
+
+            modelBuilder.Entity("CMS.Domain.Entities.NetworkHospital", b =>
+                {
+                    b.Property<Guid>("HospitalId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("CashlessLimit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("ConsultationFee")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ContactNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EmpanelmentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EmpanelmentEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("HospitalName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PinCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("RegistrationNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("RoomRates")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Specializations")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("HospitalId");
+
+                    b.HasIndex("RegistrationNumber")
+                        .IsUnique();
+
+                    b.HasIndex("City", "IsActive");
+
+                    b.ToTable("NetworkHospitals", (string)null);
                 });
 
             modelBuilder.Entity("CMS.Domain.Entities.Nominee", b =>
@@ -306,10 +421,26 @@ namespace CMS.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal>("AgeLoadingPercentage")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("BasePremiumAnnual")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal>("CorporateDiscountPercentage")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("DependentLoadingPercentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -333,15 +464,47 @@ namespace CMS.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsFamilyFloater")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("bit");
+
+                    b.Property<decimal>("LocationRiskMultiplier")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("MaxDependentsAllowed")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxNomineesAllowed")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<decimal>("PreExistingConditionLoading")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.PrimitiveCollection<string>("RequiredKycDocuments")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequiredKycDocumentsJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("SmokerLoadingPercentage")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("PlanId");
@@ -374,12 +537,21 @@ namespace CMS.Infrastructure.Migrations
                     b.Property<DateTime?>("LapsedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<decimal?>("LastPaymentAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("LastPaymentDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("MemberId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("MonthlyPremium")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("NextPremiumDueDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("PlanId")
                         .HasColumnType("uniqueidentifier");
@@ -469,6 +641,36 @@ namespace CMS.Infrastructure.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("PremiumPayments", (string)null);
+                });
+
+            modelBuilder.Entity("CMS.Domain.Entities.RatingFactor", b =>
+                {
+                    b.Property<Guid>("RatingFactorId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("FactorName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("Percentage")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("PlanId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("RatingFactorId");
+
+                    b.HasIndex("PlanId");
+
+                    b.ToTable("RatingFactors", (string)null);
                 });
 
             modelBuilder.Entity("CMS.Domain.Entities.Claim", b =>
@@ -601,9 +803,21 @@ namespace CMS.Infrastructure.Migrations
                     b.Navigation("Policy");
                 });
 
+            modelBuilder.Entity("CMS.Domain.Entities.RatingFactor", b =>
+                {
+                    b.HasOne("CMS.Domain.Entities.Plan", null)
+                        .WithMany("RatingFactors")
+                        .HasForeignKey("PlanId");
+                });
+
             modelBuilder.Entity("CMS.Domain.Entities.Member", b =>
                 {
                     b.Navigation("Claims");
+                });
+
+            modelBuilder.Entity("CMS.Domain.Entities.Plan", b =>
+                {
+                    b.Navigation("RatingFactors");
                 });
 
             modelBuilder.Entity("CMS.Domain.Entities.Policy", b =>
