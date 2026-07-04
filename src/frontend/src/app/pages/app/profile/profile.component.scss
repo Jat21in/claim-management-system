@@ -426,3 +426,187 @@ ul {
         grid-template-columns: 1fr;
     }
 }
+
+// ============================================
+// PHOTO UPLOAD STYLES
+// ============================================
+
+.photo-section {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(34, 211, 238, 0.03);
+}
+
+.photo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.photo-wrapper {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid rgba(34, 211, 238, 0.3);
+    flex-shrink: 0;
+
+    .profile-photo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .photo-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #22D3EE, #06b6d4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        font-weight: 700;
+        color: #0B1220;
+    }
+
+    .photo-upload-btn {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 32px;
+        height: 32px;
+        background: #22D3EE;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid rgba(11, 18, 32, 0.9);
+
+        svg {
+            width: 16px;
+            height: 16px;
+            color: #0B1220;
+        }
+
+        &:hover {
+            transform: scale(1.1);
+            background: #06b6d4;
+        }
+
+        input {
+            display: none;
+        }
+    }
+}
+
+.photo-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+
+    .btn-upload {
+        padding: 6px 20px;
+        background: #22D3EE;
+        border: none;
+        border-radius: 8px;
+        color: #0B1220;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover:not(:disabled) {
+            background: #06b6d4;
+            transform: scale(1.02);
+        }
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    }
+
+    .btn-cancel-photo {
+        padding: 6px 16px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        color: #9ca3af;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+    }
+}
+
+.btn-remove-photo {
+    padding: 4px 16px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    color: #f87171;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+
+    &:hover {
+        background: rgba(239, 68, 68, 0.25);
+    }
+}
+
+.photo-hint {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+// Profile Avatar with Image
+.profile-avatar {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 16px;
+    
+    .profile-avatar-image {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(34, 211, 238, 0.3);
+    }
+    
+    .avatar-initials {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #22D3EE, #06b6d4);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        font-weight: 700;
+        color: #0B1220;
+        border: 3px solid rgba(34, 211, 238, 0.3);
+    }
+    
+    .avatar-status {
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        width: 16px;
+        height: 16px;
+        background: #6b7280;
+        border: 2px solid rgba(11, 18, 32, 0.9);
+        border-radius: 50%;
+        
+        &.verified {
+            background: #4ade80;
+        }
+    }
+}

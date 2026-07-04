@@ -7,6 +7,7 @@ import { environment } from '../../environments/environment';
 export interface MemberDashboardResponse {
   fullName: string;
   email: string;
+  profilePhotoUrl?: string;
   activePlan: {
     id: string;
     name: string;
@@ -14,11 +15,10 @@ export interface MemberDashboardResponse {
     startDate: string;
     endDate: string;
   } | null;
-  activePolicyId?: string;      // ✅ Add this
-  activePolicyNumber?: string;   // ✅ Add this
+  activePolicyId?: string;
+  activePolicyNumber?: string;
 }
 
-// NEW: Policy Summary from new system
 export interface PolicySummary {
   hasActivePolicy: boolean;
   policyNumber?: string;
@@ -44,102 +44,83 @@ export interface UpdateProfileRequest {
   contactNumber: string;
 }
 
+export interface ProfileResponse {
+  memberId: string;
+  fullName: string;
+  email: string;
+  dateOfBirth: string;
+  phoneNumber?: string;
+  profilePhotoUrl?: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    country: string;
+    postalCode: string;
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class MemberService {
   private http = inject(HttpClient);
+  private base = `${environment.apiBaseUrl}/v1/members`;
 
-  // Existing endpoint (for backward compatibility)
+  // ✅ Get dashboard
   getDashboard(): Observable<MemberDashboardResponse> {
     console.log('📡 API CALL: getDashboard');
+    return this.http.get<MemberDashboardResponse>(`${this.base}/me`);
+  }
 
-    return this.http.get<MemberDashboardResponse>(
-      `${environment.apiBaseUrl}/v1/members/me`
+  // ✅ Get full profile (with photo)
+  getMyProfile(): Observable<ProfileResponse> {
+    return this.http.get<ProfileResponse>(`${this.base}/profile`);
+  }
+
+  // ✅ Update profile
+  updateProfile(payload: UpdateProfileRequest): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${this.base}/profile`, payload);
+  }
+
+  // ✅ Upload profile photo
+  uploadProfilePhoto(file: File): Observable<{ photoUrl: string; message: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ photoUrl: string; message: string }>(
+      `${this.base}/profile-photo`,
+      formData
     );
   }
 
-  // NEW: Get enhanced dashboard with policy data
-  getEnhancedDashboard(): Observable<any> {
+  // ✅ Remove profile photo
+  removeProfilePhoto(): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.base}/profile-photo`);
+  }
 
-    // Try to get enhanced data, fallback gracefully
+  // ✅ Get enhanced dashboard with policy data
+  getEnhancedDashboard(): Observable<any> {
     return forkJoin({
       member: this.getDashboard(),
-
       policySummary: this.http
-        .get<PolicySummary>(
-          `${environment.apiBaseUrl}/v1/policies/summary`
-        )
-        .pipe(
-          catchError((error) => {
-            console.warn('⚠️ Policy summary API failed:', error);
-            return of(null);
-          })
-        ),
-
+        .get<PolicySummary>(`${environment.apiBaseUrl}/v1/policies/summary`)
+        .pipe(catchError(() => of(null))),
       dependents: this.http
-        .get<any[]>(
-          `${environment.apiBaseUrl}/v1/policies/dependents`
-        )
-        .pipe(
-          catchError((error) => {
-            console.warn('⚠️ Dependents API failed:', error);
-            return of([]);
-          })
-        ),
-
+        .get<any[]>(`${environment.apiBaseUrl}/v1/policies/dependents`)
+        .pipe(catchError(() => of([]))),
       nominees: this.http
-        .get<any[]>(
-          `${environment.apiBaseUrl}/v1/policies/nominees`
-        )
-        .pipe(
-          catchError((error) => {
-            console.warn('⚠️ Nominees API failed:', error);
-            return of([]);
-          })
-        ),
-
+        .get<any[]>(`${environment.apiBaseUrl}/v1/policies/nominees`)
+        .pipe(catchError(() => of([]))),
       kycStatus: this.http
-        .get<any>(
-          `${environment.apiBaseUrl}/v1/kyc/status`
-        )
-        .pipe(
-          catchError((error) => {
-            console.warn('⚠️ KYC status API failed:', error);
-            return of(null);
-          })
-        )
+        .get<any>(`${environment.apiBaseUrl}/v1/kyc/status`)
+        .pipe(catchError(() => of(null)))
     }).pipe(
-      map((data) => {
-        return {
-          ...data,
-
-          // Easy access helpers for UI
-          hasPolicy:
-            data.policySummary?.hasActivePolicy ?? false,
-
-          activePlanName:
-            data.policySummary?.planName ||
-            data.member?.activePlan?.name ||
-            'No Active Plan',
-
-          insuredAmount:
-            data.policySummary?.sumInsured ||
-            data.member?.activePlan?.insuredAmount ||
-            0,
-
-          dependentsCount:
-            data.dependents?.length || 0,
-
-          nomineesCount:
-            data.nominees?.length || 0
-        };
-      })
-    );
-  }
-
-  updateProfile(payload: UpdateProfileRequest) {
-    return this.http.put(
-      `${environment.apiBaseUrl}/v1/members/profile`,
-      payload
+      map((data) => ({
+        ...data,
+        hasPolicy: data.policySummary?.hasActivePolicy ?? false,
+        activePlanName: data.policySummary?.planName || data.member?.activePlan?.name || 'No Active Plan',
+        insuredAmount: data.policySummary?.sumInsured || data.member?.activePlan?.insuredAmount || 0,
+        dependentsCount: data.dependents?.length || 0,
+        nomineesCount: data.nominees?.length || 0
+      }))
     );
   }
 }

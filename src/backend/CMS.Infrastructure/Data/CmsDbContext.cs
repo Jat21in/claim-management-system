@@ -21,13 +21,7 @@ public sealed class CmsDbContext : DbContext
     public DbSet<KycDocument> KycDocuments => Set<KycDocument>();
     public DbSet<NetworkHospital> NetworkHospitals => Set<NetworkHospital>();
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        base.OnConfiguring(optionsBuilder);
-
-        optionsBuilder.UseQueryTrackingBehavior(
-            QueryTrackingBehavior.NoTracking);
-    }
+    // ✅ REMOVE OnConfiguring - it overrides the connection string
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -70,7 +64,6 @@ public sealed class CmsDbContext : DbContext
             entity.Property(e => e.ConsultationFee)
                 .HasPrecision(18, 2);
 
-            // ✅ Specializations Converter + Comparer
             entity.Property(e => e.Specializations)
                 .HasConversion(
                     v => string.Join(',', v),
@@ -83,41 +76,21 @@ public sealed class CmsDbContext : DbContext
                             (a, v) => HashCode.Combine(a, v.GetHashCode())),
                         c => c.ToArray()));
 
-            // ✅ RoomRates Converter + Comparer
             entity.Property(e => e.RoomRates)
                 .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(
-                        v,
-                        (System.Text.Json.JsonSerializerOptions?)null),
-
-                    v => System.Text.Json.JsonSerializer.Deserialize
-                        <Dictionary<string, decimal>>(
-                            v,
-                            (System.Text.Json.JsonSerializerOptions?)null)
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (System.Text.Json.JsonSerializerOptions?)null)
                          ?? new Dictionary<string, decimal>())
                 .Metadata.SetValueComparer(
                     new ValueComparer<Dictionary<string, decimal>>(
                         (c1, c2) => c1!.SequenceEqual(c2!),
-
-                        c => c.Aggregate(
-                            0,
-                            (a, v) => HashCode.Combine(
-                                a,
-                                v.Key.GetHashCode(),
-                                v.Value.GetHashCode())),
-
-                        c => c.ToDictionary(
-                            entry => entry.Key,
-                            entry => entry.Value)));
+                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.Key.GetHashCode(), v.Value.GetHashCode())),
+                        c => c.ToDictionary(entry => entry.Key, entry => entry.Value)));
 
             entity.HasIndex(e => e.RegistrationNumber)
                 .IsUnique();
 
-            entity.HasIndex(e => new
-            {
-                e.City,
-                e.IsActive
-            });
+            entity.HasIndex(e => new { e.City, e.IsActive });
         });
 
         // =========================

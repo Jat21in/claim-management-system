@@ -3,6 +3,7 @@ import {
   OnInit,
   inject,
   ChangeDetectorRef,
+  ChangeDetectionStrategy,
   ViewChild,
   ElementRef,
   AfterViewInit
@@ -23,7 +24,8 @@ type SortOption = 'latest' | 'oldest' | 'amount-desc' | 'amount-asc';
   standalone: true,
   imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './claims.component.html',
-  styleUrls: ['./claims.component.scss']
+  styleUrls: ['./claims.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ClaimsComponent implements OnInit, AfterViewInit {
   @ViewChild('statusChart') statusChartCanvas!: ElementRef<HTMLCanvasElement>;

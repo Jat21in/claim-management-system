@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -10,7 +10,8 @@ import { MemberService } from '../../../services/member.service';
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './change-plan.component.html',
-  styleUrls: ['./change-plan.component.scss']
+  styleUrls: ['./change-plan.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ChangePlanComponent implements OnInit {
   private planService = inject(PlanService);

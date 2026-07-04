@@ -1,7 +1,8 @@
-import { AfterViewInit, Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit, inject } from '@angular/core';
 import { NgFor, NgIf, CurrencyPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { PlanService, PublicPlan } from '../../../services/plan.service';
+import { AuthService } from '../../../auth/auth.service';
 import { FooterComponent } from '../landing/components/footer/footer.component';
 
 @Component({
@@ -15,6 +16,9 @@ export class PlansComponent implements OnInit, AfterViewInit {
 
   plans: PublicPlan[] = [];
   billing: 'monthly' | 'yearly' = 'monthly';
+
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
   glowColor = 'rgba(99,102,241,0.4)';
   glowX = 0;
@@ -34,7 +38,33 @@ export class PlansComponent implements OnInit, AfterViewInit {
     this.animate();
   }
 
-  // ✅ GET DATA DIRECTLY FROM THE PLAN OBJECT (NO HARDCODED CONFIGS)
+  // ✅ SELECT PLAN METHOD
+  selectPlan(plan: PublicPlan): void {
+    console.log('[Plans] Selecting plan:', plan.planId, plan.name);
+    
+    // Store plan using unified method
+    this.authService.setSelectedPlan(plan.planId, {
+      planName: plan.name,
+      insuredAmount: plan.insuredAmount,
+      durationInMonths: plan.durationInMonths
+    });
+
+    console.log('[Plans] Plan stored, ID:', plan.planId);
+    console.log('[Plans] Stored data:', this.authService.getSelectedPlan());
+
+    // Navigate to policy setup or registration
+    if (this.authService.isAuthenticated()) {
+      console.log('[Plans] User authenticated, redirecting to policy setup');
+      this.router.navigate(['/app/policy-setup']);
+    } else {
+      console.log('[Plans] User not authenticated, redirecting to registration with planId:', plan.planId);
+      this.router.navigate(['/auth/register'], { 
+        queryParams: { planId: plan.planId } 
+      });
+    }
+  }
+
+  // GET DATA DIRECTLY FROM THE PLAN OBJECT
   getBaseAnnual(plan: PublicPlan): number {
     return plan.basePremiumAnnual || 0;
   }
@@ -64,7 +94,6 @@ export class PlansComponent implements OnInit, AfterViewInit {
   }
 
   getPlanBestFor(plan: PublicPlan): string {
-    // ✅ DERIVE FROM ACTUAL PLAN DATA
     if (plan.insuredAmount >= 1000000) return 'Premium Families';
     if (plan.insuredAmount >= 750000) return 'Families';
     if (plan.insuredAmount >= 500000) return 'Professionals';
@@ -84,7 +113,6 @@ export class PlansComponent implements OnInit, AfterViewInit {
     }).format(amount);
   }
 
-  // ✅ SIMPLIFIED TOGGLE
   toggleBilling(event: any) {
     this.priceChanging = true;
     this.billing = event.target.checked ? 'yearly' : 'monthly';
@@ -94,7 +122,6 @@ export class PlansComponent implements OnInit, AfterViewInit {
     }, 400);
   }
 
-  // ✅ GLOW EFFECTS (UNCHANGED)
   setGlowColor(type: string) {
     if (type === 'gold') this.glowColor = 'rgba(255,215,0,0.6)';
     else if (type === 'silver') this.glowColor = 'rgba(192,192,192,0.6)';

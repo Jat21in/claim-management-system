@@ -4,7 +4,8 @@ import {
   ElementRef,
   ViewChild,
   ChangeDetectorRef,
-  OnDestroy
+  OnDestroy,
+  ChangeDetectionStrategy
 } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
@@ -23,7 +24,8 @@ import { FooterComponent } from './components/footer/footer.component';
   standalone: true,
   imports: [CommonModule, RouterModule, AnimatedTestimonialsComponent, ContactComponent, FooterComponent],
   templateUrl: './landing.component.html',
-  styleUrls: ['./landing.component.scss']
+  styleUrls: ['./landing.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LandingComponent implements AfterViewInit, OnDestroy {
 

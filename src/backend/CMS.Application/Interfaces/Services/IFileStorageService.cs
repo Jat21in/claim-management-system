@@ -9,12 +9,8 @@ public interface IFileStorageService
     Task<string> UploadClaimDocumentAsync(Guid claimId, Stream fileStream, string fileName, CancellationToken cancellationToken);
     Task<bool> DeleteFileAsync(string fileUrl, CancellationToken cancellationToken);
 
-    //Task<(string fileName, string filePath, long fileSize, string contentType)> SaveFileAsync(
-    //    IFormFile file,
-    //    Guid claimId,
-    //    CancellationToken cancellationToken);
-
-    //void DeleteFile(string filePath);
-
+    // ✅ NEW: Profile Photo Methods
+    Task<string> UploadProfilePhotoAsync(Guid memberId, Stream fileStream, string fileName, CancellationToken cancellationToken);
+    Task<bool> DeleteProfilePhotoAsync(string photoUrl, CancellationToken cancellationToken);
     byte[]? GetFileBytes(string filePath);
 }

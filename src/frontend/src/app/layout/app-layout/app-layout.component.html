@@ -1,19 +1,17 @@
 <nav class="app-navbar" [class.scrolled]="isScrolled">
     <div class="nav-container">
 
-        <!-- ✅ LOGO -->
+        <!-- LOGO -->
         <a class="nav-logo" (click)="scrollToSection('home')">
             <span class="logo-icon">✦</span>
             <span class="logo-text">Claim<span class="logo-highlight">Core</span></span>
         </a>
 
-        <!-- ✅ DESKTOP NAV -->
+        <!-- DESKTOP NAV -->
         <div class="nav-links desktop-nav">
 
-            <!-- ✅ WAIT FOR KYC -->
             <ng-container *ngIf="!isLoadingKyc; else loadingNav">
 
-                <!-- ✅ ONLY SHOW WHEN KYC VERIFIED -->
                 <ng-container *ngIf="isKycVerified">
 
                     <a routerLink="/app/dashboard" routerLinkActive="active" class="nav-link">
@@ -64,7 +62,6 @@
 
                 </ng-container>
 
-                <!-- ❌ KYC NOT VERIFIED -->
                 <ng-container *ngIf="!isKycVerified">
                     <span class="nav-link" style="opacity:0.6; cursor:not-allowed">
                         Complete KYC to unlock features
@@ -80,40 +77,27 @@
                 <span class="nav-link" style="opacity:0.5;">Loading...</span>
             </ng-template>
 
-            <!-- ✅ ADMIN ALWAYS -->
             <a *ngIf="isAdmin" routerLink="/admin" class="nav-link admin-link">
                 🔧 Admin Panel
             </a>
 
         </div>
 
-        <!-- ✅ RIGHT SIDE -->
+        <!-- RIGHT SIDE -->
         <div class="nav-actions">
 
-            <!-- ✅ KYC STATUS BADGE -->
+            <!-- KYC STATUS BADGE -->
             <div *ngIf="!isLoadingKyc" class="kyc-badge" [class.verified]="isKycVerified" [class.pending]="!isKycVerified">
-
-                <!-- ✅ VERIFIED SVG -->
                 <svg *ngIf="isKycVerified" class="kyc-icon" viewBox="0 0 24 24" fill="none">
-    <path d="M5 13l4 4L19 7"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"/>
-  </svg>
-
-                <!-- ✅ PENDING DOT SVG -->
+                    <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
                 <svg *ngIf="!isKycVerified" class="kyc-icon pending-svg" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="5" fill="currentColor"/>
-  </svg>
-
-                <span class="kyc-text">
-    {{ isKycVerified ? 'Verified' : 'Pending' }}
-  </span>
-
+                    <circle cx="12" cy="12" r="5" fill="currentColor"/>
+                </svg>
+                <span class="kyc-text">{{ isKycVerified ? 'Verified' : 'Pending' }}</span>
             </div>
 
-            <!-- ✅ NOTIFICATIONS -->
+            <!-- NOTIFICATIONS -->
             <div class="notification-bell" (click)="toggleNotifications()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -124,10 +108,19 @@
                 </span>
             </div>
 
-            <!-- ✅ USER DROPDOWN -->
+            <!-- ✅ USER DROPDOWN WITH PHOTO -->
             <div class="user-dropdown" (click)="toggleDropdown()">
                 <div class="user-avatar">
-                    <div class="avatar-initials">{{ userInitials }}</div>
+                    <ng-container *ngIf="profilePhotoUrl; else initialsBlock">
+                        <img 
+                            [src]="profilePhotoUrl" 
+                            alt="Profile Photo"
+                            class="avatar-image"
+                        />
+                    </ng-container>
+                    <ng-template #initialsBlock>
+                        <div class="avatar-initials">{{ userInitials }}</div>
+                    </ng-template>
                     <div class="avatar-status" [class.online]="isOnline"></div>
                 </div>
                 <div class="user-info desktop-only">
@@ -139,7 +132,7 @@
                 </svg>
             </div>
 
-            <!-- ✅ MOBILE MENU -->
+            <!-- MOBILE MENU BUTTON -->
             <button class="mobile-menu-btn" (click)="toggleMobileMenu()" [class.active]="mobileMenuOpen">
                 <span></span><span></span><span></span>
             </button>
@@ -147,12 +140,21 @@
         </div>
     </div>
 
-    <!-- ✅ MOBILE MENU -->
+    <!-- MOBILE MENU -->
     <div class="mobile-menu" [class.open]="mobileMenuOpen">
         <div class="mobile-menu-header">
             <div class="mobile-user-info">
                 <div class="mobile-avatar">
-                    <div class="avatar-initials">{{ userInitials }}</div>
+                    <ng-container *ngIf="profilePhotoUrl; else mobileInitialsBlock">
+                        <img 
+                            [src]="profilePhotoUrl" 
+                            alt="Profile Photo"
+                            class="avatar-image"
+                        />
+                    </ng-container>
+                    <ng-template #mobileInitialsBlock>
+                        <div class="avatar-initials">{{ userInitials }}</div>
+                    </ng-template>
                 </div>
                 <div>
                     <div class="mobile-user-name">{{ userName }}</div>
@@ -199,7 +201,6 @@
 
                 </ng-container>
 
-                <!-- ❌ KYC NOT VERIFIED -->
                 <ng-container *ngIf="!isKycVerified">
                     <span style="opacity:0.6; padding: 14px 0; display: block;">Complete KYC to unlock features</span>
                     <a routerLink="/app/profile" (click)="closeMobileMenu()">Complete KYC</a>
@@ -207,7 +208,6 @@
 
             </ng-container>
 
-            <!-- ✅ ADMIN -->
             <a *ngIf="isAdmin" routerLink="/admin" (click)="closeMobileMenu()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <path d="M12 2a10 10 0 0 1 10 10c0 3.5-2 6.5-5 8l-2 2h-6l-2-2c-3-1.5-5-4.5-5-8a10 10 0 0 1 10-10z"/>
@@ -226,7 +226,7 @@
         </div>
     </div>
 
-    <!-- ✅ NOTIFICATIONS PANEL -->
+    <!-- NOTIFICATIONS PANEL -->
     <div class="notifications-panel" [class.open]="notificationsOpen">
         <div class="notifications-header">
             <h3>Notifications</h3>
@@ -257,11 +257,20 @@
         </div>
     </div>
 
-    <!-- ✅ DROPDOWN MENU -->
+    <!-- DROPDOWN MENU -->
     <div class="dropdown-menu" [class.open]="dropdownOpen" (click)="$event.stopPropagation()">
         <div class="dropdown-header">
             <div class="dropdown-avatar">
-                <div class="avatar-initials">{{ userInitials }}</div>
+                <ng-container *ngIf="profilePhotoUrl; else dropdownInitialsBlock">
+                    <img 
+                        [src]="profilePhotoUrl" 
+                        alt="Profile Photo"
+                        class="avatar-image"
+                    />
+                </ng-container>
+                <ng-template #dropdownInitialsBlock>
+                    <div class="avatar-initials">{{ userInitials }}</div>
+                </ng-template>
             </div>
             <div class="dropdown-user-info">
                 <div class="dropdown-user-name">{{ userName }}</div>
@@ -302,7 +311,7 @@
     </div>
 </nav>
 
-<!-- ✅ MAIN -->
+<!-- MAIN -->
 <main class="main-content" [class.menu-open]="mobileMenuOpen">
     <div class="content-wrapper">
         <router-outlet></router-outlet>

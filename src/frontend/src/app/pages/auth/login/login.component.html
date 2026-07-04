@@ -1,20 +1,64 @@
 <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
 
-    <!-- ✅ Success Message -->
+    <!-- Success Message -->
     <div *ngIf="successMessage" class="bg-green-500/20 text-green-400 px-4 py-2 rounded-lg text-sm border border-green-500/30">
         {{ successMessage }}
     </div>
 
-    <input formControlName="email" type="email" placeholder="Email" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg" />
+    <!-- Email Field -->
+    <div>
+        <input 
+            formControlName="email" 
+            type="email" 
+            placeholder="Email" 
+            class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-textSecondary focus:border-accent focus:ring-1 focus:ring-accent transition-all"
+        />
+        <div *ngIf="form.get('email')?.touched && form.get('email')?.invalid" class="text-red-400 text-sm mt-1">
+            Please enter a valid email address.
+        </div>
+    </div>
 
-    <input formControlName="password" type="password" placeholder="Password" class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg" />
+    <!-- Password Field -->
+    <div>
+        <input 
+            formControlName="password" 
+            type="password" 
+            placeholder="Password" 
+            class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-textSecondary focus:border-accent focus:ring-1 focus:ring-accent transition-all"
+        />
+        <div *ngIf="form.get('password')?.touched && form.get('password')?.invalid" class="text-red-400 text-sm mt-1">
+            Password is required.
+        </div>
+    </div>
 
+    <!-- ✅ Forgot Password Link - FIXED -->
+    <div class="flex justify-end">
+        <a 
+            routerLink="/forgot-password" 
+            class="text-sm text-accent hover:text-accent/80 transition-colors duration-200 cursor-pointer hover:underline"
+        >
+            Forgot Password?
+        </a>
+    </div>
+
+    <!-- Error Message -->
     <p *ngIf="error" class="text-red-400 text-sm">
         {{ error }}
     </p>
 
-    <button type="submit" [disabled]="loading" class="w-full py-2 bg-accent text-black font-semibold rounded-lg disabled:opacity-60">
+    <!-- Submit Button -->
+    <button 
+        type="submit" 
+        [disabled]="loading" 
+        class="w-full py-2 bg-accent text-black font-semibold rounded-lg disabled:opacity-60 hover:bg-accent/90 transition-colors"
+    >
         {{ loading ? 'Signing in…' : 'Login' }}
     </button>
+
+    <!-- Register Link -->
+    <p class="text-center text-textSecondary text-sm mt-4">
+        Don't have an account? 
+        <a routerLink="/auth/register" class="text-accent hover:underline">Register</a>
+    </p>
 
 </form>

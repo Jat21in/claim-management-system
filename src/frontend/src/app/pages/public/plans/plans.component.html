@@ -1,11 +1,11 @@
 <div class="pricing-wrapper" (mousemove)="onMouseMove($event)" (mouseleave)="resetGlow()">
 
-    <!-- ✅ CURSOR GLOW -->
+    <!-- CURSOR GLOW -->
     <div class="cursor-glow" [style.transform]="'translate(' + glowX + 'px,' + glowY + 'px) translate(-50%, -50%)'"
         [style.background]="'radial-gradient(circle,' + glowColor + ' 0%, rgba(99,102,241,0.25) 25%, transparent 70%)'">
     </div>
 
-    <!-- ✅ HERO (UNCHANGED ✅) -->
+    <!-- HERO -->
     <div class="heading-section">
         <h1 class="heading">
             <span class="letter left" style="--i:0">P</span>
@@ -62,7 +62,7 @@
         </p>
     </div>
 
-    <!-- ✅ BILLING SWITCH -->
+    <!-- BILLING SWITCH -->
     <div class="billing-switch">
         <span [class.active]="billing === 'monthly'">Monthly</span>
 
@@ -80,7 +80,7 @@
         <span [class.active]="billing === 'yearly'">Yearly</span>
     </div>
 
-    <!-- ✅ ✅ PLANS (UPDATED WITH API + DYNAMIC RENDERING) -->
+    <!-- PLANS GRID -->
     <div class="pricing-grid" *ngIf="plans.length > 0">
 
         <div class="pricing-card" *ngFor="let plan of plans; let i = index" [class.popular-card]="i === 1"
@@ -92,7 +92,6 @@
             <p class="desc">{{ plan.description }}</p>
 
             <div class="price">
-                <!-- <span class="currency"></span> -->
                 <span class="amount">{{ formatPlanPremium(plan) }}</span>
                 <span class="billing">
                     / {{ billing === 'monthly' ? 'month' : 'year' }}
@@ -130,11 +129,18 @@
                 </li>
             </ul>
 
-            <!-- ✅ ROUTE -->
-            <a class="cta-btn" [routerLink]="['/plans', plan.planId]">
+            <!-- ✅ SELECT PLAN BUTTON -->
+            <button 
+                (click)="selectPlan(plan)" 
+                class="w-full mt-2 py-3 px-4 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold rounded-lg transition-all duration-200 transform hover:scale-[1.02]">
+                Select This Plan
+            </button>
+
+            <!-- VIEW DETAILS BUTTON -->
+            <a class="cta-btn mt-2" [routerLink]="['/plans', plan.planId]">
                 <div class="cta-inner">
-                    <span class="text-default">Schedule a demo</span>
-                    <span class="text-hover">Get started</span>
+                    <span class="text-default">View Details</span>
+                    <span class="text-hover">Learn More</span>
                 </div>
             </a>
         </div>

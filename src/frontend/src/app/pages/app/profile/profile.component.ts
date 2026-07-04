@@ -1,15 +1,10 @@
-import {
-  Component,
-  OnInit,
-  inject,
-  ChangeDetectorRef,
-  ChangeDetectionStrategy
-} from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { RouterLink } from '@angular/router';
-import { MemberService } from '../../../services/member.service';
+import { MemberService, ProfileResponse } from '../../../services/member.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-profile',
@@ -26,10 +21,16 @@ export class ProfileComponent implements OnInit {
 
   loading = true;
   saving = false;
+  isUploading = false;
   error: string | null = null;
   success: string | null = null;
   maxDate = new Date().toISOString().split('T')[0];
   memberSince = '';
+
+  // Photo upload
+  profilePhoto: string | null = null;
+  photoFile: File | null = null;
+  photoPreview: string | null = null;
 
   // Profile completion tracking
   profileCompletion = 0;
@@ -59,29 +60,137 @@ export class ProfileComponent implements OnInit {
     this.loading = true;
     this.cdr.markForCheck();
 
-    this.memberService.getDashboard()
+    this.memberService.getMyProfile()
       .pipe(finalize(() => {
         this.loading = false;
         this.cdr.markForCheck();
       }))
       .subscribe({
-        next: (res) => {
+        next: (res: ProfileResponse) => {
           this.form.patchValue({
             fullName: res.fullName,
-            email: res.email
+            email: res.email,
+            dateOfBirth: res.dateOfBirth ? new Date(res.dateOfBirth).toISOString().split('T')[0] : '',
+            contactNumber: res.phoneNumber || '',
+            street: res.address?.street || '',
+            city: res.address?.city || '',
+            state: res.address?.state || '',
+            country: res.address?.country || '',
+            postalCode: res.address?.postalCode || ''
           });
 
-          // Store member since date
+          // ✅ Load profile photo with FULL URL
+          if (res.profilePhotoUrl) {
+            this.profilePhoto = `${environment.uploadBaseUrl}${res.profilePhotoUrl}`;
+          } else {
+            this.profilePhoto = null;
+          }
+          
           this.memberSince = new Date().toISOString().split('T')[0];
 
           this.updateProfileCompletion();
           this.cdr.detectChanges();
         },
-        error: () => {
-          this.error = 'Failed to load profile';
+        error: (err: any) => {
+          this.error = err?.error?.message || 'Failed to load profile';
           this.cdr.markForCheck();
         }
       });
+  }
+
+  // ✅ PHOTO UPLOAD METHODS
+  onPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        this.error = 'File size cannot exceed 5MB';
+        this.cdr.markForCheck();
+        return;
+      }
+
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        this.error = 'Invalid file format. Allowed: JPG, PNG, GIF, WEBP';
+        this.cdr.markForCheck();
+        return;
+      }
+
+      this.photoFile = file;
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.photoPreview = reader.result as string;
+        this.cdr.markForCheck();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  uploadPhoto(): void {
+    if (!this.photoFile) return;
+
+    this.isUploading = true;
+    this.error = '';
+    this.success = '';
+    this.cdr.markForCheck();
+
+    this.memberService.uploadProfilePhoto(this.photoFile).subscribe({
+      next: (response: { photoUrl: string; message: string }) => {
+        this.isUploading = false;
+        // ✅ Use FULL URL for the photo
+        this.profilePhoto = `${environment.uploadBaseUrl}${response.photoUrl}`;
+        this.photoPreview = null;
+        this.photoFile = null;
+        this.success = 'Profile photo updated successfully!';
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.success = null;
+          this.cdr.markForCheck();
+        }, 3000);
+      },
+      error: (err: any) => {
+        this.isUploading = false;
+        this.error = err?.error?.message || 'Failed to upload photo.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  removePhoto(): void {
+    if (!confirm('Are you sure you want to remove your profile photo?')) return;
+
+    this.loading = true;
+    this.cdr.markForCheck();
+
+    this.memberService.removeProfilePhoto().subscribe({
+      next: () => {
+        this.profilePhoto = null;
+        this.photoPreview = null;
+        this.loading = false;
+        this.success = 'Profile photo removed.';
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.success = null;
+          this.cdr.markForCheck();
+        }, 3000);
+      },
+      error: (err: any) => {
+        this.loading = false;
+        this.error = err?.error?.message || 'Failed to remove photo.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  cancelPhotoUpload(): void {
+    this.photoPreview = null;
+    this.photoFile = null;
+    this.cdr.markForCheck();
   }
 
   private updateProfileCompletion(): void {
@@ -164,7 +273,7 @@ export class ProfileComponent implements OnInit {
             this.cdr.markForCheck();
           }, 3000);
         },
-        error: (err) => {
+        error: (err: any) => {
           this.error = err?.error?.message ?? 'Failed to update profile';
           this.cdr.markForCheck();
         }

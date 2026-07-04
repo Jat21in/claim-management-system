@@ -18,39 +18,39 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // 🔥 FIX: Add connection resilience and command timeout
+        var connectionString = configuration.GetConnectionString("CmsDatabase");
+
+        // Database Context with optimized settings
         services.AddDbContext<CmsDbContext>(options =>
-    options.UseSqlServer(
-        configuration.GetConnectionString("CmsDatabase"),
-        sqlOptions =>
-        {
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 3,
-                maxRetryDelay: TimeSpan.FromSeconds(10),
-                errorNumbersToAdd: null);
+            options.UseSqlServer(
+                connectionString,
+                sqlOptions =>
+                {
+                    sqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorNumbersToAdd: null);
 
-            sqlOptions.CommandTimeout(120);
+                    sqlOptions.CommandTimeout(120);
+                    sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                })
+            .EnableSensitiveDataLogging(false)
+            .EnableDetailedErrors(false)
+            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 
-            // ✅ ADD THIS
-            sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-        })
-    .EnableSensitiveDataLogging(false)
-    .EnableDetailedErrors(false)
-);
-
+        // Repositories
         services.AddScoped<IMemberRepository, MemberRepository>();
         services.AddScoped<IPlanRepository, PlanRepository>();
         services.AddScoped<IClaimRepository, ClaimRepository>();
-
-        // NEW REPOSITORIES FOR PHASE 1
         services.AddScoped<IPolicyRepository, PolicyRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IKycRepository, KycRepository>();
 
+        // Security
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
-        // NEW SERVICES FOR PHASE 1
+        // Infrastructure Services
         services.AddScoped<IFileStorageService, FileStorageService>();
         services.AddScoped<IPdfGenerationService, PdfGenerationService>();
         services.AddScoped<IEmailService, EmailService>();

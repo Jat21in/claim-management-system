@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule,
@@ -13,7 +13,8 @@ import { ClaimService } from '../../services/claim.service';
   selector: 'app-submit-claim',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './submit-claim.component.html'
+  templateUrl: './submit-claim.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SubmitClaimComponent {
 

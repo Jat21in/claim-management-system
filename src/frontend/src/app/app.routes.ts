@@ -35,6 +35,7 @@ import { policySetupGuard } from './guards/policy-setup.guard';
 import { PolicySetupLayoutComponent } from './layout/policy-setup-layout/policy-setup-layout.component';
 import { PaymentPageComponent } from './pages/app/payments/payment-page.component';
 import { PaymentHistoryComponent } from './pages/app/payments/payment-history.component';
+import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-password.component';
 
 export const routes: Routes = [
   /**
@@ -117,6 +118,11 @@ export const routes: Routes = [
     loadChildren: () => import('./admin/admin.routes').then(m => m.ADMIN_ROUTES)
   },
 
+  {
+    path: 'forgot-password',
+    component: ForgotPasswordComponent
+  },
+  
   /**
    * ❌ Fallback
    */

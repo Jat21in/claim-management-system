@@ -10,7 +10,7 @@ public sealed class Member : IAuditable
     public Guid MemberId { get; private set; }
     public Guid? ActivePlanId { get; private set; }
 
-    // ✅ NEW: KYC + Status
+    // KYC + Status
     public MemberStatus Status { get; private set; } = MemberStatus.Pending;
     public DateTime? KycSubmittedAt { get; private set; }
     public DateTime? KycVerifiedAt { get; private set; }
@@ -26,8 +26,15 @@ public sealed class Member : IAuditable
     public string? PhoneNumber { get; private set; }
     public string Role { get; private set; } = "Member";
 
+    // ✅ NEW: Profile Photo
+    public string? ProfilePhotoUrl { get; private set; }
+
     // Authentication
     public string PasswordHash { get; private set; } = null!;
+
+    // ✅ NEW: Password Reset Fields
+    public string? ResetToken { get; private set; }
+    public DateTime? ResetTokenExpiresAt { get; private set; }
 
     public void SetPasswordHash(string passwordHash)
     {
@@ -68,14 +75,11 @@ public sealed class Member : IAuditable
         DateOfBirth = dateOfBirth;
         Address = address ?? throw new ArgumentNullException(nameof(address));
 
-        // ✅ default KYC state
         Status = MemberStatus.Pending;
-
         CreatedAt = DateTime.UtcNow;
     }
 
-    // ✅ ✅ KYC METHODS
-
+    // ✅ KYC METHODS
     public void SubmitKyc()
     {
         Status = MemberStatus.Pending;
@@ -104,7 +108,52 @@ public sealed class Member : IAuditable
         UpdatedAt = DateTime.UtcNow;
     }
 
-    // ✅ ✅ OBSOLETE PLAN ASSIGNMENT (Phase 1 compatibility)
+    // ✅ PROFILE PHOTO METHODS
+    public void UpdateProfilePhoto(string photoUrl)
+    {
+        if (string.IsNullOrWhiteSpace(photoUrl))
+            throw new ArgumentException("Photo URL is required", nameof(photoUrl));
+
+        ProfilePhotoUrl = photoUrl;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void RemoveProfilePhoto()
+    {
+        ProfilePhotoUrl = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    // ✅ PASSWORD RESET METHODS
+    public void SetResetToken(string token, DateTime expiresAt)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            throw new ArgumentException("Reset token is required", nameof(token));
+
+        if (expiresAt <= DateTime.UtcNow)
+            throw new ArgumentException("Expiration must be in the future", nameof(expiresAt));
+
+        ResetToken = token;
+        ResetTokenExpiresAt = expiresAt;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void ClearResetToken()
+    {
+        ResetToken = null;
+        ResetTokenExpiresAt = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public bool IsResetTokenValid(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token)) return false;
+        if (ResetToken != token) return false;
+        if (ResetTokenExpiresAt < DateTime.UtcNow) return false;
+        return true;
+    }
+
+    // ✅ OBSOLETE PLAN ASSIGNMENT (Phase 1 compatibility)
     [Obsolete("Use Policy creation instead. Will be removed in Phase 2.")]
     public void AssignPlan(Plan plan)
     {
@@ -112,7 +161,7 @@ public sealed class Member : IAuditable
             throw new ArgumentNullException(nameof(plan));
 
         ActivePlan = plan;
-        ActivePlanId = plan.PlanId;  // ✅ Just set the FK, don't create new plan
+        ActivePlanId = plan.PlanId;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -137,7 +186,6 @@ public sealed class Member : IAuditable
         );
 
         Claims.Add(claim);
-
         UpdatedAt = DateTime.UtcNow;
 
         return claim;

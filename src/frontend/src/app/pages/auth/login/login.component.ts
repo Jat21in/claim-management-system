@@ -1,6 +1,6 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 import { AuthService } from '../../../auth/auth.service';
@@ -8,12 +8,14 @@ import { AuthService } from '../../../auth/auth.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule, CommonModule, RouterLink],
   templateUrl: './login.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoginComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -37,6 +39,7 @@ export class LoginComponent implements OnInit {
     // Show success message if coming from registration
     if (this.route.snapshot.queryParams['registered'] === 'true') {
       this.successMessage = 'Account created successfully! Please login with your credentials.';
+      this.cdr.markForCheck();
 
       const email = this.route.snapshot.queryParams['email'];
       if (email) {
@@ -45,7 +48,14 @@ export class LoginComponent implements OnInit {
 
       setTimeout(() => {
         this.successMessage = null;
+        this.cdr.markForCheck();
       }, 5000);
+    }
+
+    // Check if there's a selected plan and store it properly
+    const selectedPlanId = this.authService.getSelectedPlanId();
+    if (!selectedPlanId) {
+      this.authService.getPlanIdFromLegacyStorage();
     }
   }
 
@@ -61,6 +71,9 @@ export class LoginComponent implements OnInit {
 
     const { email, password, rememberMe } = this.form.value;
 
+    // Check for selected plan BEFORE login
+    const hasSelectedPlan = !!this.authService.getSelectedPlanId();
+
     this.authService.login(
       { email: email!, password: password! },
       rememberMe ?? false
@@ -68,10 +81,15 @@ export class LoginComponent implements OnInit {
       next: () => {
         this.loading = false;
 
-        // Get role after login
         const role = this.authService.getUserRole();
         console.log('[Login] User role after login:', role);
-        console.log('[Login] Redirect target:', this.redirectUrl);
+
+        // If user has a selected plan, redirect to policy setup
+        if (hasSelectedPlan) {
+          console.log('[Login] User has selected plan, redirecting to policy setup');
+          this.router.navigate(['/app/policy-setup']);
+          return;
+        }
 
         // Role-based redirect
         if (role === 'Admin' || role === 'ClaimsProcessor') {
@@ -88,5 +106,10 @@ export class LoginComponent implements OnInit {
         console.error('[Login] Error:', err);
       },
     });
+  }
+
+  // ✅ Optional: Alternative method if routerLink doesn't work
+  goToForgotPassword(): void {
+    this.router.navigate(['/forgot-password']);
   }
 }

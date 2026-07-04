@@ -37,6 +37,10 @@ export class AuthService {
   private authStatusSubject = new BehaviorSubject<boolean>(this.isAuthenticated());
   authStatus$ = this.authStatusSubject.asObservable();
 
+  // UNIFIED PLAN STATE
+  private readonly PLAN_STORAGE_KEY = 'claimcore_selected_plan';
+
+  // ✅ LOGIN
   login(credentials: { email: string; password: string }, rememberMe: boolean = false): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials)
       .pipe(
@@ -45,7 +49,6 @@ export class AuthService {
           storage.setItem('token', response.token);
           storage.setItem('tokenExpiry', response.expiresAt);
 
-          // Decode and store user info
           const decoded = this.decodeToken(response.token);
           if (decoded) {
             storage.setItem('userRole', decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']);
@@ -58,29 +61,36 @@ export class AuthService {
       );
   }
 
+  // ✅ REGISTER
   register(userData: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/auth/register`, userData);
   }
 
+  // ✅ FORGOT PASSWORD - Request OTP
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/forgot-password`, { email });
+  }
+
+  // ✅ VERIFY RESET TOKEN (OTP)
+  verifyResetToken(email: string, token: string): Observable<{ isValid: boolean }> {
+    return this.http.post<{ isValid: boolean }>(`${this.apiUrl}/auth/verify-reset-token`, { email, token });
+  }
+
+  // ✅ RESET PASSWORD
+  resetPassword(email: string, token: string, newPassword: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/reset-password`, { email, token, newPassword });
+  }
+
+  // ✅ LOGOUT
   logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('tokenExpiry');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('selectedPlanId');
-
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('tokenExpiry');
-    sessionStorage.removeItem('userRole');
-    sessionStorage.removeItem('userId');
-    sessionStorage.removeItem('userEmail');
-    sessionStorage.removeItem('selectedPlanId');
-
+    // Clear all storage
+    localStorage.clear();
+    sessionStorage.clear();
     this.authStatusSubject.next(false);
     this.router.navigate(['/']);
   }
 
+  // ✅ TOKEN MANAGEMENT
   getToken(): string | null {
     return localStorage.getItem('token') || sessionStorage.getItem('token');
   }
@@ -132,18 +142,61 @@ export class AuthService {
     }
   }
 
-  setSelectedPlanId(planId: string): void {
-    const storage = this.isAuthenticated() ?
-      (localStorage.getItem('token') ? localStorage : sessionStorage) : sessionStorage;
-    storage.setItem('selectedPlanId', planId);
+  // ✅ UNIFIED PLAN STORAGE METHODS
+  setSelectedPlan(planId: string, planData?: any): void {
+    const planInfo = {
+      planId: planId,
+      selectedAt: new Date().toISOString(),
+      ...planData
+    };
+    localStorage.setItem(this.PLAN_STORAGE_KEY, JSON.stringify(planInfo));
+  }
+
+  getSelectedPlan(): { planId: string; selectedAt: string; [key: string]: any } | null {
+    const data = localStorage.getItem(this.PLAN_STORAGE_KEY);
+    if (data) {
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
   }
 
   getSelectedPlanId(): string | null {
-    return localStorage.getItem('selectedPlanId') || sessionStorage.getItem('selectedPlanId');
+    const plan = this.getSelectedPlan();
+    return plan?.planId || null;
   }
 
-  clearSelectedPlanId(): void {
-    localStorage.removeItem('selectedPlanId');
-    sessionStorage.removeItem('selectedPlanId');
+  clearSelectedPlan(): void {
+    localStorage.removeItem(this.PLAN_STORAGE_KEY);
+  }
+
+  // ✅ BACKWARD COMPATIBILITY: Support old storage keys
+  getPlanIdFromLegacyStorage(): string | null {
+    const keys = ['selectedPlanId', 'premiumHealthFactors'];
+    for (const key of keys) {
+      const data = localStorage.getItem(key);
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.planId) {
+            this.setSelectedPlan(parsed.planId, parsed);
+            return parsed.planId;
+          }
+          if (typeof parsed === 'string') {
+            this.setSelectedPlan(parsed);
+            return parsed;
+          }
+        } catch (e) {
+          if (data) {
+            this.setSelectedPlan(data);
+            return data;
+          }
+        }
+      }
+    }
+    return null;
   }
 }

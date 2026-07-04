@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -13,6 +13,7 @@ import { NetworkHospitalSearchComponent } from '../../../../components/network-h
   imports: [CommonModule, ReactiveFormsModule, RouterLink, NetworkHospitalSearchComponent],
   templateUrl: './submit-claim.component.html',
   styleUrls: ['./submit-claim.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SubmitClaimComponent {
   private fb = inject(FormBuilder);

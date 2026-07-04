@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, OnInit, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Output, EventEmitter, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HospitalService, NetworkHospital } from '../../services/hospital.service';
@@ -8,7 +8,8 @@ import { HospitalService, NetworkHospital } from '../../services/hospital.servic
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './network-hospital-search.component.html',
-  styleUrls: ['./network-hospital-search.component.scss']
+  styleUrls: ['./network-hospital-search.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NetworkHospitalSearchComponent implements OnInit {
   @Output() close = new EventEmitter<void>();

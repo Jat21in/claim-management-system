@@ -105,9 +105,9 @@ export class PolicySetupComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Don't clear selected plan ID until payment is complete
+    // ✅ FIX: Use the correct method name
     if (this.policySetupResponse) {
-      this.authService.clearSelectedPlanId();
+      this.authService.clearSelectedPlan();
     }
   }
 
@@ -116,29 +116,33 @@ export class PolicySetupComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.cdr.markForCheck();
 
-    // Method 1: Check URL query params
+    // ✅ 1. Check URL query params
     let planId = this.route.snapshot.queryParams['planId'];
 
-    // Method 2: Check localStorage/sessionStorage
+    // ✅ 2. Check unified plan storage
     if (!planId) {
       planId = this.authService.getSelectedPlanId();
     }
 
-    // Method 3: Check if user already has an active plan assigned from member profile
+    // ✅ 3. Check legacy storage
     if (!planId) {
-      console.log('[PolicySetup] No plan ID in storage, checking user profile for assigned plan');
+      planId = this.authService.getPlanIdFromLegacyStorage();
+    }
+
+    // ✅ 4. Check if user already has an active plan from profile
+    if (!planId) {
+      console.log('[PolicySetup] Checking user profile for assigned plan');
       this.memberService.getDashboard().subscribe({
         next: (memberData) => {
           console.log('[PolicySetup] Member data:', memberData);
 
           if (memberData.activePlan && memberData.activePlan.id) {
-            // User already has a plan assigned to their profile
             planId = memberData.activePlan.id;
             console.log('[PolicySetup] Found assigned plan from profile:', planId);
+            this.authService.setSelectedPlan(planId);
             this.loadPlanDetails(planId);
           } else {
-            // No plan found anywhere - redirect to plans page
-            console.error('[PolicySetup] No plan selected and no assigned plan found');
+            console.error('[PolicySetup] No plan found anywhere');
             this.errorMessage = 'No plan selected. Please choose a plan first.';
             this.isLoading = false;
             this.cdr.markForCheck();
@@ -160,7 +164,7 @@ export class PolicySetupComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Plan ID found in storage
+    // ✅ Plan ID found - load it
     this.loadPlanDetails(planId);
   }
 
@@ -460,7 +464,8 @@ export class PolicySetupComponent implements OnInit, OnDestroy {
     this.policySetupService.setupPolicyWithPayment(request).subscribe({
       next: (response) => {
         this.policySetupResponse = response;
-        this.authService.clearSelectedPlanId();
+        // ✅ FIX: Use the correct method name
+        this.authService.clearSelectedPlan();
         this.successMessage = `Policy ${response.policy.policyNumber} created successfully! Redirecting to dashboard...`;
         this.cdr.markForCheck();
 

@@ -1,8 +1,8 @@
 ﻿using CMS.Application.Interfaces.Services;
-using MailKit.Net.Smtp;
-using MailKit.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 using MimeKit;
 using MimeKit.Text;
 
@@ -19,6 +19,139 @@ public sealed class EmailService : IEmailService
         _logger = logger;
     }
 
+    #region Core Email Methods
+
+    private async Task SendEmailAsync(string toEmail, string subject, string htmlBody, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var emailSettings = _configuration.GetSection("EmailSettings");
+            var smtpServer = emailSettings["SmtpServer"];
+            var smtpPort = int.Parse(emailSettings["SmtpPort"] ?? "587");
+            var username = emailSettings["Username"];
+            var password = emailSettings["Password"];
+            var fromEmail = emailSettings["FromEmail"] ?? "noreply@claimcore.com";
+            var fromName = emailSettings["FromName"] ?? "ClaimCore Insurance";
+
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            {
+                _logger.LogWarning("Email credentials not configured. Skipping email send.");
+                return;
+            }
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(fromName, fromEmail));
+            message.To.Add(new MailboxAddress(toEmail, toEmail));
+            message.Subject = subject;
+            message.Body = new TextPart(TextFormat.Html) { Text = htmlBody };
+
+            using var client = new SmtpClient();
+            client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+            await client.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.StartTls, cancellationToken);
+            await client.AuthenticateAsync(username, password, cancellationToken);
+            await client.SendAsync(message, cancellationToken);
+            await client.DisconnectAsync(true, cancellationToken);
+
+            _logger.LogInformation("Email sent successfully to {Email}", toEmail);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send email to {Email}", toEmail);
+            throw;
+        }
+    }
+
+    private async Task SendEmailWithAttachmentAsync(string toEmail, string subject, string htmlBody, byte[] attachment, string attachmentName, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var emailSettings = _configuration.GetSection("EmailSettings");
+            var smtpServer = emailSettings["SmtpServer"];
+            var smtpPort = int.Parse(emailSettings["SmtpPort"] ?? "587");
+            var username = emailSettings["Username"];
+            var password = emailSettings["Password"];
+            var fromEmail = emailSettings["FromEmail"] ?? "noreply@claimcore.com";
+            var fromName = emailSettings["FromName"] ?? "ClaimCore Insurance";
+
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            {
+                _logger.LogWarning("Email credentials not configured. Skipping email send.");
+                return;
+            }
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(fromName, fromEmail));
+            message.To.Add(new MailboxAddress(toEmail, toEmail));
+            message.Subject = subject;
+
+            var builder = new BodyBuilder();
+            builder.HtmlBody = htmlBody;
+            builder.Attachments.Add(attachmentName, attachment);
+            message.Body = builder.ToMessageBody();
+
+            using var client = new SmtpClient();
+            client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+            await client.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.StartTls, cancellationToken);
+            await client.AuthenticateAsync(username, password, cancellationToken);
+            await client.SendAsync(message, cancellationToken);
+            await client.DisconnectAsync(true, cancellationToken);
+
+            _logger.LogInformation("Email with attachment sent successfully to {Email}", toEmail);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send email with attachment to {Email}", toEmail);
+            throw;
+        }
+    }
+
+    #endregion
+
+    #region IEmailService Implementation
+
+    // ✅ NEW: Send Password Reset OTP Email
+    public async Task SendPasswordResetOtpAsync(string toEmail, string fullName, string otp, CancellationToken cancellationToken)
+    {
+        var subject = "🔐 Password Reset OTP - ClaimCore";
+        var body = $@"
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; background-color: #0B1220; color: #E5E7EB; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 30px; background: #1a2332; border-radius: 12px; }}
+                    .header {{ text-align: center; margin-bottom: 30px; }}
+                    .header h1 {{ color: #22D3EE; font-size: 28px; }}
+                    .otp-box {{ background: #0B1220; padding: 25px; text-align: center; font-size: 36px; font-weight: bold; letter-spacing: 12px; border-radius: 8px; border: 2px solid #22D3EE; color: #22D3EE; margin: 25px 0; }}
+                    .info {{ color: #9CA3AF; font-size: 14px; line-height: 1.6; }}
+                    .footer {{ margin-top: 30px; padding-top: 20px; border-top: 1px solid #2a3a4a; color: #6B7280; font-size: 12px; text-align: center; }}
+                    .highlight {{ color: #22D3EE; font-weight: bold; }}
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='header'>
+                        <h1>🔐 Password Reset</h1>
+                    </div>
+                    <p>Hello <strong>{fullName}</strong>,</p>
+                    <p>We received a request to reset your password for your ClaimCore account.</p>
+                    <p>Use the OTP below to reset your password:</p>
+                    <div class='otp-box'>{otp}</div>
+                    <div class='info'>
+                        <p>⏰ This OTP is valid for <span class='highlight'>15 minutes</span>.</p>
+                        <p>🔒 If you didn't request this, please ignore this email.</p>
+                    </div>
+                    <div class='footer'>
+                        <p>ClaimCore Insurance • Secure & Trusted</p>
+                        <p>© {DateTime.Now.Year} ClaimCore. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        ";
+
+        await SendEmailAsync(toEmail, subject, body, cancellationToken);
+    }
+
     public async Task SendClaimStatusUpdateEmailAsync(
         string toEmail,
         string fullName,
@@ -32,7 +165,6 @@ public sealed class EmailService : IEmailService
         string aiReasoning,
         CancellationToken cancellationToken)
     {
-        // Determine status configuration
         var (statusColor, statusIconSvg, statusBgColor, nextSteps) = status.ToLower() switch
         {
             "approved" => (
@@ -74,13 +206,8 @@ public sealed class EmailService : IEmailService
         var formattedClaimId = claimId.Length > 8 ? claimId.Substring(0, 8) + "..." : claimId;
         var formattedDate = claimDate.ToString("dd MMMM yyyy");
         var formattedAmount = $"₹{amount:N2}";
+        var truncatedDescription = description?.Length > 100 ? description.Substring(0, 100) + "..." : description ?? "No description provided";
 
-        // Truncate description if too long
-        var truncatedDescription = description?.Length > 100
-            ? description.Substring(0, 100) + "..."
-            : description ?? "No description provided";
-
-        // Build confidence score visualization
         var confidenceScoreHtml = "";
         if (aiConfidenceScore.HasValue)
         {
@@ -100,7 +227,6 @@ public sealed class EmailService : IEmailService
                 </div>";
         }
 
-        // Build AI reasoning section
         var aiReasoningHtml = "";
         if (!string.IsNullOrEmpty(aiReasoning))
         {
@@ -147,17 +273,14 @@ public sealed class EmailService : IEmailService
                     <!-- Content -->
                     <div style='background: #FFFFFF; padding: 32px; border-radius: 0 0 16px 16px; border: 1px solid #E5E7EB; border-top: none;'>
                         
-                        <!-- Greeting -->
                         <p style='color: #111827; font-size: 16px; margin-bottom: 24px;'>Dear <strong style='color: #0891B2;'>{fullName}</strong>,</p>
                         
-                        <!-- Status Message -->
                         <div style='background: #F9FAFB; padding: 16px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #E5E7EB;'>
                             <p style='color: #4B5563; margin: 0;'>
                                 Your claim has been <strong style='color: {statusColor}; text-transform: uppercase;'>{status}</strong>.
                             </p>
                         </div>
                         
-                        <!-- Claim Details Card -->
                         <div style='background: #F9FAFB; border-radius: 12px; overflow: hidden; margin-bottom: 24px; border: 1px solid #E5E7EB;'>
                             <div style='background: #F3F4F6; padding: 14px 20px; border-bottom: 1px solid #E5E7EB;'>
                                 <div style='display: flex; align-items: center; gap: 8px;'>
@@ -185,11 +308,9 @@ public sealed class EmailService : IEmailService
                             </table>
                         </div>
                         
-                        <!-- AI Insights Section -->
                         {aiReasoningHtml}
                         {confidenceScoreHtml}
                         
-                        <!-- Next Steps -->
                         <div style='background: #F0F9FF; padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #BAE6FD;'>
                             <div style='display: flex; align-items: center; gap: 12px; margin-bottom: 12px;'>
                                 {GetFlagIcon()}
@@ -198,7 +319,6 @@ public sealed class EmailService : IEmailService
                             <p style='color: #075985; margin: 0; font-size: 14px; line-height: 1.6;'>{nextSteps}</p>
                         </div>
                         
-                        <!-- Action Button -->
                         <div style='text-align: center; margin-bottom: 28px;'>
                             <a href='https://portal.claimcore.com/claims/{claimId}' 
                                style='display: inline-block; background: #0891B2; color: #FFFFFF; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;'>
@@ -206,7 +326,6 @@ public sealed class EmailService : IEmailService
                             </a>
                         </div>
                         
-                        <!-- Support Section -->
                         <div style='background: #F9FAFB; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #E5E7EB;'>
                             <p style='color: #6B7280; font-size: 12px; margin: 0;'>
                                 Need assistance? Contact our support team at <a href='mailto:support@claimcore.com' style='color: #0891B2; text-decoration: none;'>support@claimcore.com</a>
@@ -214,7 +333,6 @@ public sealed class EmailService : IEmailService
                         </div>
                     </div>
                     
-                    <!-- Footer -->
                     <div style='background: #F3F4F6; padding: 24px; text-align: center; border-radius: 0 0 16px 16px; border: 1px solid #E5E7EB; border-top: none;'>
                         <p style='color: #9CA3AF; font-size: 12px; margin: 0;'>
                             This is an automated transactional message. Please do not reply directly to this email.
@@ -331,6 +449,42 @@ public sealed class EmailService : IEmailService
         ";
 
         await SendEmailAsync(toEmail, subject, body, cancellationToken);
+    }
+
+    public async Task SendKycSubmittedEmailToAdminAsync(string fullName, string email, CancellationToken cancellationToken)
+    {
+        var subject = "New KYC Submission - Action Required";
+        var adminEmail = _configuration["EmailSettings:AdminEmail"] ?? "admin@claimcore.com";
+        var body = $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: linear-gradient(135deg, #22D3EE, #06b6d4); padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                    .content {{ background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }}
+                    .button {{ display: inline-block; padding: 12px 24px; background: #22D3EE; color: #0B1220; text-decoration: none; border-radius: 6px; margin-top: 20px; }}
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='header'>
+                        <h1>New KYC Submission</h1>
+                    </div>
+                    <div class='content'>
+                        <h2>Action Required</h2>
+                        <p>A user has submitted KYC documents for verification.</p>
+                        <p><strong>User:</strong> {fullName}</p>
+                        <p><strong>Email:</strong> {email}</p>
+                        <a href='https://yourdomain.com/admin/kyc' class='button'>Review KYC →</a>
+                    </div>
+                </div>
+            </body>
+            </html>
+        ";
+
+        await SendEmailAsync(adminEmail, subject, body, cancellationToken);
     }
 
     public async Task SendPremiumReminderEmailAsync(string toEmail, string fullName, string policyNumber, decimal amount, DateTime dueDate, CancellationToken cancellationToken)
@@ -458,78 +612,42 @@ public sealed class EmailService : IEmailService
         await SendEmailAsync(toEmail, subject, body, cancellationToken);
     }
 
-    public async Task SendKycSubmittedEmailToAdminAsync(string fullName, string email, CancellationToken cancellationToken)
+    public async Task SendOtpEmailAsync(string toEmail, string fullName, string otp, CancellationToken cancellationToken)
     {
-        var subject = "New KYC Submission - Action Required";
-        var adminEmail = _configuration["EmailSettings:AdminEmail"] ?? "admin@claimcore.com";
+        var subject = "Your Verification Code - ClaimCore Insurance";
         var body = $@"
             <!DOCTYPE html>
             <html>
             <head>
                 <style>
                     body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .container {{ max-width: 500px; margin: 0 auto; padding: 20px; }}
                     .header {{ background: linear-gradient(135deg, #22D3EE, #06b6d4); padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-                    .content {{ background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }}
-                    .button {{ display: inline-block; padding: 12px 24px; background: #22D3EE; color: #0B1220; text-decoration: none; border-radius: 6px; margin-top: 20px; }}
+                    .header h1 {{ color: white; margin: 0; }}
+                    .content {{ background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; text-align: center; }}
+                    .otp-code {{ font-size: 32px; font-weight: bold; letter-spacing: 8px; background: #e5e7eb; padding: 15px; border-radius: 8px; margin: 20px 0; }}
+                    .footer {{ text-align: center; padding: 20px; font-size: 12px; color: #6b7280; }}
                 </style>
             </head>
             <body>
                 <div class='container'>
                     <div class='header'>
-                        <h1>New KYC Submission</h1>
+                        <h1>Verification Code</h1>
                     </div>
                     <div class='content'>
-                        <h2>Action Required</h2>
-                        <p>A user has submitted KYC documents for verification.</p>
-                        <p><strong>User:</strong> {fullName}</p>
-                        <p><strong>Email:</strong> {email}</p>
-                        <a href='https://yourdomain.com/admin/kyc' class='button'>Review KYC →</a>
+                        <h2>Dear {fullName},</h2>
+                        <p>Please use the following verification code to complete your KYC:</p>
+                        <div class='otp-code'>{otp}</div>
+                        <p>This code will expire in <strong>5 minutes</strong>.</p>
+                        <p>If you didn't request this, please ignore this email.</p>
+                    </div>
+                    <div class='footer'>
+                        <p>© 2026 ClaimCore Insurance. All rights reserved.</p>
                     </div>
                 </div>
             </body>
             </html>
         ";
-
-        await SendEmailAsync(adminEmail, subject, body, cancellationToken);
-    }
-
-    public async Task SendOtpEmailAsync(string toEmail, string fullName, string otp, CancellationToken cancellationToken)
-    {
-        var subject = "Your Verification Code - ClaimCore Insurance";
-        var body = $@"
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 500px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: linear-gradient(135deg, #22D3EE, #06b6d4); padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-                .header h1 {{ color: white; margin: 0; }}
-                .content {{ background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; text-align: center; }}
-                .otp-code {{ font-size: 32px; font-weight: bold; letter-spacing: 8px; background: #e5e7eb; padding: 15px; border-radius: 8px; margin: 20px 0; }}
-                .footer {{ text-align: center; padding: 20px; font-size: 12px; color: #6b7280; }}
-            </style>
-        </head>
-        <body>
-            <div class='container'>
-                <div class='header'>
-                    <h1>Verification Code</h1>
-                </div>
-                <div class='content'>
-                    <h2>Dear {fullName},</h2>
-                    <p>Please use the following verification code to complete your KYC:</p>
-                    <div class='otp-code'>{otp}</div>
-                    <p>This code will expire in <strong>5 minutes</strong>.</p>
-                    <p>If you didn't request this, please ignore this email.</p>
-                </div>
-                <div class='footer'>
-                    <p>© 2026 ClaimCore Insurance. All rights reserved.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-    ";
 
         await SendEmailAsync(toEmail, subject, body, cancellationToken);
     }
@@ -538,36 +656,37 @@ public sealed class EmailService : IEmailService
     {
         var subject = $"Policy Lapsed - {policyNumber}";
         var body = $@"
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: linear-gradient(135deg, #ef4444, #dc2626); padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-                .content {{ background: #f9fafb; padding: 30px; }}
-                .button {{ display: inline-block; padding: 12px 24px; background: #22D3EE; color: #0B1220; text-decoration: none; border-radius: 6px; margin-top: 20px; }}
-            </style>
-        </head>
-        <body>
-            <div class='container'>
-                <div class='header'>
-                    <h1>Policy Lapsed</h1>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: linear-gradient(135deg, #ef4444, #dc2626); padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                    .header h1 {{ color: white; margin: 0; }}
+                    .content {{ background: #f9fafb; padding: 30px; }}
+                    .button {{ display: inline-block; padding: 12px 24px; background: #22D3EE; color: #0B1220; text-decoration: none; border-radius: 6px; margin-top: 20px; }}
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='header'>
+                        <h1>Policy Lapsed</h1>
+                    </div>
+                    <div class='content'>
+                        <h2>Dear {fullName},</h2>
+                        <p>Your insurance policy <strong>{policyNumber}</strong> has been lapsed due to pending premium payments.</p>
+                        <p><strong>Outstanding Amount:</strong> ₹{outstandingAmount:N2}</p>
+                        <p>Please contact support or initiate reinstatement to restore your coverage.</p>
+                        <a href='https://yourdomain.com/policy/reinstate' class='button'>Reinstate Policy →</a>
+                        <p>Best regards,<br><strong>ClaimCore Insurance Team</strong></p>
+                    </div>
+                    <div class='footer'>
+                        <p>© 2026 ClaimCore Insurance. All rights reserved.</p>
+                    </div>
                 </div>
-                <div class='content'>
-                    <h2>Dear {fullName},</h2>
-                    <p>Your insurance policy <strong>{policyNumber}</strong> has been lapsed due to pending premium payments.</p>
-                    <p><strong>Outstanding Amount:</strong> ₹{outstandingAmount:N2}</p>
-                    <p>Please contact support or initiate reinstatement to restore your coverage.</p>
-                    <a href='https://yourdomain.com/policy/reinstate' class='button'>Reinstate Policy →</a>
-                    <p>Best regards,<br><strong>ClaimCore Insurance Team</strong></p>
-                </div>
-                <div class='footer'>
-                    <p>© 2026 ClaimCore Insurance. All rights reserved.</p>
-                </div>
-            </div>
-        </body>
-        </html>
+            </body>
+            </html>
         ";
 
         await SendEmailAsync(toEmail, subject, body, cancellationToken);
@@ -577,37 +696,37 @@ public sealed class EmailService : IEmailService
     {
         var subject = "Claim Settled Successfully - ClaimCore Insurance";
         var body = $@"
-        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
-            <div style='background: linear-gradient(135deg, #22D3EE, #06B6D4); padding: 20px; text-align: center;'>
-                <h2 style='color: #0B1220; margin: 0;'>Claim Settlement Confirmation</h2>
-            </div>
-            <div style='background: #FFFFFF; padding: 30px; border: 1px solid #E5E7EB;'>
-                <p style='color: #111827; font-size: 16px;'>Dear {fullName},</p>
-                <p style='color: #4B5563;'>Your claim has been successfully settled. The details are as follows:</p>
-                <table style='width: 100%; margin: 20px 0; border-collapse: collapse;'>
-                    <tr style='border-bottom: 1px solid #E5E7EB;'>
-                        <td style='padding: 10px 0; color: #6B7280;'>Claim Number:</td>
-                        <td style='padding: 10px 0; color: #0891B2; font-weight: bold;'>{claimNumber}</td>
-                    </tr>
-                    <tr style='border-bottom: 1px solid #E5E7EB;'>
-                        <td style='padding: 10px 0; color: #6B7280;'>Settled Amount:</td>
-                        <td style='padding: 10px 0; color: #10B981; font-weight: bold;'>₹{amount:N2}</td>
-                    </tr>
-                    <tr>
-                        <td style='padding: 10px 0; color: #6B7280;'>Payment Reference:</td>
-                        <td style='padding: 10px 0; color: #111827;'>{paymentReference}</td>
-                    </tr>
-                </table>
-                <p style='color: #4B5563;'>The amount will be credited to your registered bank account within 2-3 business days.</p>
-                <div style='margin-top: 30px; text-align: center;'>
-                    <a href='https://claimcore.com/app/claims/{claimNumber}' style='background: #0891B2; color: #FFFFFF; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;'>View Claim Details</a>
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                <div style='background: linear-gradient(135deg, #22D3EE, #06B6D4); padding: 20px; text-align: center;'>
+                    <h2 style='color: #0B1220; margin: 0;'>Claim Settlement Confirmation</h2>
                 </div>
-            </div>
-            <div style='background: #F3F4F6; padding: 15px; text-align: center; font-size: 12px; color: #6B7280;'>
-                <p>This is an automated message. Please do not reply to this email.</p>
-                <p>&copy; {DateTime.UtcNow.Year} ClaimCore Insurance. All rights reserved.</p>
-            </div>
-        </div>";
+                <div style='background: #FFFFFF; padding: 30px; border: 1px solid #E5E7EB;'>
+                    <p style='color: #111827; font-size: 16px;'>Dear {fullName},</p>
+                    <p style='color: #4B5563;'>Your claim has been successfully settled. The details are as follows:</p>
+                    <table style='width: 100%; margin: 20px 0; border-collapse: collapse;'>
+                        <tr style='border-bottom: 1px solid #E5E7EB;'>
+                            <td style='padding: 10px 0; color: #6B7280;'>Claim Number:</td>
+                            <td style='padding: 10px 0; color: #0891B2; font-weight: bold;'>{claimNumber}</td>
+                        </tr>
+                        <tr style='border-bottom: 1px solid #E5E7EB;'>
+                            <td style='padding: 10px 0; color: #6B7280;'>Settled Amount:</td>
+                            <td style='padding: 10px 0; color: #10B981; font-weight: bold;'>₹{amount:N2}</td>
+                        </tr>
+                        <tr>
+                            <td style='padding: 10px 0; color: #6B7280;'>Payment Reference:</td>
+                            <td style='padding: 10px 0; color: #111827;'>{paymentReference}</td>
+                        </tr>
+                    </table>
+                    <p style='color: #4B5563;'>The amount will be credited to your registered bank account within 2-3 business days.</p>
+                    <div style='margin-top: 30px; text-align: center;'>
+                        <a href='https://claimcore.com/app/claims/{claimNumber}' style='background: #0891B2; color: #FFFFFF; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;'>View Claim Details</a>
+                    </div>
+                </div>
+                <div style='background: #F3F4F6; padding: 15px; text-align: center; font-size: 12px; color: #6B7280;'>
+                    <p>This is an automated message. Please do not reply to this email.</p>
+                    <p>&copy; {DateTime.UtcNow.Year} ClaimCore Insurance. All rights reserved.</p>
+                </div>
+            </div>";
 
         await SendEmailAsync(toEmail, subject, body, cancellationToken);
     }
@@ -616,40 +735,39 @@ public sealed class EmailService : IEmailService
     {
         var subject = $"GST Invoice #{invoiceNumber} - ClaimCore Insurance";
         var body = $@"
-        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
-            <div style='background: linear-gradient(135deg, #22D3EE, #06B6D4); padding: 20px; text-align: center;'>
-                <h2 style='color: #0B1220; margin: 0;'>GST Invoice</h2>
-            </div>
-            <div style='background: #FFFFFF; padding: 30px; border: 1px solid #E5E7EB;'>
-                <p style='color: #111827; font-size: 16px;'>Dear {fullName},</p>
-                <p style='color: #4B5563;'>Thank you for your payment. Please find attached your GST invoice.</p>
-                <table style='width: 100%; margin: 20px 0; border-collapse: collapse;'>
-                    <tr style='border-bottom: 1px solid #E5E7EB;'>
-                        <td style='padding: 10px 0; color: #6B7280;'>Invoice Number:</td>
-                        <td style='padding: 10px 0; color: #0891B2; font-weight: bold;'>{invoiceNumber}</td>
-                    </tr>
-                    <tr style='border-bottom: 1px solid #E5E7EB;'>
-                        <td style='padding: 10px 0; color: #6B7280;'>Invoice Date:</td>
-                        <td style='padding: 10px 0; color: #111827;'>{DateTime.UtcNow:dd MMM yyyy}</td>
-                    </tr>
-                    <tr style='border-bottom: 1px solid #E5E7EB;'>
-                        <td style='padding: 10px 0; color: #6B7280;'>Total Amount:</td>
-                        <td style='padding: 10px 0; color: #10B981; font-weight: bold;'>₹{amount:N2}</td>
-                    </tr>
-                </table>
-                <p style='color: #4B5563;'>Please find the attached PDF for your records.</p>
-                <div style='margin-top: 30px; text-align: center;'>
-                    <a href='#' style='background: #0891B2; color: #FFFFFF; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;'>Download Invoice</a>
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                <div style='background: linear-gradient(135deg, #22D3EE, #06B6D4); padding: 20px; text-align: center;'>
+                    <h2 style='color: #0B1220; margin: 0;'>GST Invoice</h2>
                 </div>
-            </div>
-            <div style='background: #F3F4F6; padding: 15px; text-align: center; font-size: 12px; color: #6B7280;'>
-                <p>This is a system-generated invoice. It is valid without signature.</p>
-                <p>&copy; {DateTime.UtcNow.Year} ClaimCore Insurance. All rights reserved.</p>
-            </div>
-        </div>";
+                <div style='background: #FFFFFF; padding: 30px; border: 1px solid #E5E7EB;'>
+                    <p style='color: #111827; font-size: 16px;'>Dear {fullName},</p>
+                    <p style='color: #4B5563;'>Thank you for your payment. Please find attached your GST invoice.</p>
+                    <table style='width: 100%; margin: 20px 0; border-collapse: collapse;'>
+                        <tr style='border-bottom: 1px solid #E5E7EB;'>
+                            <td style='padding: 10px 0; color: #6B7280;'>Invoice Number:</td>
+                            <td style='padding: 10px 0; color: #0891B2; font-weight: bold;'>{invoiceNumber}</td>
+                        </tr>
+                        <tr style='border-bottom: 1px solid #E5E7EB;'>
+                            <td style='padding: 10px 0; color: #6B7280;'>Invoice Date:</td>
+                            <td style='padding: 10px 0; color: #111827;'>{DateTime.UtcNow:dd MMM yyyy}</td>
+                        </tr>
+                        <tr style='border-bottom: 1px solid #E5E7EB;'>
+                            <td style='padding: 10px 0; color: #6B7280;'>Total Amount:</td>
+                            <td style='padding: 10px 0; color: #10B981; font-weight: bold;'>₹{amount:N2}</td>
+                        </tr>
+                    </table>
+                    <p style='color: #4B5563;'>Please find the attached PDF for your records.</p>
+                </div>
+                <div style='background: #F3F4F6; padding: 15px; text-align: center; font-size: 12px; color: #6B7280;'>
+                    <p>This is a system-generated invoice. It is valid without signature.</p>
+                    <p>&copy; {DateTime.UtcNow.Year} ClaimCore Insurance. All rights reserved.</p>
+                </div>
+            </div>";
 
         await SendEmailWithAttachmentAsync(toEmail, subject, body, pdfAttachment, $"Invoice_{invoiceNumber}.pdf", cancellationToken);
     }
+
+    #endregion
 
     #region SVG Icon Helpers
 
@@ -723,90 +841,4 @@ public sealed class EmailService : IEmailService
     }
 
     #endregion
-
-    // Core email sending method
-    private async Task SendEmailAsync(string toEmail, string subject, string htmlBody, CancellationToken cancellationToken)
-    {
-        try
-        {
-            _logger.LogInformation($"Sending email to: {toEmail}");
-
-            var email = new MimeMessage();
-            email.From.Add(MailboxAddress.Parse(_configuration["EmailSettings:FromEmail"]));
-            email.To.Add(MailboxAddress.Parse(toEmail));
-            email.Subject = subject;
-            email.Body = new TextPart(TextFormat.Html) { Text = htmlBody };
-
-            using var smtp = new SmtpClient();
-
-            // Bypass SSL certificate validation for development
-            smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
-
-            await smtp.ConnectAsync(
-                _configuration["EmailSettings:SmtpServer"],
-                int.Parse(_configuration["EmailSettings:SmtpPort"]),
-                SecureSocketOptions.StartTls,
-                cancellationToken);
-
-            await smtp.AuthenticateAsync(
-                _configuration["EmailSettings:Username"],
-                _configuration["EmailSettings:Password"],
-                cancellationToken);
-
-            await smtp.SendAsync(email, cancellationToken);
-            await smtp.DisconnectAsync(true, cancellationToken);
-
-            _logger.LogInformation($"Email sent successfully to {toEmail}");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Failed to send email to {toEmail}. Error: {ex.Message}");
-            throw;
-        }
-    }
-
-    // Email with attachment method
-    private async Task SendEmailWithAttachmentAsync(string toEmail, string subject, string htmlBody, byte[] attachment, string attachmentName, CancellationToken cancellationToken)
-    {
-        try
-        {
-            _logger.LogInformation($"Sending email with attachment to: {toEmail}");
-
-            var email = new MimeMessage();
-            email.From.Add(MailboxAddress.Parse(_configuration["EmailSettings:FromEmail"]));
-            email.To.Add(MailboxAddress.Parse(toEmail));
-            email.Subject = subject;
-
-            var builder = new BodyBuilder();
-            builder.HtmlBody = htmlBody;
-            builder.Attachments.Add(attachmentName, attachment);
-            email.Body = builder.ToMessageBody();
-
-            using var smtp = new SmtpClient();
-
-            // Bypass SSL certificate validation for development
-            smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
-
-            await smtp.ConnectAsync(
-                _configuration["EmailSettings:SmtpServer"],
-                int.Parse(_configuration["EmailSettings:SmtpPort"]),
-                SecureSocketOptions.StartTls,
-                cancellationToken);
-
-            await smtp.AuthenticateAsync(
-                _configuration["EmailSettings:Username"],
-                _configuration["EmailSettings:Password"],
-                cancellationToken);
-
-            await smtp.SendAsync(email, cancellationToken);
-            await smtp.DisconnectAsync(true, cancellationToken);
-
-            _logger.LogInformation($"Email with attachment sent successfully to {toEmail}");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Failed to send email with attachment to {toEmail}. Error: {ex.Message}");
-            throw;
-        }
-    }
 }

@@ -4,9 +4,10 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { AuthService } from '../../auth/auth.service';
 import { MemberService } from '../../services/member.service';
 import { ClaimService } from '../../services/claim.service';
-import { KycService } from '../../services/kyc.service'; // ✅ Add this
+import { KycService } from '../../services/kyc.service';
 import { Subscription } from 'rxjs';
 import { FooterComponent } from '../../pages/public/landing/components/footer/footer.component';
+import { environment } from '../../../environments/environment';
 
 interface Notification {
   id: string;
@@ -28,14 +29,14 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private memberService = inject(MemberService);
   private claimService = inject(ClaimService);
-  private kycService = inject(KycService); // ✅ Add this
+  private kycService = inject(KycService);
   private router = inject(Router);
   private renderer = inject(Renderer2);
   private elementRef = inject(ElementRef);
   private cdr = inject(ChangeDetectorRef);
   private boundEscapeHandler = this.handleEscapeKey.bind(this);
 
-  // ✅ KYC STATE
+  // KYC STATE
   isKycVerified = false;
   isLoadingKyc = true;
 
@@ -51,6 +52,7 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   userEmail = '';
   userRole = 'Member';
   userInitials = 'M';
+  profilePhotoUrl: string | null = null;
 
   // Notifications
   notifications: Notification[] = [];
@@ -63,7 +65,7 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadUserData();
     this.loadNotifications();
-    this.checkKycStatus(); // ✅ Add this
+    this.checkKycStatus();
 
     this.refreshSubscription = this.claimService.refreshClaims$.subscribe(() => {
       this.loadNotifications();
@@ -78,7 +80,6 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
     document.removeEventListener('keydown', this.boundEscapeHandler);
   }
 
-  // ✅ ✅ ✅ KYC LOGIC
   private checkKycStatus() {
     this.kycService.getStatus().subscribe({
       next: (status) => {
@@ -95,7 +96,6 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ ADMIN GETTER
   get isAdmin(): boolean {
     const role = this.auth.getUserRole();
     return role === 'Admin' || role === 'ClaimsProcessor';
@@ -114,36 +114,52 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
                         decoded?.role ||
                         'Member';
 
-        const nameParts = this.userName.split(' ');
-        if (nameParts.length >= 2) {
-          this.userInitials = (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
-        } else {
-          this.userInitials = this.userName.substring(0, 2).toUpperCase();
-        }
+        this.updateInitials();
       } catch (e) {
         console.error('Error decoding token', e);
       }
     }
 
-    this.memberService.getDashboard().subscribe({
+    // Load full profile with photo
+    this.memberService.getMyProfile().subscribe({
       next: (res) => {
         if (res.fullName) {
           this.userName = res.fullName;
-          const nameParts = res.fullName.split(' ');
-          if (nameParts.length >= 2) {
-            this.userInitials = (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
-          } else {
-            this.userInitials = res.fullName.substring(0, 2).toUpperCase();
-          }
+          this.updateInitials();
         }
         if (res.email) this.userEmail = res.email;
+        // Load profile photo with full URL
+        if (res.profilePhotoUrl) {
+          this.profilePhotoUrl = `${environment.uploadBaseUrl}${res.profilePhotoUrl}`;
+        } else {
+          this.profilePhotoUrl = null;
+        }
         this.cdr.markForCheck();
       },
       error: () => {
         console.error('Failed to load user data');
-        this.cdr.markForCheck();
+        // Fallback to dashboard if profile fails
+        this.memberService.getDashboard().subscribe({
+          next: (res) => {
+            if (res.fullName) {
+              this.userName = res.fullName;
+              this.updateInitials();
+            }
+            if (res.email) this.userEmail = res.email;
+            this.cdr.markForCheck();
+          }
+        });
       }
     });
+  }
+
+  private updateInitials(): void {
+    const nameParts = this.userName.split(' ');
+    if (nameParts.length >= 2) {
+      this.userInitials = (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+    } else {
+      this.userInitials = this.userName.substring(0, 2).toUpperCase();
+    }
   }
 
   private loadNotifications(): void {

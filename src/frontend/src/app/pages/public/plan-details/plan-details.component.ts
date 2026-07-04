@@ -388,48 +388,54 @@ export class PlanDetailComponent implements OnInit, AfterViewInit {
   }
 
   loadPlan() {
+  this.isLoading = true;
+  this.error = null;
 
-    this.isLoading = true;
-    this.error = null;
+  // ✅ Get plan ID from route - try both param names
+  let planId = this.route.snapshot.paramMap.get('planId') || 
+               this.route.snapshot.params['id'] ||
+               this.route.snapshot.queryParams['planId'];
 
-    const planId =
-      this.route.snapshot.paramMap.get('planId') ||
-      this.route.snapshot.params['id'];
+  if (!planId) {
+    this.error = 'Invalid plan ID';
+    this.errorMessage = 'Invalid plan ID';
+    this.isLoading = false;
+    this.cdr.markForCheck();
+    return;
+  }
 
-    if (!planId) {
-      this.error = 'Invalid plan ID';
-      this.errorMessage = 'Invalid plan ID';
+  this.planId = planId;
+  console.log('[PlanDetail] Loading plan with ID:', this.planId);
+
+  this.planService.getPlanById(planId).subscribe({
+    next: (plan) => {
+      this.currentPlan = plan;
+      this.isLoading = false;
+      console.log('[PlanDetail] Plan loaded:', plan.name);
+
+      // ✅ Auto-store the plan when loaded
+      if (this.planId) {
+        this.authService.setSelectedPlan(this.planId, {
+          planName: plan.name,
+          insuredAmount: plan.insuredAmount,
+          durationInMonths: plan.durationInMonths,
+          features: plan.features
+        });
+        console.log('[PlanDetail] Plan auto-stored:', this.planId);
+      }
+
+      setTimeout(() => this.initCharts(), 300);
+      this.cdr.markForCheck();
+    },
+    error: (err) => {
+      console.error('Failed to load plan:', err);
+      this.error = 'Failed to load plan details. Please try again.';
+      this.errorMessage = 'Failed to load plan details';
       this.isLoading = false;
       this.cdr.markForCheck();
-      return;
     }
-
-    this.planId = planId;
-
-    this.planService.getPlanById(planId).subscribe({
-
-      next: (plan) => {
-        this.currentPlan = plan;
-        this.isLoading = false;
-
-        setTimeout(() => this.initCharts(), 300);
-        this.cdr.markForCheck();
-      },
-
-      error: (err) => {
-        console.error('Failed to load plan:', err);
-
-        this.error =
-          'Failed to load plan details. Please try again.';
-
-        this.errorMessage =
-          'Failed to load plan details';
-
-        this.isLoading = false;
-        this.cdr.markForCheck();
-      }
-    });
-  }
+  });
+}
 
   private initCharts() {
     this.initClaimsChart();
@@ -712,37 +718,69 @@ export class PlanDetailComponent implements OnInit, AfterViewInit {
   }
 
   buyNow(): void {
+  console.log('[PlanDetail] buyNow called with planId:', this.planId);
+  console.log('[PlanDetail] Current plan:', this.currentPlan?.name);
 
-    const token = this.authService.getToken();
-
-    // Store selected plan ID regardless of login status
-    if (this.planId) {
-      this.authService.setSelectedPlanId(this.planId);
-    }
-
-    // Store health factors if calculated
-    if (this.savedHealthFactors) {
-      localStorage.setItem(
-        'premiumHealthFactors',
-        JSON.stringify(this.savedHealthFactors)
-      );
-    }
-
-    if (!token) {
-      this.router.navigate(['/auth'], {
-        queryParams: {
-          mode: 'login',
-          redirect: '/app/policy-setup'
-        }
-      });
-    } else {
-      this.router.navigate(['/app/policy-setup'], {
-        queryParams: {
-          planId: this.planId
-        }
-      });
-    }
+  // ✅ If planId is null, try to get it from storage
+  let planId = this.planId;
+  if (!planId) {
+    planId = this.authService.getSelectedPlanId();
   }
+  if (!planId) {
+    planId = this.authService.getPlanIdFromLegacyStorage();
+  }
+
+  // ✅ If still null, try to get from route again
+  if (!planId) {
+    planId = this.route.snapshot.paramMap.get('planId') || 
+             this.route.snapshot.params['id'] ||
+             this.route.snapshot.queryParams['planId'];
+  }
+
+  if (!planId) {
+    console.error('[PlanDetail] No plan ID found');
+    this.router.navigate(['/plans']);
+    return;
+  }
+
+  this.planId = planId;
+
+  // Store selected plan using unified method
+  this.authService.setSelectedPlan(planId, {
+    planName: this.currentPlan?.name,
+    insuredAmount: this.currentPlan?.insuredAmount,
+    durationInMonths: this.currentPlan?.durationInMonths,
+    features: this.currentPlan?.features
+  });
+
+  console.log('[PlanDetail] Plan stored, ID:', planId);
+  console.log('[PlanDetail] Stored data:', this.authService.getSelectedPlan());
+
+  // Store health factors if calculated
+  if (this.savedHealthFactors) {
+    localStorage.setItem(
+      'premiumHealthFactors',
+      JSON.stringify(this.savedHealthFactors)
+    );
+  }
+
+  const token = this.authService.getToken();
+
+  if (!token) {
+    this.router.navigate(['/auth'], {
+      queryParams: {
+        mode: 'login',
+        redirect: '/app/policy-setup'
+      }
+    });
+  } else {
+    this.router.navigate(['/app/policy-setup'], {
+      queryParams: {
+        planId: planId
+      }
+    });
+  }
+}
 
   onPremiumCalculated(event: {
     result: PremiumCalculationResult;

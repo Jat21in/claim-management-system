@@ -5,17 +5,10 @@ using CMS.Application.Services;
 using CMS.Infrastructure;
 using CMS.Infrastructure.Data;
 using CMS.Infrastructure.Data.Seed;
-
-using Hangfire;
-using Hangfire.Dashboard;
-using Hangfire.SqlServer;
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
-
-using System.Net;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,8 +35,6 @@ builder.Services
             ),
 
             RoleClaimType = System.Security.Claims.ClaimTypes.Role,
-
-            // ✅ FIX
             NameClaimType = System.Security.Claims.ClaimTypes.NameIdentifier
         };
     });
@@ -52,54 +43,38 @@ builder.Services
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Controllers & Swagger
+// Controllers
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
-// ✅ CORS - Allow both local and Azure frontend
+// CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend",
-        policy =>
-        {
-            policy
-                .WithOrigins(
-                    "http://localhost:4200",
-                    "https://salmon-desert-0e09f5300.7.azurestaticapps.net"
-                )
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        });
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:4200",
+                "http://localhost:5173",
+                "https://salmon-desert-0e09f5300.7.azurestaticapps.net",
+                "https://yourdomain.com"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
 });
 
-// ✅ AI Verification HTTP Client
+// AI Verification HTTP Client
 builder.Services.AddHttpClient<IAiVerificationService, GrokAiVerificationService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
-// ✅ Hangfire Configuration
-builder.Services.AddHangfire(config =>
-    config.UseSqlServerStorage(
-        builder.Configuration.GetConnectionString("CmsDatabase"),
-        new SqlServerStorageOptions
-        {
-            PrepareSchemaIfNecessary = true,
-            QueuePollInterval = TimeSpan.FromSeconds(15)
-        }));
-
-builder.Services.AddHangfireServer();
-
-// ✅ Add IRecurringJobManager registration
-builder.Services.AddSingleton<IRecurringJobManager, RecurringJobManager>();
-
-// ✅ File Upload Limits
+// File Upload Limits
 builder.Services.Configure<FormOptions>(options =>
 {
     options.ValueLengthLimit = int.MaxValue;
-    options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10MB
+    options.MultipartBodyLengthLimit = 10 * 1024 * 1024;
     options.MemoryBufferThreshold = int.MaxValue;
 });
 
@@ -107,84 +82,76 @@ builder.Services.AddLogging();
 
 var app = builder.Build();
 
-// ✅ Serve uploaded files
+// Serve uploaded files
 var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads");
 if (!Directory.Exists(uploadsPath))
 {
     Directory.CreateDirectory(uploadsPath);
 }
 
+var membersPath = Path.Combine(uploadsPath, "Members");
+if (!Directory.Exists(membersPath))
+{
+    Directory.CreateDirectory(membersPath);
+}
+
+var claimsPath = Path.Combine(uploadsPath, "Claims");
+if (!Directory.Exists(claimsPath))
+{
+    Directory.CreateDirectory(claimsPath);
+}
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
-    RequestPath = "/uploads"
+    RequestPath = "/uploads",
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=86400");
+    }
 });
 
-// ✅ DATABASE SEEDING
-using (var scope = app.Services.CreateScope())
+// Database Seeding - with retry
+var maxRetries = 5;
+var retryDelay = TimeSpan.FromSeconds(5);
+
+for (int i = 0; i < maxRetries; i++)
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<CmsDbContext>();
-    await PlanSeeder.SeedAsync(dbContext);
-}
-
-// Swagger (only in dev)
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-// Middleware order
-app.UseMiddleware<GlobalExceptionMiddleware>();
-
-app.UseHttpsRedirection();
-
-app.UseCors("AllowFrontend");
-
-app.UseAuthentication();
-
-app.UseAuthorization();
-
-// ✅ REGISTER RECURRING JOBS ONLY IF ENABLED VIA ENVIRONMENT VARIABLE
-// Set Hangfire__EnableRecurringJobs=false in Azure App Settings to disable
-var enableRecurringJobs = builder.Configuration.GetValue<bool>("Hangfire:EnableRecurringJobs", true);
-
-if (enableRecurringJobs)
-{
-    using (var scope = app.Services.CreateScope())
+    try
     {
-        var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
-        var gracePeriodService = scope.ServiceProvider.GetRequiredService<IGracePeriodService>();
-        var paymentService = scope.ServiceProvider.GetRequiredService<IPaymentService>();
+        using (var scope = app.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<CmsDbContext>();
+            Console.WriteLine($"🔄 Attempt {i + 1} of {maxRetries} to connect to database...");
 
-        // Clear existing jobs first (prevents duplicates on restart)
-        recurringJobManager.RemoveIfExists("check-overdue-payments");
-        recurringJobManager.RemoveIfExists("send-grace-reminders");
-        recurringJobManager.RemoveIfExists("check-lapsed-policies");
+            // Test connection
+            await dbContext.Database.CanConnectAsync();
 
-        // Add recurring jobs
-        recurringJobManager.AddOrUpdate(
-            "check-overdue-payments",
-            () => gracePeriodService.CheckAndUpdateOverduePaymentsAsync(CancellationToken.None),
-            Cron.Daily);
-
-        recurringJobManager.AddOrUpdate(
-            "send-grace-reminders",
-            () => gracePeriodService.SendGracePeriodRemindersAsync(CancellationToken.None),
-            Cron.Daily(9));
-
-        recurringJobManager.AddOrUpdate(
-            "check-lapsed-policies",
-            () => paymentService.CheckOverduePaymentsAndLapsePoliciesAsync(CancellationToken.None),
-            Cron.Daily(1));
+            await PlanSeeder.SeedAsync(dbContext);
+            Console.WriteLine("✅ Database seeded successfully.");
+            break;
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠️ Database attempt {i + 1} failed: {ex.Message}");
+        if (i == maxRetries - 1)
+        {
+            Console.WriteLine("❌ All database connection attempts failed. Continuing without database...");
+        }
+        else
+        {
+            Console.WriteLine($"🔄 Waiting {retryDelay.TotalSeconds} seconds before retry...");
+            await Task.Delay(retryDelay);
+        }
     }
 }
-else
-{
-    // Log that recurring jobs are disabled
-    var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogInformation("✅ Hangfire recurring jobs are DISABLED via environment variable.");
-}
+
+app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
