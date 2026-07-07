@@ -47,40 +47,40 @@ public sealed class MembersController : ControllerBase
         return Ok(new { message = "Profile updated successfully" });
     }
 
-    [HttpPost("profile-photo")]
-    public async Task<IActionResult> UploadProfilePhoto([FromForm] IFormFile file)
-    {
-        var memberId = GetMemberId();
+    //[HttpPost("profile-photo")]
+    //public async Task<IActionResult> UploadProfilePhoto([FromForm] IFormFile file)
+    //{
+    //    var memberId = GetMemberId();
 
-        if (file == null || file.Length == 0)
-            return BadRequest(new { error = "File is required" });
+    //    if (file == null || file.Length == 0)
+    //        return BadRequest(new { error = "File is required" });
 
-        if (file.Length > 5 * 1024 * 1024)
-            return BadRequest(new { error = "File size cannot exceed 5MB" });
+    //    if (file.Length > 5 * 1024 * 1024)
+    //        return BadRequest(new { error = "File size cannot exceed 5MB" });
 
-        var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
-        if (!allowedTypes.Contains(file.ContentType.ToLower()))
-            return BadRequest(new { error = "Invalid file format. Allowed: JPG, PNG, GIF, WEBP" });
+    //    var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+    //    if (!allowedTypes.Contains(file.ContentType.ToLower()))
+    //        return BadRequest(new { error = "Invalid file format. Allowed: JPG, PNG, GIF, WEBP" });
 
-        using var stream = file.OpenReadStream();
-        var photoUrl = await _memberService.UploadProfilePhotoAsync(
-            memberId,
-            stream,
-            file.FileName,
-            HttpContext.RequestAborted);
+    //    using var stream = file.OpenReadStream();
+    //    var photoUrl = await _memberService.UploadProfilePhotoAsync(
+    //        memberId,
+    //        stream,
+    //        file.FileName,
+    //        HttpContext.RequestAborted);
 
-        return Ok(new
-        {
-            photoUrl,
-            message = "Profile photo updated successfully"
-        });
-    }
+    //    return Ok(new
+    //    {
+    //        photoUrl,
+    //        message = "Profile photo updated successfully"
+    //    });
+    //}
 
-    [HttpDelete("profile-photo")]
-    public async Task<IActionResult> RemoveProfilePhoto()
-    {
-        var memberId = GetMemberId();
-        await _memberService.RemoveProfilePhotoAsync(memberId, HttpContext.RequestAborted);
-        return Ok(new { message = "Profile photo removed successfully" });
-    }
+    //[HttpDelete("profile-photo")]
+    //public async Task<IActionResult> RemoveProfilePhoto()
+    //{
+    //    var memberId = GetMemberId();
+    //    await _memberService.RemoveProfilePhotoAsync(memberId, HttpContext.RequestAborted);
+    //    return Ok(new { message = "Profile photo removed successfully" });
+    //}
 }
