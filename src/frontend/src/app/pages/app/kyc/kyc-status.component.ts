@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { KycService } from '../../../services/kyc.service';
@@ -9,6 +9,7 @@ import { environment } from '../../../../environments/environment';
   selector: 'app-kyc-status',
   standalone: true,
   imports: [CommonModule, RouterLink],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="kyc-status-container">
       <div class="breadcrumb">
@@ -223,14 +224,22 @@ import { environment } from '../../../../environments/environment';
   `,
   styleUrls: ['./kyc-status.component.scss'],
 })
-export class KycStatusComponent implements OnInit {
+export class KycStatusComponent implements OnInit, OnDestroy {
   private kycService = inject(KycService);
+  private cdr = inject(ChangeDetectorRef);
+  private intervalId?: number;
   status: KycStatus | null = null;
 
   ngOnInit() {
     this.loadStatus();
     // Auto-refresh every 30 seconds
-    setInterval(() => this.loadStatus(), 30000);
+    this.intervalId = window.setInterval(() => this.loadStatus(), 30000);
+  }
+
+  ngOnDestroy() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
   }
 
   loadStatus() {
@@ -245,6 +254,8 @@ export class KycStatusComponent implements OnInit {
             fileUrl: `${environment.uploadBaseUrl}${doc.fileUrl}`,
           })),
         };
+        // notify OnPush change detection to check this component
+        this.cdr.markForCheck();
       },
       error: (err) => console.error('Failed to load KYC status', err),
     });

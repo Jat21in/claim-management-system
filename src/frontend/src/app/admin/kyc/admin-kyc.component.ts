@@ -108,33 +108,51 @@ export class AdminKycComponent implements OnInit, OnDestroy {
     if (this.refreshInterval) clearInterval(this.refreshInterval);
   }
 
-  // Document Modal Methods
-  openDocumentModal(doc: KycDocument, requestName: string, event: Event) {
-    event.stopPropagation();
-    this.selectedDocument = doc;
-    this.selectedRequestName = requestName;
-
-    let fullUrl = doc.fileUrl;
-
-    if (fullUrl.startsWith('/uploads/')) {
-      fullUrl = `${environment.uploadBaseUrl}${fullUrl}`;
-    } else if (!fullUrl.startsWith('http')) {
-      fullUrl = `${environment.uploadBaseUrl}/${fullUrl}`;
-    }
-
-    this.documentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(fullUrl);
-
-    const fileExt = doc.fileName?.split('.').pop()?.toLowerCase() || '';
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
-      this.documentFileType = 'image';
-    } else if (fileExt === 'pdf') {
-      this.documentFileType = 'pdf';
-    } else {
-      this.documentFileType = 'other';
-    }
-
-    this.showDocumentModal = true;
+  // Add this helper method at the top of your component
+private buildFullUrl(fileUrl: string): string {
+  if (!fileUrl) return '#';
+  
+  // If it's already an absolute URL, return it
+  if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+    return fileUrl;
   }
+  
+  // Clean up the base URL - remove trailing slash if present
+  let baseUrl = environment.uploadBaseUrl;
+  if (baseUrl.endsWith('/')) {
+    baseUrl = baseUrl.slice(0, -1);
+  }
+  
+  // Clean up the file URL - remove leading slash if present
+  let cleanFileUrl = fileUrl;
+  if (cleanFileUrl.startsWith('/')) {
+    cleanFileUrl = cleanFileUrl.slice(1);
+  }
+  
+  // Combine them
+  return `${baseUrl}/${cleanFileUrl}`;
+}
+
+openDocumentModal(doc: KycDocument, requestName: string, event: Event) {
+  event.stopPropagation();
+  this.selectedDocument = doc;
+  this.selectedRequestName = requestName;
+
+  // Use the helper method to build the URL
+  const fullUrl = this.buildFullUrl(doc.fileUrl);
+  this.documentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(fullUrl);
+
+  const fileExt = doc.fileName?.split('.').pop()?.toLowerCase() || '';
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+    this.documentFileType = 'image';
+  } else if (fileExt === 'pdf') {
+    this.documentFileType = 'pdf';
+  } else {
+    this.documentFileType = 'other';
+  }
+
+  this.showDocumentModal = true;
+}
 
   closeDocumentModal() {
     this.showDocumentModal = false;

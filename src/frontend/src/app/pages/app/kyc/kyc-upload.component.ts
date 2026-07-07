@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormsModule,
@@ -11,6 +11,8 @@ import { Router, RouterLink } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { Subject, interval, Subscription } from 'rxjs';
+import { takeUntil, finalize } from 'rxjs/operators';
 
 interface DocumentType {
   id: number;
@@ -27,6 +29,7 @@ interface DocumentType {
   selector: 'app-kyc-upload',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './kyc-upload.component.html',
   styleUrls: ['./kyc-upload.component.scss'],
 })
@@ -34,6 +37,7 @@ export class KycUploadComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private http = inject(HttpClient);
+  private cdr = inject(ChangeDetectorRef);
 
   error = '';
   Math = Math;
@@ -84,7 +88,8 @@ export class KycUploadComponent implements OnInit, OnDestroy {
   isOtpSent: boolean = false;
   isOtpVerified: boolean = false;
   otpTimer: number = 0;
-  otpInterval: any;
+  private destroyed$ = new Subject<void>();
+  private otpSub?: Subscription;
 
   kycForm: FormGroup = this.fb.group({
     documentNumber: ['', Validators.required],
@@ -95,9 +100,11 @@ export class KycUploadComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.otpInterval) {
-      clearInterval(this.otpInterval);
+    if (this.otpSub) {
+      this.otpSub.unsubscribe();
     }
+    this.destroyed$.next();
+    this.destroyed$.complete();
   }
 
   get isPhoneNumberValid(): boolean {
@@ -112,6 +119,7 @@ export class KycUploadComponent implements OnInit, OnDestroy {
     }
     this.phoneNumber = value;
     input.value = value;
+    this.cdr.markForCheck();
   }
 
   selectDocument(docId: number) {
@@ -128,6 +136,7 @@ export class KycUploadComponent implements OnInit, OnDestroy {
       this.kycForm.get('documentNumber')?.setValidators(validators);
       this.kycForm.get('documentNumber')?.updateValueAndValidity();
     }
+    this.cdr.markForCheck();
   }
 
   onFileSelected(event: Event) {
@@ -152,12 +161,14 @@ export class KycUploadComponent implements OnInit, OnDestroy {
     }
 
     this.uploadedFile = file;
+    this.cdr.markForCheck();
   }
 
   removeFile() {
     this.uploadedFile = null;
     const fileInput = document.getElementById('documentFile') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
+    this.cdr.markForCheck();
   }
 
   onDragOver(event: DragEvent) {
@@ -208,29 +219,42 @@ export class KycUploadComponent implements OnInit, OnDestroy {
       .post(`${environment.apiBaseUrl}/v1/verification/send-otp`, {
         phoneNumber: this.phoneNumber,
       })
+      .pipe(
+        takeUntil(this.destroyed$),
+        finalize(() => {
+          this.isOtpLoading = false;
+          this.cdr.markForCheck();
+        })
+      )
       .subscribe({
         next: () => {
           this.isOtpSent = true;
-          this.isOtpLoading = false;
           this.startOtpTimer();
         },
         error: (err) => {
           this.error = err.error?.error || err.message || 'Failed to send OTP';
-          this.isOtpLoading = false;
         },
       });
   }
 
   startOtpTimer() {
     this.otpTimer = 300;
-    if (this.otpInterval) clearInterval(this.otpInterval);
-    this.otpInterval = setInterval(() => {
-      if (this.otpTimer > 0) {
-        this.otpTimer--;
-      } else {
-        clearInterval(this.otpInterval);
-      }
-    }, 1000);
+    if (this.otpSub) {
+      this.otpSub.unsubscribe();
+    }
+    this.otpSub = interval(1000)
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe(() => {
+        if (this.otpTimer > 0) {
+          this.otpTimer--;
+        } else {
+          if (this.otpSub) {
+            this.otpSub.unsubscribe();
+            this.otpSub = undefined;
+          }
+        }
+        this.cdr.markForCheck();
+      });
   }
 
   verifyOtp() {
@@ -247,23 +271,29 @@ export class KycUploadComponent implements OnInit, OnDestroy {
         phoneNumber: this.phoneNumber,
         otp: this.otpCode,
       })
+      .pipe(
+        takeUntil(this.destroyed$),
+        finalize(() => {
+          this.isOtpLoading = false;
+          this.cdr.markForCheck();
+        })
+      )
       .subscribe({
         next: (res: any) => {
           if (res.isValid === true) {
             this.isOtpVerified = true;
             this.error = '';
-            if (this.otpInterval) {
-              clearInterval(this.otpInterval);
+            if (this.otpSub) {
+              this.otpSub.unsubscribe();
+              this.otpSub = undefined;
             }
           } else {
             this.error = 'Invalid OTP. Please try again.';
             this.isOtpVerified = false;
           }
-          this.isOtpLoading = false;
         },
         error: (err) => {
           this.error = err.error?.error || 'OTP verification failed';
-          this.isOtpLoading = false;
           this.isOtpVerified = false;
         },
       });
@@ -288,15 +318,22 @@ export class KycUploadComponent implements OnInit, OnDestroy {
     formData.append('PhoneNumber', this.phoneNumber);
     formData.append('OtpCode', this.otpCode);
     formData.append('file', this.uploadedFile);
-
-    this.http.post(`${environment.apiBaseUrl}/v1/kyc/upload`, formData).subscribe({
-      next: () => {
-        this.router.navigate(['/app/kyc/pending']);
-      },
-      error: (err) => {
-        this.error = err.error?.error || err.message || 'Upload failed';
-        this.isSubmitting = false;
-      },
-    });
+    this.http
+      .post(`${environment.apiBaseUrl}/v1/kyc/upload`, formData)
+      .pipe(
+        takeUntil(this.destroyed$),
+        finalize(() => {
+          this.isSubmitting = false;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.router.navigate(['/app/kyc/pending']);
+        },
+        error: (err) => {
+          this.error = err.error?.error || err.message || 'Upload failed';
+        },
+      });
   }
 }
