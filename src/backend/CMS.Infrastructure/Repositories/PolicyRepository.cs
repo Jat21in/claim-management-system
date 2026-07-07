@@ -153,5 +153,12 @@ public sealed class PolicyRepository : IPolicyRepository
         return await _context.Set<Nominee>()
             .FirstOrDefaultAsync(n => n.NomineeId == nomineeId, cancellationToken);
     }
-
+    // In PolicyRepository.cs
+    public async Task<Policy?> GetByIdWithMemberAsync(Guid policyId, CancellationToken cancellationToken)
+    {
+        return await _context.Policies
+            .Include(p => p.Member)  // ✅ This loads the Member
+            .Include(p => p.Plan)
+            .FirstOrDefaultAsync(p => p.PolicyId == policyId, cancellationToken);
+    }
 }

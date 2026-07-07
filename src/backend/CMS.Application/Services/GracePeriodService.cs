@@ -79,7 +79,8 @@ public sealed class GracePeriodService : IGracePeriodService
 
         try
         {
-            var policy = await _policyRepository.GetByIdAsync(policyId, cancellationToken);
+            // ✅ FIX: Get policy with Member loaded
+            var policy = await _policyRepository.GetByIdWithMemberAsync(policyId, cancellationToken);
 
             if (policy == null)
             {
@@ -95,7 +96,7 @@ public sealed class GracePeriodService : IGracePeriodService
                 return result;
             }
 
-            // ✅ FIX: Get overdue payments with null check
+            // Get overdue payments
             var allPayments = await _paymentRepository.GetByPolicyIdAsync(policyId, cancellationToken);
             var overduePayments = allPayments?.Where(p => p.Status == PaymentStatus.Pending && p.DueDate < DateTime.UtcNow).ToList() ?? new List<PremiumPayment>();
 
@@ -111,7 +112,7 @@ public sealed class GracePeriodService : IGracePeriodService
             policy.Lapse();
             await _policyRepository.UpdateAsync(policy, cancellationToken);
 
-            // ✅ FIX: Send email only if Member exists
+            // ✅ FIX: Now Member is loaded, check if it exists
             if (policy.Member != null && !string.IsNullOrEmpty(policy.Member.Email))
             {
                 await _emailService.SendPolicyLapsedEmailAsync(
@@ -120,13 +121,16 @@ public sealed class GracePeriodService : IGracePeriodService
                     policy.PolicyNumber,
                     totalOutstanding,
                     cancellationToken);
+
+                _logger.LogInformation($"✅ Lapse notification sent to {policy.Member.Email}");
             }
             else
             {
-                _logger.LogWarning($"Cannot send lapse email for policy {policy.PolicyNumber}: Member or email is null");
+                _logger.LogWarning($"❌ Cannot send lapse email for policy {policy.PolicyNumber}: Member or email is null");
+                _logger.LogWarning($"   MemberId: {policy.MemberId}, Member object is null: {policy.Member == null}");
             }
 
-            _logger.LogWarning("Policy {PolicyNumber} lapsed on {Date}", policy.PolicyNumber, DateTime.UtcNow);
+            _logger.LogWarning($"Policy {policy.PolicyNumber} lapsed on {DateTime.UtcNow}");
         }
         catch (Exception ex)
         {
@@ -203,7 +207,8 @@ public sealed class GracePeriodService : IGracePeriodService
         {
             _logger.LogInformation("=== SendGracePeriodRemindersAsync STARTED ===");
 
-            var pendingPayments = await _paymentRepository.GetPendingPaymentsAsync(cancellationToken);
+            // ✅ FIX: Get pending payments with Policy AND Member loaded
+            var pendingPayments = await _paymentRepository.GetPendingPaymentsWithDetailsAsync(cancellationToken);
 
             _logger.LogInformation($"Found {pendingPayments?.Count() ?? 0} pending payments");
 
@@ -211,6 +216,7 @@ public sealed class GracePeriodService : IGracePeriodService
 
             foreach (var payment in pendingPayments)
             {
+                // ✅ FIX: Check all navigation properties
                 if (payment == null || payment.Policy == null || payment.Policy.Member == null)
                 {
                     _logger.LogWarning($"Skipping payment with null policy or member: {payment?.PaymentId}");
@@ -221,51 +227,40 @@ public sealed class GracePeriodService : IGracePeriodService
                 var isOverdue = daysUntilDue < 0;
                 var daysOverdue = isOverdue ? Math.Abs(daysUntilDue) : 0;
 
-                _logger.LogInformation($"Payment {payment.Policy.PolicyNumber}: DueDate={payment.DueDate:yyyy-MM-dd}, DaysUntilDue={daysUntilDue}, IsOverdue={isOverdue}");
+                // Get email with null check
+                var email = payment.Policy.Member?.Email;
+                var fullName = payment.Policy.Member?.FullName ?? "Valued Customer";
 
-                // Send email for OVERDUE payments
-                if (isOverdue)
+                if (string.IsNullOrEmpty(email))
                 {
-                    _logger.LogInformation($"🔴 SENDING OVERDUE reminder to {payment.Policy.Member.Email} for policy {payment.Policy.PolicyNumber}, {daysOverdue} days overdue");
-
-                    try
-                    {
-                        await _emailService.SendPremiumReminderEmailAsync(
-                            payment.Policy.Member.Email,
-                            payment.Policy.Member.FullName ?? "Valued Customer",
-                            payment.Policy.PolicyNumber,
-                            payment.Amount,
-                            payment.DueDate,
-                            cancellationToken);
-
-                        _logger.LogInformation($"✅ Email sent successfully to {payment.Policy.Member.Email}");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"❌ Failed to send email: {ex.Message}");
-                    }
+                    _logger.LogWarning($"Skipping payment {payment.PaymentId}: Member has no email");
+                    continue;
                 }
-                // For upcoming payments (7, 3, 1 days before due)
+
+                // Send email based on days until due
+                if (isOverdue && daysOverdue <= 30)
+                {
+                    _logger.LogInformation($"🔴 SENDING OVERDUE reminder to {email} for policy {payment.Policy.PolicyNumber}, {daysOverdue} days overdue");
+
+                    await _emailService.SendPremiumReminderEmailAsync(
+                        email,
+                        fullName,
+                        payment.Policy.PolicyNumber,
+                        payment.Amount,
+                        payment.DueDate,
+                        cancellationToken);
+                }
                 else if (daysUntilDue == 7 || daysUntilDue == 3 || daysUntilDue == 1)
                 {
-                    _logger.LogInformation($"Sending UPCOMING reminder to {payment.Policy.Member.Email} for policy {payment.Policy.PolicyNumber}, due in {daysUntilDue} days");
+                    _logger.LogInformation($"📧 Sending reminder to {email} for policy {payment.Policy.PolicyNumber}, due in {daysUntilDue} days");
 
-                    try
-                    {
-                        await _emailService.SendPremiumReminderEmailAsync(
-                            payment.Policy.Member.Email,
-                            payment.Policy.Member.FullName ?? "Valued Customer",
-                            payment.Policy.PolicyNumber,
-                            payment.Amount,
-                            payment.DueDate,
-                            cancellationToken);
-
-                        _logger.LogInformation($"✅ Email sent successfully to {payment.Policy.Member.Email}");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"❌ Failed to send email: {ex.Message}");
-                    }
+                    await _emailService.SendPremiumReminderEmailAsync(
+                        email,
+                        fullName,
+                        payment.Policy.PolicyNumber,
+                        payment.Amount,
+                        payment.DueDate,
+                        cancellationToken);
                 }
                 else
                 {

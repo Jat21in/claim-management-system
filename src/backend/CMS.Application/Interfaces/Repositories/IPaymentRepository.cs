@@ -10,4 +10,6 @@ public interface IPaymentRepository
     Task<IEnumerable<PremiumPayment>> GetOverduePaymentsAsync(CancellationToken cancellationToken);
     Task AddAsync(PremiumPayment payment, CancellationToken cancellationToken);
     Task UpdateAsync(PremiumPayment payment, CancellationToken cancellationToken);
+    // In IPaymentRepository.cs
+    Task<IEnumerable<PremiumPayment>> GetPendingPaymentsWithDetailsAsync(CancellationToken cancellationToken);
 }

@@ -21,7 +21,7 @@ public sealed class CmsDbContext : DbContext
     public DbSet<KycDocument> KycDocuments => Set<KycDocument>();
     public DbSet<NetworkHospital> NetworkHospitals => Set<NetworkHospital>();
 
-    // ✅ REMOVE OnConfiguring - it overrides the connection string
+    // REMOVE OnConfiguring - it overrides the connection string
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

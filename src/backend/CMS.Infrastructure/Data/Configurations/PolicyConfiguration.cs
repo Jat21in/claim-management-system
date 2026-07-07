@@ -18,6 +18,9 @@ public sealed class PolicyConfiguration : IEntityTypeConfiguration<Policy>
         builder.HasIndex(p => p.PolicyNumber)
             .IsUnique();
 
+        builder.Property(p => p.LastPaymentAmount)
+        .HasPrecision(18, 2);  // ✅ Add this line
+
         builder.Property(p => p.MonthlyPremium)
             .HasPrecision(18, 2);
 

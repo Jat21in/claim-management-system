@@ -115,4 +115,13 @@ public sealed class PaymentRepository : IPaymentRepository
             await _context.SaveChangesAsync(cancellationToken);
         }
     }
+    // In PaymentRepository.cs
+    public async Task<IEnumerable<PremiumPayment>> GetPendingPaymentsWithDetailsAsync(CancellationToken cancellationToken)
+    {
+        return await _context.PremiumPayments
+            .Include(p => p.Policy)
+                .ThenInclude(p => p.Member)  // ✅ Load Member through Policy
+            .Where(p => p.Status == PaymentStatus.Pending)
+            .ToListAsync(cancellationToken);
+    }
 }

@@ -16,4 +16,6 @@ public interface IPolicyRepository
     Task AddNomineeAsync(Nominee nominee, CancellationToken cancellationToken);
     Task<Dependent?> GetDependentByIdAsync(Guid dependentId, CancellationToken cancellationToken);
     Task<Nominee?> GetNomineeByIdAsync(Guid nomineeId, CancellationToken cancellationToken);
+    // In IPolicyRepository.cs
+    Task<Policy?> GetByIdWithMemberAsync(Guid policyId, CancellationToken cancellationToken);
 }
