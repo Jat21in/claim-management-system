@@ -1,21 +1,24 @@
 // ============================================================
-// FOOTER COMPONENT — Updated to match ContactUs theme
+// FOOTER COMPONENT — Updated with highlighted documentation
 // ============================================================
 
-// ── Tokens (aligned with ContactUs component) ─────────────────
-$bg-darker:       #020617;      // main footer background
-$bg-input:        #1e293b;      // social button background
+// ── Tokens ─────────────────────────────────────────────────────
+$bg-darker:       #020617;
+$bg-input:        #1e293b;
 $text-head:       #ffffff;
-$text-link:       #a1a5b4;      // same as contact $text-secondary
-$text-link-hov:   #3b82f6;      // primary accent from contact
-$text-desc:       #a1a5b4;      // brand description, same as $text-secondary
-$divider:         #334155;      // contact's $border-color
+$text-link:       #a1a5b4;
+$text-link-hov:   #3b82f6;
+$text-desc:       #a1a5b4;
+$divider:         #334155;
 $font:            'DM Sans', 'Helvetica Neue', Arial, sans-serif;
+$highlight-bg:    rgba(59, 130, 246, 0.15);
+$highlight-border: #3b82f6;
 
-// Social brand colours (unchanged)
+// Social brand colours
+$github:   #333;
 $linkedin: #0a66c2;
-$twitter:   #1d9bf0;
-$slack-bg:  #4a154b;
+$twitter:  #1d9bf0;
+$slack-bg: #4a154b;
 
 // ── Google Font import ────────────────────────────────────────
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -23,7 +26,7 @@ $slack-bg:  #4a154b;
 // ── Root container ────────────────────────────────────────────
 .footer {
   position: relative;
-  background: $bg-darker;                // solid dark background
+  background: $bg-darker;
   font-family: $font;
   overflow: hidden;
   padding: 3.5rem 0 0;
@@ -81,17 +84,63 @@ $slack-bg:  #4a154b;
     font-weight: 400;
     color: $text-link;
     text-decoration: none;
-    transition: color 0.18s ease;
+    transition: color 0.18s ease, background 0.18s ease;
     line-height: 1.5;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
 
     &:hover,
     &:focus-visible {
-      color: $text-link-hov;   // primary blue accent
+      color: $text-link-hov;
       outline: none;
+    }
+
+    // ── Highlighted link (Documentation) ──────────────────────
+    &--highlighted {
+      background: $highlight-bg;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      border: 1px solid $highlight-border;
+      color: #60a5fa;
+      font-weight: 500;
+      position: relative;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba(59, 130, 246, 0.25);
+        transform: translateX(4px);
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+      }
+
+      .footer__external-icon {
+        color: #60a5fa;
+      }
+    }
+
+    // ── External link indicator ──────────────────────────────
+    &--external {
+      .footer__external-icon {
+        font-size: 0.7rem;
+        opacity: 0.6;
+        transition: transform 0.2s ease;
+      }
+
+      &:hover .footer__external-icon {
+        transform: translate(2px, -2px);
+        opacity: 1;
+      }
     }
   }
 
-  // ── Brand panel (right column) ────────────────────────────────
+  &__external-icon {
+    display: inline-block;
+    font-size: 0.65rem;
+    line-height: 1;
+    margin-left: 0.1rem;
+  }
+
+  // ── Brand panel ──────────────────────────────────────────────
   &__brand {
     display: flex;
     flex-direction: column;
@@ -106,45 +155,89 @@ $slack-bg:  #4a154b;
     }
   }
 
- &__brand-logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;           // consistent with header gap
-  text-decoration: none;
-}
+  &__brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+  }
 
-&__logo-box {
-  font-size: 1.8rem;      // same size as header icon
-  line-height: 1;
-  background: linear-gradient(135deg, #a855f7, #3b82f6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  // remove any background, width/height constraints
-  width: auto;
-  height: auto;
-  background-color: transparent; // override previous background
-}
+  &__logo-box {
+    font-size: 1.8rem;
+    line-height: 1;
+    background: linear-gradient(135deg, #a855f7, #3b82f6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    width: auto;
+    height: auto;
+    background-color: transparent;
+  }
 
-&__brand-name {
-  font-weight: 700;
-  font-size: 1.5rem;      // match header logo-text
-  letter-spacing: -0.02em;
-  color: white;           // "Claim" stays white
-}
+  &__brand-name {
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+    color: white;
+  }
 
-&__brand-highlight {
-  background: linear-gradient(135deg, #a855f7, #3b82f6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
+  &__brand-highlight {
+    background: linear-gradient(135deg, #a855f7, #3b82f6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 
   &__brand-desc {
     font-size: 0.8rem;
     line-height: 1.65;
-    color: $text-desc;         // now uses $text-secondary from contact
+    color: $text-desc;
     margin: 0;
+  }
+
+  // ── Quick links (highlighted documentation) ─────────────────
+  &__quick-links {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 0.25rem;
+
+    @media (max-width: 480px) {
+      flex-direction: column;
+    }
+  }
+
+  &__quick-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: $text-link;
+    text-decoration: none;
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    background: $bg-input;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+
+    &:hover {
+      color: #fff;
+      background: darken($bg-input, 5%);
+      transform: translateY(-2px);
+    }
+
+    &--primary {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: $highlight-border;
+      color: #60a5fa;
+
+      &:hover {
+        background: rgba(59, 130, 246, 0.35);
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        border-color: #60a5fa;
+      }
+    }
   }
 
   // ── Social buttons ────────────────────────────────────────────
@@ -161,7 +254,7 @@ $slack-bg:  #4a154b;
     width: 32px;
     height: 32px;
     border-radius: 6px;
-    background: $bg-input;           // matches contact’s input background
+    background: $bg-input;
     color: #ffffff;
     transition: background 0.2s ease, transform 0.15s ease;
     text-decoration: none;
@@ -175,9 +268,10 @@ $slack-bg:  #4a154b;
       transform: translateY(-2px);
     }
 
+    &--github:hover   { background: $github; }
     &--linkedin:hover { background: $linkedin; }
-    &--twitter:hover  { background: $twitter;  }
-    &--slack:hover    { background: $slack-bg;  }
+    &--twitter:hover  { background: $twitter; }
+    &--slack:hover    { background: $slack-bg; }
   }
 
   // ── Divider ───────────────────────────────────────────────────
@@ -186,7 +280,7 @@ $slack-bg:  #4a154b;
     margin: 0 auto;
     padding: 0 2rem;
     height: 1px;
-    background: $divider;       // contact’s border colour
+    background: $divider;
   }
 
   // ── Bottom copyright bar ───────────────────────────────────────
@@ -195,17 +289,48 @@ $slack-bg:  #4a154b;
     margin: 0 auto;
     padding: 1.25rem 2rem;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     position: relative;
     z-index: 2;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+
+    @media (max-width: 600px) {
+      justify-content: center;
+      text-align: center;
+    }
   }
 
   &__copy {
     font-size: 0.8rem;
-    color: $text-desc;          // consistent with contact secondary text
+    color: $text-desc;
     margin: 0;
     letter-spacing: 0.005em;
+  }
+
+  &__copy-links {
+    font-size: 0.8rem;
+    color: $text-desc;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    a {
+      color: $text-link;
+      text-decoration: none;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: $text-link-hov;
+      }
+    }
+  }
+
+  &__dot {
+    color: $divider;
+    user-select: none;
   }
 
   // ── Watermark text ─────────────────────────────────────────────
@@ -218,7 +343,7 @@ $slack-bg:  #4a154b;
     font-weight: 700;
     letter-spacing: -0.03em;
     color: transparent;
-    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.07);  // slightly more visible on darker bg
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.07);
     background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%);
     -webkit-background-clip: text;
     background-clip: text;
@@ -232,5 +357,9 @@ $slack-bg:  #4a154b;
 
 // ── Accessibility ──────────────────────────────────────────────
 @media (prefers-reduced-motion: reduce) {
-  .footer__social-btn { transition: none; }
+  .footer__social-btn,
+  .footer__link,
+  .footer__quick-link {
+    transition: none;
+  }
 }
