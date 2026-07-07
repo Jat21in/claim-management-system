@@ -12,11 +12,13 @@ public sealed class EmailService : IEmailService
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<EmailService> _logger;
+    private readonly EmailLinkService _linkService;
 
-    public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
+    public EmailService(IConfiguration configuration, ILogger<EmailService> logger, EmailLinkService linkService)
     {
         _configuration = configuration;
         _logger = logger;
+        _linkService = linkService;
     }
 
     #region Core Email Methods
@@ -109,10 +111,11 @@ public sealed class EmailService : IEmailService
 
     #region IEmailService Implementation
 
-    // ✅ NEW: Send Password Reset OTP Email
     public async Task SendPasswordResetOtpAsync(string toEmail, string fullName, string otp, CancellationToken cancellationToken)
     {
         var subject = "🔐 Password Reset OTP - ClaimCore";
+        var dashboardLink = _linkService.GetDashboardLink();
+
         var body = $@"
             <html>
             <head>
@@ -142,12 +145,12 @@ public sealed class EmailService : IEmailService
                     </div>
                     <div class='footer'>
                         <p>ClaimCore Insurance • Secure & Trusted</p>
+                        <p><a href='{dashboardLink}' style='color: #22D3EE;'>Go to Dashboard</a></p>
                         <p>© {DateTime.Now.Year} ClaimCore. All rights reserved.</p>
                     </div>
                 </div>
             </body>
-            </html>
-        ";
+            </html>";
 
         await SendEmailAsync(toEmail, subject, body, cancellationToken);
     }
@@ -202,6 +205,9 @@ public sealed class EmailService : IEmailService
             "paid" => $"CLAIM SETTLED - ClaimCore Insurance",
             _ => $"STATUS UPDATE - ClaimCore Insurance"
         };
+
+        var claimDetailsLink = _linkService.GetClaimDetailsLink(claimId);
+        var dashboardLink = _linkService.GetDashboardLink();
 
         var formattedClaimId = claimId.Length > 8 ? claimId.Substring(0, 8) + "..." : claimId;
         var formattedDate = claimDate.ToString("dd MMMM yyyy");
@@ -320,7 +326,7 @@ public sealed class EmailService : IEmailService
                         </div>
                         
                         <div style='text-align: center; margin-bottom: 28px;'>
-                            <a href='https://portal.claimcore.com/claims/{claimId}' 
+                            <a href='{claimDetailsLink}' 
                                style='display: inline-block; background: #0891B2; color: #FFFFFF; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;'>
                                 Access Claim Dashboard
                             </a>
@@ -338,6 +344,9 @@ public sealed class EmailService : IEmailService
                             This is an automated transactional message. Please do not reply directly to this email.
                         </p>
                         <p style='color: #9CA3AF; font-size: 12px; margin: 12px 0 0;'>
+                            <a href='{dashboardLink}' style='color: #0891B2;'>Go to Dashboard</a>
+                        </p>
+                        <p style='color: #9CA3AF; font-size: 12px; margin: 12px 0 0;'>
                             © {DateTime.UtcNow.Year} ClaimCore Insurance. All rights reserved.
                         </p>
                     </div>
@@ -352,6 +361,10 @@ public sealed class EmailService : IEmailService
     public async Task SendKycApprovedEmailAsync(string toEmail, string fullName, CancellationToken cancellationToken)
     {
         var subject = "Your KYC has been approved! - ClaimCore Insurance";
+        var dashboardLink = _linkService.GetDashboardLink();
+        var policyLink = _linkService.GetPolicyLink();
+        var claimsLink = _linkService.GetClaimsLink();
+
         var body = $@"
             <!DOCTYPE html>
             <html>
@@ -359,7 +372,7 @@ public sealed class EmailService : IEmailService
                 <style>
                     body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
                     .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                    .header {{ background: linear-gradient(135deg, #22D3EE, #06b6d4); padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                    .header {{ background: linear-gradient(135deg, #10b981, #059669); padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
                     .header h1 {{ color: white; margin: 0; }}
                     .content {{ background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }}
                     .button {{ display: inline-block; padding: 12px 24px; background: #22D3EE; color: #0B1220; text-decoration: none; border-radius: 6px; margin-top: 20px; }}
@@ -369,7 +382,7 @@ public sealed class EmailService : IEmailService
             <body>
                 <div class='container'>
                     <div class='header'>
-                        <h1>Welcome to ClaimCore!</h1>
+                        <h1>✅ KYC Approved!</h1>
                     </div>
                     <div class='content'>
                         <h2>Dear {fullName},</h2>
@@ -382,18 +395,19 @@ public sealed class EmailService : IEmailService
                             <li>Submit and track claims</li>
                             <li>Download policy documents</li>
                         </ul>
-                        <a href='https://yourdomain.com/dashboard' class='button'>Go to Dashboard →</a>
+                        <div style='text-align: center;'>
+                            <a href='{dashboardLink}' class='button'>Go to Dashboard →</a>
+                        </div>
                         <p style='margin-top: 20px;'>Thank you for choosing ClaimCore!</p>
                         <p>Best regards,<br><strong>ClaimCore Insurance Team</strong></p>
                     </div>
                     <div class='footer'>
                         <p>© 2026 ClaimCore Insurance. All rights reserved.</p>
-                        <p>This is an automated message, please do not reply.</p>
+                        <p><a href='{policyLink}'>Browse Plans</a> | <a href='{claimsLink}'>Submit Claim</a></p>
                     </div>
                 </div>
             </body>
-            </html>
-        ";
+            </html>";
 
         await SendEmailAsync(toEmail, subject, body, cancellationToken);
     }
@@ -401,6 +415,8 @@ public sealed class EmailService : IEmailService
     public async Task SendKycRejectedEmailAsync(string toEmail, string fullName, string reason, CancellationToken cancellationToken)
     {
         var subject = "Action Required: KYC Verification Failed - ClaimCore Insurance";
+        var kycLink = _linkService.GetKycLink();
+
         var body = $@"
             <!DOCTYPE html>
             <html>
@@ -435,7 +451,7 @@ public sealed class EmailService : IEmailService
                             <li>File size should be under 5MB</li>
                             <li>Accepted formats: PDF, JPG, PNG</li>
                         </ul>
-                        <a href='https://yourdomain.com/kyc/upload' class='button'>Re-upload Documents →</a>
+                        <a href='{kycLink}' class='button'>Re-upload Documents →</a>
                         <p>If you have any questions, please contact our support team.</p>
                         <p>Best regards,<br><strong>ClaimCore Insurance Team</strong></p>
                     </div>
@@ -445,8 +461,7 @@ public sealed class EmailService : IEmailService
                     </div>
                 </div>
             </body>
-            </html>
-        ";
+            </html>";
 
         await SendEmailAsync(toEmail, subject, body, cancellationToken);
     }
@@ -455,6 +470,8 @@ public sealed class EmailService : IEmailService
     {
         var subject = "New KYC Submission - Action Required";
         var adminEmail = _configuration["EmailSettings:AdminEmail"] ?? "admin@claimcore.com";
+        var adminKycLink = $"{_linkService.GetDashboardLink()}/admin/kyc";
+
         var body = $@"
             <!DOCTYPE html>
             <html>
@@ -477,12 +494,11 @@ public sealed class EmailService : IEmailService
                         <p>A user has submitted KYC documents for verification.</p>
                         <p><strong>User:</strong> {fullName}</p>
                         <p><strong>Email:</strong> {email}</p>
-                        <a href='https://yourdomain.com/admin/kyc' class='button'>Review KYC →</a>
+                        <a href='{adminKycLink}' class='button'>Review KYC →</a>
                     </div>
                 </div>
             </body>
-            </html>
-        ";
+            </html>";
 
         await SendEmailAsync(adminEmail, subject, body, cancellationToken);
     }
@@ -490,6 +506,10 @@ public sealed class EmailService : IEmailService
     public async Task SendPremiumReminderEmailAsync(string toEmail, string fullName, string policyNumber, decimal amount, DateTime dueDate, CancellationToken cancellationToken)
     {
         var subject = $"Premium Reminder: Payment Due on {dueDate:MMMM dd, yyyy} - ClaimCore Insurance";
+        var paymentLink = _linkService.GetPaymentLink();
+        var dashboardLink = _linkService.GetDashboardLink();
+        var policyLink = _linkService.GetPolicyLink();
+
         var body = $@"
             <!DOCTYPE html>
             <html>
@@ -515,17 +535,22 @@ public sealed class EmailService : IEmailService
                         <p><strong>Policy Number:</strong> {policyNumber}</p>
                         <p><strong>Amount Due:</strong> ₹{amount:N2}</p>
                         <p><strong>Due Date:</strong> {dueDate:MMMM dd, yyyy}</p>
-                        <a href='https://yourdomain.com/payments' class='button'>Pay Now →</a>
-                        <p>Please ensure timely payment to avoid policy lapse.</p>
+                        <div style='text-align: center;'>
+                            <a href='{paymentLink}' class='button'>Pay Now →</a>
+                        </div>
+                        <div style='text-align: center; margin-top: 16px;'>
+                            <a href='{dashboardLink}' style='color: #22D3EE;'>Go to Dashboard</a>
+                        </div>
+                        <p style='margin-top: 20px;'>Please ensure timely payment to avoid policy lapse.</p>
                         <p>Best regards,<br><strong>ClaimCore Insurance Team</strong></p>
                     </div>
                     <div class='footer'>
                         <p>© 2026 ClaimCore Insurance. All rights reserved.</p>
+                        <p><a href='{policyLink}'>View Policy Details</a></p>
                     </div>
                 </div>
             </body>
-            </html>
-        ";
+            </html>";
 
         await SendEmailAsync(toEmail, subject, body, cancellationToken);
     }
@@ -533,6 +558,9 @@ public sealed class EmailService : IEmailService
     public async Task SendPolicyCreatedEmailAsync(string toEmail, string fullName, string policyNumber, CancellationToken cancellationToken)
     {
         var subject = "Your Insurance Policy is Active! - ClaimCore Insurance";
+        var policyLink = _linkService.GetPolicyLink();
+        var dashboardLink = _linkService.GetDashboardLink();
+
         var body = $@"
             <!DOCTYPE html>
             <html>
@@ -556,17 +584,19 @@ public sealed class EmailService : IEmailService
                         <h2>Dear {fullName},</h2>
                         <p>Your insurance policy has been successfully activated!</p>
                         <p><strong>Policy Number:</strong> {policyNumber}</p>
-                        <a href='https://yourdomain.com/policy' class='button'>View Policy Details →</a>
+                        <div style='text-align: center;'>
+                            <a href='{policyLink}' class='button'>View Policy Details →</a>
+                        </div>
                         <p>Stay protected with ClaimCore!</p>
                         <p>Best regards,<br><strong>ClaimCore Insurance Team</strong></p>
                     </div>
                     <div class='footer'>
                         <p>© 2026 ClaimCore Insurance. All rights reserved.</p>
+                        <p><a href='{dashboardLink}'>Go to Dashboard</a></p>
                     </div>
                 </div>
             </body>
-            </html>
-        ";
+            </html>";
 
         await SendEmailAsync(toEmail, subject, body, cancellationToken);
     }
@@ -574,6 +604,9 @@ public sealed class EmailService : IEmailService
     public async Task SendPaymentConfirmationEmailAsync(string toEmail, string fullName, string policyNumber, decimal amount, string transactionId, CancellationToken cancellationToken)
     {
         var subject = "Payment Confirmation - ClaimCore Insurance";
+        var dashboardLink = _linkService.GetDashboardLink();
+        var policyLink = _linkService.GetPolicyLink();
+
         var body = $@"
             <!DOCTYPE html>
             <html>
@@ -599,15 +632,18 @@ public sealed class EmailService : IEmailService
                         <p><strong>Amount:</strong> ₹{amount:N2}</p>
                         <p><strong>Transaction ID:</strong> {transactionId}</p>
                         <p>Your policy is now active until the next due date.</p>
+                        <div style='text-align: center; margin-top: 20px;'>
+                            <a href='{policyLink}' style='background: #22D3EE; color: #0B1220; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;'>View Policy</a>
+                        </div>
                         <p>Best regards,<br><strong>ClaimCore Insurance Team</strong></p>
                     </div>
                     <div class='footer'>
                         <p>© 2026 ClaimCore Insurance. All rights reserved.</p>
+                        <p><a href='{dashboardLink}'>Go to Dashboard</a></p>
                     </div>
                 </div>
             </body>
-            </html>
-        ";
+            </html>";
 
         await SendEmailAsync(toEmail, subject, body, cancellationToken);
     }
@@ -615,6 +651,8 @@ public sealed class EmailService : IEmailService
     public async Task SendOtpEmailAsync(string toEmail, string fullName, string otp, CancellationToken cancellationToken)
     {
         var subject = "Your Verification Code - ClaimCore Insurance";
+        var dashboardLink = _linkService.GetDashboardLink();
+
         var body = $@"
             <!DOCTYPE html>
             <html>
@@ -643,11 +681,11 @@ public sealed class EmailService : IEmailService
                     </div>
                     <div class='footer'>
                         <p>© 2026 ClaimCore Insurance. All rights reserved.</p>
+                        <p><a href='{dashboardLink}'>Go to Dashboard</a></p>
                     </div>
                 </div>
             </body>
-            </html>
-        ";
+            </html>";
 
         await SendEmailAsync(toEmail, subject, body, cancellationToken);
     }
@@ -655,6 +693,10 @@ public sealed class EmailService : IEmailService
     public async Task SendPolicyLapsedEmailAsync(string toEmail, string fullName, string policyNumber, decimal outstandingAmount, CancellationToken cancellationToken)
     {
         var subject = $"Policy Lapsed - {policyNumber}";
+        var reinstateLink = _linkService.GetReinstateLink();
+        var dashboardLink = _linkService.GetDashboardLink();
+        var paymentLink = _linkService.GetPaymentLink();
+
         var body = $@"
             <!DOCTYPE html>
             <html>
@@ -666,28 +708,40 @@ public sealed class EmailService : IEmailService
                     .header h1 {{ color: white; margin: 0; }}
                     .content {{ background: #f9fafb; padding: 30px; }}
                     .button {{ display: inline-block; padding: 12px 24px; background: #22D3EE; color: #0B1220; text-decoration: none; border-radius: 6px; margin-top: 20px; }}
+                    .button-danger {{ background: #ef4444; color: white; }}
+                    .footer {{ text-align: center; padding: 20px; font-size: 12px; color: #6b7280; }}
                 </style>
             </head>
             <body>
                 <div class='container'>
                     <div class='header'>
-                        <h1>Policy Lapsed</h1>
+                        <h1>⚠️ Policy Lapsed</h1>
                     </div>
                     <div class='content'>
                         <h2>Dear {fullName},</h2>
                         <p>Your insurance policy <strong>{policyNumber}</strong> has been lapsed due to pending premium payments.</p>
                         <p><strong>Outstanding Amount:</strong> ₹{outstandingAmount:N2}</p>
-                        <p>Please contact support or initiate reinstatement to restore your coverage.</p>
-                        <a href='https://yourdomain.com/policy/reinstate' class='button'>Reinstate Policy →</a>
+                        <p>To reinstate your policy, please:</p>
+                        <ol>
+                            <li>Pay the outstanding amount</li>
+                            <li>Pay the reinstatement fee</li>
+                        </ol>
+                        <div style='text-align: center;'>
+                            <a href='{reinstateLink}' class='button'>Reinstate Policy →</a>
+                        </div>
+                        <div style='text-align: center; margin-top: 16px;'>
+                            <a href='{paymentLink}' class='button' style='background: #ef4444;'>Pay Now</a>
+                        </div>
+                        <p style='margin-top: 20px;'>For any questions, please contact our support team.</p>
                         <p>Best regards,<br><strong>ClaimCore Insurance Team</strong></p>
                     </div>
                     <div class='footer'>
                         <p>© 2026 ClaimCore Insurance. All rights reserved.</p>
+                        <p><a href='{dashboardLink}'>Go to Dashboard</a></p>
                     </div>
                 </div>
             </body>
-            </html>
-        ";
+            </html>";
 
         await SendEmailAsync(toEmail, subject, body, cancellationToken);
     }
@@ -695,6 +749,10 @@ public sealed class EmailService : IEmailService
     public async Task SendClaimSettlementEmailAsync(string toEmail, string fullName, string claimNumber, decimal amount, string paymentReference, CancellationToken cancellationToken)
     {
         var subject = "Claim Settled Successfully - ClaimCore Insurance";
+        var claimDetailsLink = _linkService.GetClaimDetailsLink(claimNumber);
+        var dashboardLink = _linkService.GetDashboardLink();
+        var settlementLetterLink = _linkService.GetSettlementLetterLink(claimNumber);
+
         var body = $@"
             <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
                 <div style='background: linear-gradient(135deg, #22D3EE, #06B6D4); padding: 20px; text-align: center;'>
@@ -719,11 +777,15 @@ public sealed class EmailService : IEmailService
                     </table>
                     <p style='color: #4B5563;'>The amount will be credited to your registered bank account within 2-3 business days.</p>
                     <div style='margin-top: 30px; text-align: center;'>
-                        <a href='https://claimcore.com/app/claims/{claimNumber}' style='background: #0891B2; color: #FFFFFF; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;'>View Claim Details</a>
+                        <a href='{claimDetailsLink}' style='background: #0891B2; color: #FFFFFF; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;'>View Claim Details</a>
+                    </div>
+                    <div style='margin-top: 16px; text-align: center;'>
+                        <a href='{settlementLetterLink}' style='color: #0891B2;'>Download Settlement Letter</a>
                     </div>
                 </div>
                 <div style='background: #F3F4F6; padding: 15px; text-align: center; font-size: 12px; color: #6B7280;'>
                     <p>This is an automated message. Please do not reply to this email.</p>
+                    <p><a href='{dashboardLink}' style='color: #0891B2;'>Go to Dashboard</a></p>
                     <p>&copy; {DateTime.UtcNow.Year} ClaimCore Insurance. All rights reserved.</p>
                 </div>
             </div>";
@@ -734,6 +796,9 @@ public sealed class EmailService : IEmailService
     public async Task SendGstInvoiceEmailAsync(string toEmail, string fullName, string invoiceNumber, decimal amount, byte[] pdfAttachment, CancellationToken cancellationToken)
     {
         var subject = $"GST Invoice #{invoiceNumber} - ClaimCore Insurance";
+        var dashboardLink = _linkService.GetDashboardLink();
+        var invoiceLink = _linkService.GetGstInvoiceLink(invoiceNumber);
+
         var body = $@"
             <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
                 <div style='background: linear-gradient(135deg, #22D3EE, #06B6D4); padding: 20px; text-align: center;'>
@@ -757,9 +822,13 @@ public sealed class EmailService : IEmailService
                         </tr>
                     </table>
                     <p style='color: #4B5563;'>Please find the attached PDF for your records.</p>
+                    <div style='margin-top: 20px; text-align: center;'>
+                        <a href='{invoiceLink}' style='color: #0891B2;'>Download Invoice</a>
+                    </div>
                 </div>
                 <div style='background: #F3F4F6; padding: 15px; text-align: center; font-size: 12px; color: #6B7280;'>
                     <p>This is a system-generated invoice. It is valid without signature.</p>
+                    <p><a href='{dashboardLink}' style='color: #0891B2;'>Go to Dashboard</a></p>
                     <p>&copy; {DateTime.UtcNow.Year} ClaimCore Insurance. All rights reserved.</p>
                 </div>
             </div>";

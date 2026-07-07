@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<IPremiumCalculatorService, PremiumCalculatorService>();
         services.AddScoped<IGracePeriodService, GracePeriodService>();
         services.AddScoped<IPdfGenerationService, PdfGenerationService>();
+        services.AddScoped<EmailLinkService>(); // ✅ NEW: Email link service for dynamic URLs
 
         // Note: IFileStorageService is registered in Infrastructure layer
         // to maintain proper separation of concerns
