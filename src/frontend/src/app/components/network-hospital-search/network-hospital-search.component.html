@@ -1,78 +1,168 @@
 <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" (click)="closeModal()">
-    <div class="relative max-w-3xl w-full max-h-[85vh] bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700 shadow-2xl flex flex-col" (click)="$event.stopPropagation()">
+    <div class="relative max-w-4xl w-full max-h-[90vh] bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700 shadow-2xl flex flex-col" (click)="$event.stopPropagation()">
 
         <!-- Header -->
-        <div class="flex items-center justify-between p-5 border-b border-slate-700">
+        <div class="flex items-center justify-between p-5 border-b border-slate-700 flex-shrink-0">
             <div>
                 <h2 class="text-xl font-semibold text-white">Network Hospitals</h2>
                 <p class="text-slate-400 text-sm">Cashless treatment available at these hospitals</p>
             </div>
-            <button (click)="closeModal()" class="text-slate-400 hover:text-white transition-colors">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-      </button>
+            <button (click)="closeModal()" class="text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-700/50">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
         </div>
 
         <!-- Search Filters -->
-        <div class="p-5 border-b border-slate-700 space-y-3">
-            <input type="text" [(ngModel)]="searchTerm" placeholder="Search by hospital name or city..." class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500 text-white placeholder-slate-500">
+        <div class="p-5 border-b border-slate-700 flex-shrink-0">
+            <div class="space-y-3">
+                <!-- Search Input -->
+                <div class="relative">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input 
+                        type="text" 
+                        [(ngModel)]="searchTerm" 
+                        (ngModelChange)="onSearchTermChange()"
+                        placeholder="Search by hospital name, city, or specialization..." 
+                        class="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 text-white placeholder-slate-500 transition-all"
+                    />
+                    <button *ngIf="searchTerm" (click)="searchTerm = ''; onSearchTermChange()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <select [(ngModel)]="selectedCity" (change)="onCityChange()" class="px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white">
-          <option value="">All Cities</option>
-          <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
-        </select>
-                <select [(ngModel)]="selectedSpecialization" (change)="onSpecializationChange()" class="px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white">
-          <option value="">All Specializations</option>
-          <option *ngFor="let spec of specializations" [value]="spec">{{ spec }}</option>
-        </select>
+                <!-- Filters -->
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- City Dropdown - DYNAMIC -->
+                    <div class="relative">
+                        <select 
+                            [(ngModel)]="selectedCity" 
+                            (change)="onCityChange()" 
+                            class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white appearance-none focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                        >
+                            <option value="">All Cities</option>
+                            <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
+                        </select>
+                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+
+                    <!-- Specialization Dropdown - DYNAMIC -->
+                    <div class="relative">
+                        <select 
+                            [(ngModel)]="selectedSpecialization" 
+                            (change)="onSpecializationChange()" 
+                            class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white appearance-none focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                        >
+                            <option value="">All Specializations</option>
+                            <option *ngFor="let spec of specializations" [value]="spec">{{ spec }}</option>
+                        </select>
+                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </div>
             </div>
+        </div>
+
+        <!-- Result Stats -->
+        <div class="px-5 py-2 border-b border-slate-700/50 flex-shrink-0">
+            <span class="text-sm text-slate-400">
+                <span class="font-semibold text-white">{{ filteredHospitals.length }}</span> 
+                hospitals found
+                <span *ngIf="selectedCity" class="text-cyan-400"> in {{ selectedCity }}</span>
+                <span *ngIf="selectedSpecialization" class="text-cyan-400"> with {{ selectedSpecialization }}</span>
+            </span>
         </div>
 
         <!-- Hospital List -->
         <div class="flex-1 overflow-y-auto p-5 space-y-3">
             <!-- Loading -->
-            <div *ngIf="isLoading" class="flex justify-center py-12">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+            <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-16">
+                <div class="animate-spin rounded-full h-10 w-10 border-4 border-cyan-500/30 border-t-cyan-500"></div>
+                <p class="text-slate-400 mt-4 text-sm">Loading hospitals...</p>
             </div>
 
             <!-- Empty State -->
-            <div *ngIf="!isLoading && filterHospitals().length === 0" class="text-center py-12">
-                <svg class="w-12 h-12 text-slate-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1M5 21v-4a1 1 0 011-1h2a1 1 0 011 1v4"></path>
-        </svg>
-                <p class="text-slate-400">No hospitals found</p>
-                <p class="text-slate-500 text-sm">Try changing your search criteria</p>
+            <div *ngIf="!isLoading && filteredHospitals.length === 0" class="text-center py-16">
+                <svg class="w-16 h-16 text-slate-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1M5 21v-4a1 1 0 011-1h2a1 1 0 011 1v4"></path>
+                </svg>
+                <p class="text-slate-400 text-lg">No hospitals found</p>
+                <p class="text-slate-500 text-sm mt-1">Try adjusting your search or filters</p>
+                <button 
+                    (click)="selectedCity = ''; selectedSpecialization = ''; searchTerm = ''; searchHospitals()" 
+                    class="mt-4 px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors text-sm"
+                >
+                    Clear All Filters
+                </button>
             </div>
 
             <!-- Hospital Cards -->
-            <div *ngFor="let hospital of filterHospitals()" class="bg-slate-800/50 rounded-xl p-4 border border-slate-700 hover:border-cyan-500/50 transition-all">
-                <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                        <h3 class="text-white font-semibold">{{ hospital.hospitalName }}</h3>
-                        <p class="text-slate-400 text-sm">{{ hospital.address }}, {{ hospital.city }}</p>
-                        <div class="flex flex-wrap gap-2 mt-2">
-                            <span *ngFor="let spec of hospital.specializations.slice(0, 3)" class="text-xs bg-slate-700 px-2 py-1 rounded-full text-slate-300">
-                {{ spec }}
-              </span>
-                            <span *ngIf="hospital.specializations.length > 3" class="text-xs text-slate-500">+{{ hospital.specializations.length - 3 }} more</span>
+            <div 
+                *ngFor="let hospital of filteredHospitals; trackBy: trackByHospitalId" 
+                class="bg-slate-800/50 rounded-xl p-4 border border-slate-700 hover:border-cyan-500/50 transition-all duration-200 hover:bg-slate-800/70 group"
+            >
+                <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-white font-semibold group-hover:text-cyan-400 transition-colors">
+                            {{ hospital.hospitalName }}
+                        </h3>
+                        <p class="text-slate-400 text-sm">{{ hospital.address }}, {{ hospital.city }}, {{ hospital.state }} - {{ hospital.pinCode }}</p>
+                        
+                        <!-- Specializations -->
+                        <div class="flex flex-wrap gap-1.5 mt-2">
+                            <span *ngFor="let spec of hospital.specializations.slice(0, 3)" class="text-xs bg-slate-700 px-2.5 py-1 rounded-full text-slate-300">
+                                {{ spec }}
+                            </span>
+                            <span *ngIf="hospital.specializations.length > 3" class="text-xs text-slate-500 px-2.5 py-1">
+                                +{{ hospital.specializations.length - 3 }} more
+                            </span>
                         </div>
-                        <div class="flex items-center gap-4 mt-2 text-sm">
-                            <span class="text-green-400">✅ Cashless up to {{ formatCurrency(hospital.cashlessLimit) }}</span>
-                            <span class="text-slate-400">Consultation: {{ formatCurrency(hospital.consultationFee) }}</span>
+
+                        <!-- Stats -->
+                        <div class="flex flex-wrap items-center gap-4 mt-2.5 text-sm">
+                            <span class="text-emerald-400 flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                </svg>
+                                Cashless: {{ formatCurrency(hospital.cashlessLimit) }}
+                            </span>
+                            <span class="text-slate-400 flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Consultation: {{ formatCurrency(hospital.consultationFee) }}
+                            </span>
+                            <span class="text-slate-500 text-xs">
+                                📞 {{ hospital.contactNumber }}
+                            </span>
                         </div>
                     </div>
-                    <button (click)="select(hospital)" class="px-4 py-2 bg-cyan-500 text-black text-sm font-medium rounded-lg hover:bg-cyan-400 transition-colors">
-            Select
-          </button>
+
+                    <!-- Select Button -->
+                    <button 
+                        (click)="select(hospital)" 
+                        class="flex-shrink-0 px-5 py-2.5 bg-cyan-500 text-black text-sm font-medium rounded-lg hover:bg-cyan-400 transition-all hover:shadow-lg hover:shadow-cyan-500/30 focus:ring-2 focus:ring-cyan-500/50"
+                    >
+                        Select
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Footer Hint -->
-        <div class="p-4 border-t border-slate-700 text-center">
-            <p class="text-slate-500 text-xs">Showing network hospitals with cashless facility. Select a hospital to proceed with pre-authorization.</p>
+        <!-- Footer -->
+        <div class="p-4 border-t border-slate-700 flex-shrink-0 text-center">
+            <p class="text-slate-500 text-xs">
+                Showing network hospitals with cashless facility. 
+                <span class="text-slate-400">Select a hospital to proceed with pre-authorization.</span>
+            </p>
         </div>
     </div>
 </div>

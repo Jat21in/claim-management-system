@@ -36,4 +36,14 @@ export class HospitalService {
   getHospitalById(hospitalId: string): Observable<NetworkHospital> {
     return this.http.get<NetworkHospital>(`${this.baseUrl}/network/${hospitalId}`);
   }
+
+  // ✅ NEW: Get all unique cities from hospitals
+  getCities(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.baseUrl}/cities`);
+  }
+
+  // ✅ NEW: Get all unique specializations from hospitals
+  getSpecializations(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.baseUrl}/specializations`);
+  }
 }
