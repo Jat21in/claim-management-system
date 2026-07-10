@@ -463,9 +463,9 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## 📧 Contact & Support
 
-- **Project Maintainer** – Jatin Mittal
-- **Issue Tracker** – [GitHub Issues](https://github.com/your-org/ClaimCore/issues)
-- **Documentation** – [Wiki](https://github.com/your-org/ClaimCore/wiki)
+- **Project Maintainer** – Jatin Mittal & Purwa
+- **Purwa** – [GitHub Issues](https://github.com/purwarajput)
+- **Documentation** – [Wiki](https://jat21in.github.io/claim-management-system/)
 
 ---
 
@@ -476,4 +476,3 @@ Distributed under the MIT License. See `LICENSE` for more information.
 *© 2026 ClaimCore Insurance Systems — Enterprise claims reimagined*
 
 </div>
-```
